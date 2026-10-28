@@ -15,13 +15,16 @@ import {
   ZoomOut,
   ChevronDown,
   Layers,
-  Sparkles
+  Sparkles,
+  Plus,
 } from 'lucide-react';
-import { ViewportMode, ToolMode } from '../types';
+import { ViewportMode, ToolMode, ProjectType } from '../types';
 
 interface TopBarProps {
   projectName: string;
   setProjectName: (name: string) => void;
+  projectType: ProjectType;
+  onOpenNewProject: () => void;
   toolMode: ToolMode;
   setToolMode: (tool: ToolMode) => void;
   viewportMode: ViewportMode;
@@ -41,6 +44,8 @@ interface TopBarProps {
 export const TopBar: React.FC<TopBarProps> = ({
   projectName,
   setProjectName,
+  projectType,
+  onOpenNewProject,
   toolMode,
   setToolMode,
   viewportMode,
@@ -139,8 +144,30 @@ export const TopBar: React.FC<TopBarProps> = ({
         </div>
       </div>
 
-      {/* Center: Project Title */}
-      <div className="flex items-center gap-2 max-w-[280px] sm:max-w-md">
+      {/* Center: Project Title & Environment Badge */}
+      <div className="flex items-center gap-2 max-w-[360px] sm:max-w-lg">
+        {/* New Project Button */}
+        <button
+          onClick={onOpenNewProject}
+          className="flex items-center gap-1 px-2 py-1 rounded bg-[#1e1e1e] hover:bg-[#383838] border border-[#383838] text-zinc-200 text-xs font-medium transition-colors"
+          title="Crear o configurar proyecto"
+        >
+          <Plus className="w-3.5 h-3.5 text-[#0d99ff]" />
+          <span className="hidden sm:inline">Nuevo</span>
+        </button>
+
+        {/* Project Type Badge */}
+        <button
+          onClick={onOpenNewProject}
+          title="Haga clic para cambiar el tipo de proyecto e iconografía"
+          className="flex items-center gap-1.5 px-2 py-1 rounded bg-[#1e1e1e] hover:bg-[#383838] border border-[#383838] text-[11px] font-medium text-zinc-300 transition-colors"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
+          <span className="truncate max-w-[100px]">
+            {projectType === 'html_css' ? 'HTML/CSS' : projectType === 'framework' ? 'React/NPM' : 'Híbrido'}
+          </span>
+        </button>
+
         {isEditingTitle ? (
           <input
             type="text"
@@ -154,7 +181,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         ) : (
           <button
             onClick={() => setIsEditingTitle(true)}
-            className="hover:bg-[#383838] px-2.5 py-1 rounded text-zinc-300 hover:text-white font-medium tracking-tight truncate max-w-[200px]"
+            className="hover:bg-[#383838] px-2.5 py-1 rounded text-zinc-300 hover:text-white font-medium tracking-tight truncate max-w-[160px]"
             title="Click to rename project"
           >
             {projectName}

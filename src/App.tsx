@@ -5,6 +5,7 @@ import {
   ToolMode,
   DropPosition,
   ComponentDefinition,
+  ProjectType,
 } from './types';
 import { INITIAL_CANVAS_TREE } from './data/initialTemplate';
 import { COMPONENT_CATALOG } from './data/componentCatalog';
@@ -23,9 +24,12 @@ import { LeftSidebar } from './components/LeftSidebar';
 import { RightSidebar } from './components/RightSidebar';
 import { Canvas } from './components/Canvas';
 import { ExportModal } from './components/ExportModal';
+import { NewProjectModal } from './components/NewProjectModal';
 
 export function App() {
   const [projectName, setProjectName] = useState('VisualForge Studio - Project');
+  const [projectType, setProjectType] = useState<ProjectType>('hybrid');
+  const [isNewProjectOpen, setIsNewProjectOpen] = useState(false);
 
   // Tree and History State for Undo / Redo
   const [tree, setTree] = useState<CanvasNode[]>(INITIAL_CANVAS_TREE);
@@ -272,12 +276,27 @@ export function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleUndo, handleRedo, selectedId, handleDeleteNode, handleDuplicateNode]);
 
+  const handleCreateProject = useCallback(
+    (name: string, type: ProjectType, iconLibrary: string, template: 'saas' | 'blank') => {
+      setProjectName(name);
+      setProjectType(type);
+      const initialTree = template === 'blank' ? [] : INITIAL_CANVAS_TREE;
+      setTree(initialTree);
+      setHistory([initialTree]);
+      setHistoryIdx(0);
+      setSelectedId(initialTree[0]?.id || null);
+    },
+    []
+  );
+
   return (
     <div className="h-screen w-screen overflow-hidden flex flex-col bg-[#1e1e1e] text-zinc-100 font-sans select-none">
       {/* Figma Top Toolbar */}
       <TopBar
         projectName={projectName}
         setProjectName={setProjectName}
+        projectType={projectType}
+        onOpenNewProject={() => setIsNewProjectOpen(true)}
         toolMode={toolMode}
         setToolMode={setToolMode}
         viewportMode={viewportMode}
@@ -325,6 +344,7 @@ export function App() {
 
         <RightSidebar
           selectedNode={selectedNode}
+          projectType={projectType}
           onUpdateStyle={handleUpdateStyle}
           onUpdateProps={handleUpdateProps}
           isOpen={isRightOpen}
@@ -337,6 +357,14 @@ export function App() {
         tree={tree}
         isOpen={isExportOpen}
         onClose={() => setIsExportOpen(false)}
+      />
+
+      {/* New Project & Environment Configuration Modal */}
+      <NewProjectModal
+        isOpen={isNewProjectOpen}
+        onClose={() => setIsNewProjectOpen(false)}
+        onCreateProject={handleCreateProject}
+        currentType={projectType}
       />
     </div>
   );

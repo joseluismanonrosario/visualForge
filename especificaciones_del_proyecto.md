@@ -165,90 +165,56 @@ En lugar de selectores genéricos, el panel de propiedades cuenta con un control
 
 ---
 
-## 5. CATÁLOGO E INTERCAMBIADOR DE ÍCONOS FONTAWESOME 5 FREE
+## 5. SISTEMA MULTI-LIBRERÍA DE ICONOS POR TIPO DE PROYECTO
 
-Integración oficial de Font Awesome 5 Free (`https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css`) inyectado en el `<head>`.
+El estudio incorpora un sistema universal de iconos clasificado según el entorno de trabajo seleccionado al crear o configurar el proyecto (`NewProjectModal`):
 
-### Catálogo Completo de Más de 1.450 Iconos y Familias Free:
-- Catálogo indexado completo con los **1.458 iconos gratuitos** oficiales de Font Awesome 5.15.4 (Solid, Regular y 457 marcas de Brands).
-- **Solid (`fas`)**: Iconos con relleno sólido (`fas fa-...`).
-- **Regular (`far`)**: Iconos con trazo lineal (`far fa-...`).
-- **Brands (`fab`)**: Logos oficiales de marcas, redes sociales y tecnologías (`fab fa-...`).
+### Clasificación por Tipo de Proyecto y Flujo de Trabajo:
+1. **Nativas HTML / CSS Puro (CDN o archivos .css y etiquetas `<i>`)**:
+   - `Line Awesome`: Sustituto moderno de trazo lineal basado en la cuadrícula de Font Awesome.
+   - `Iconmonstr`: Iconos geométricos minimalistas sin dependencias pesadas.
+   - `IcoMoon Free`: Iconografía de píxel perfecto para HTML semántico y CSS.
+   - `Fontisto`: Conjunto vectorial ligero para páginas clásicas.
+   - `Devicon`: Especializada en logotipos oficiales de lenguajes, frameworks y herramientas tecnológicas.
 
-### Categorías Temáticas (Incluyendo Brands):
-- `Brands (Marcas / Logos)`: Más de 450 logotipos oficiales (Google, GitHub, React, Bootstrap, Figma, Amazon, Apple, Twitter, Facebook, etc.).
-- Las 58 temáticas estándar:
-  1. `Accessibility (Accesibilidad)`
-  2. `Arrows (Flechas)`
-  3. `Business (Negocios / Empresa)`
-  4. `Camping (Campamento / Aire libre)`
-  5. `Charity (Caridad / Ayuda social)`
-  6. `Charts + Diagrams (Gráficos y diagramas)`
-  7. `Childhood (Infancia / Niños)`
-  8. `Clothing + Fashion (Ropa y moda)`
-  9. `Coding (Programación / Desarrollo)`
-  10. `Communication (Comunicación)`
-  11. `Connectivity (Conectividad / Redes)`
-  12. `Construction (Construcción)`
-  13. `Design (Diseño)`
-  14. `Devices + Hardware (Dispositivos y hardware)`
-  15. `Disaster + Crisis (Desastres y crisis)`
-  16. `Editing (Edición de texto)`
-  17. `Education (Educación)`
-  18. `Emoji (Emojis y expresiones)`
-  19. `Energy (Energía)`
-  20. `Files (Archivos y documentos)`
-  21. `Film + Video (Cine y video)`
-  22. `Food + Beverage (Alimentos y bebidas)`
-  23. `Fruits + Vegetables (Frutas y verduras)`
-  24. `Gaming (Videojuegos)`
-  25. `Genders (Géneros)`
-  26. `Halloween (Halloween / Festividades)`
-  27. `Hands (Manos)`
-  28. `Holidays (Días festivos / Vacaciones)`
-  29. `Household (Hogar / Casa)`
-  30. `Humanitarian (Humanitario)`
-  31. `Logistics (Logística y envíos)`
-  32. `Maps (Mapas / Ubicación)`
-  33. `Maritime (Marítimo)`
-  34. `Marketing (Marketing y publicidad)`
-  35. `Mathematics (Matemáticas)`
-  36. `Media Playback (Reproducción multimedia)`
-  37. `Medical + Health (Salud y medicina)`
-  38. `Money (Dinero / Finanzas)`
-  39. `Moving (Mudanza / Movimiento)`
-  40. `Music + Audio (Música y audio)`
-  41. `Photos + Images (Fotos e imágenes)`
-  42. `Punctuation + Symbols (Puntuación y símbolos)`
-  43. `Religion (Religión)`
-  44. `Science (Ciencia)`
-  45. `Science Fiction (Ciencia ficción)`
-  46. `Security (Seguridad)`
-  47. `Shapes (Formas geométricas)`
-  48. `Shopping (Compras / Comercio electrónico)`
-  49. `Social (Redes sociales / Social)`
-  50. `Spinners (Indicadores de carga / Animaciones)`
-  51. `Sports + Fitness (Deportes y ejercicio)`
-  52. `Text Formatting (Formato de texto)`
-  53. `Time (Tiempo / Relojes)`
-  54. `Toggle (Interruptores / Controles)`
-  55. `Transportation (Transporte)`
-  56. `Travel + Hotel (Viajes y hotelería)`
-  57. `Users + People (Usuarios y personas)`
-  58. `Weather (Clima / Tiempo atmosférico)`
+2. **Diseñadas para Frameworks (React, Vue, Svelte, Angular via NPM)**:
+   - `Lucide Icons`: Estándar oficial moderno de componentes para React y shadcn/ui.
+   - `Heroicons`: Iconos oficiales de Tailwind CSS creados por el equipo de Tailwind Labs.
+   - `Iconoir`: Biblioteca libre con diseño limpio, moderno y consistente.
+   - `Radix Icons`: Iconos de precisión 15x15 diseñados por WorkOS para Radix UI.
+   - `Unicons (by Iconscout)`: Más de 1.000 iconos vectoriales en estilos de línea y monocromo.
 
-### Características del Selector e Inspector de Iconos:
-- **Vista Previa de Glifo en Vivo**: Muestra el icono activo con su color actual, nombre técnico (`fa-rocket`) y prefijo (`fas` / `far` / `fab`).
-- **Control Específico de Color del Icono**:
-  - Selector nativo de color (`input type="color"`).
-  - Campo de texto hexadecimal editable en línea (`#0d99ff`).
-  - Botón de restablecimiento al azul primario.
-  - Paleta de 8 swatches rápidos preconfigurados (Blue, Purple, Pink, Emerald, Amber, Red, White, Gray).
-- **Selector Rápido de Prefijo/Estilo**: Botones para alternar con 1 clic entre Solid (`fas`), Regular (`far`) y Brands (`fab`).
-- **Controles Vectoriales**: Sliders interactivos de tamaño (`12px` a `80px`) y rotación, sincronizados con `fontSize`.
-- **Selector de Categoría**: Menú desplegable completo con Brands y las 58 categorías oficiales.
-- **Buscador en Tiempo Real con Botón de Limpieza (`X`)**: Campo de búsqueda reactivo con botón circular `X` en el margen derecho para borrar el filtro en 1 clic.
-- **Reemplazo Instantáneo**: Al hacer clic en cualquier icono, se actualiza de inmediato el nodo activo sin alterar estilos ni jerarquía.
+3. **Híbridas (Soporte Nativo Completo para AMBOS entornos: CDN + Framework)**:
+   - `Bootstrap Icons`: Iconos oficiales de Bootstrap para HTML puro o paquetes React.
+   - `Remix Icon`: Sistema neutral con variantes Line y Fill exactas.
+   - `Boxicons`: Diseñados para interfaces con estilos Regular, Solid y Logos.
+   - `Phosphor Icons`: Familia versátil con múltiples pesos (Regular, Bold, Fill).
+   - `Tabler Icons`: Más de 4.000 iconos vectoriales con cuadrícula de 24x24.
+   - `Google Material Icons / Symbols`: Diseño Material Design en variantes Outlined, Filled, Round y Sharp.
+   - `Font Awesome 5 Free`: Catálogo completo de 1.458 iconos y 58 categorías temáticas (incluyendo Brands).
+
+---
+
+### Reglas de Selección y Estilos Dinámicos por Librería:
+1. **Combobox de Selección de Librería**:
+   - Tanto en el Inspector de Propiedades como en el Explorador Modal, un combobox permite alternar entre las librerías habilitadas para el tipo de proyecto actual.
+2. **Estilos Dinámicos Estrictos**:
+   - Al seleccionar un icono de una librería, el conmutador de estilos **únicamente presenta las variantes que esa librería soporta de forma nativa**:
+     - *Font Awesome 5*: Solid (`fas`), Regular (`far`), Brands (`fab`).
+     - *Line Awesome*: Solid (`las`), Regular (`lar`), Brands (`lab`).
+     - *Bootstrap Icons*: Outline (`bi`), Fill (`bi-fill`).
+     - *Remix Icon*: Line (`ri-...-line`), Fill (`ri-...-fill`).
+     - *Boxicons*: Regular (`bx`), Solid (`bxs`), Logos (`bxl`).
+     - *Phosphor*: Regular (`ph`), Bold (`ph-bold`), Fill (`ph-fill`).
+     - *Tabler*: Outline (`ti`), Filled (`ti-filled`).
+     - *Google Material*: Outlined, Filled, Round, Sharp.
+     - *Devicon*: Plain, Original, Line.
+     - *Heroicons*: Outline, Solid.
+     - *Lucide / Iconoir / Radix / Fontisto / Iconmonstr*: Estilo estándar contorneado. No se muestran opciones incompatibles.
+3. **Control Exclusivo de Color**:
+   - Selector visual de color nativo, campo hexadecimal editable, botón de reset y 8 swatches de acceso rápido para teñir vectorialmente cualquier icono.
+4. **Buscador con Botón de Limpieza (`X`)**:
+   - Búsqueda en tiempo real por nombre y etiquetas, con botón circular `X` en el borde derecho del textbox para restablecer la consulta en 1 clic.
 
 ---
 

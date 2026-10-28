@@ -1,5 +1,7 @@
 export type ComponentLibrary = 'shadcn' | 'bootstrap' | 'both';
 
+export type ProjectType = 'html_css' | 'framework' | 'hybrid';
+
 export interface CanvasNode {
   id: string;
   name: string;
@@ -31,11 +33,35 @@ export interface ComponentDefinition {
   name: string;
   category: 'Layout & Frames' | 'Navigation' | 'Forms & Inputs' | 'Feedback & Overlays' | 'Data Display' | 'Media & Vectors';
   library: ComponentLibrary;
-  icon: string; // Lucide icon identifier
+  icon: string;
   isContainer: boolean;
   defaultStyle: Record<string, any>;
   defaultProps: Record<string, any>;
   defaultChildren?: CanvasNode[];
+}
+
+export interface IconStyleOption {
+  id: string;
+  label: string;
+  prefix: string;
+}
+
+export interface IconItem {
+  name: string;
+  class: string;
+  category: string;
+  styles?: string[];
+  tags: string[];
+}
+
+export interface IconLibraryDef {
+  id: string;
+  name: string;
+  workflow: ProjectType;
+  description: string;
+  badge: string;
+  styles: IconStyleOption[];
+  icons: IconItem[];
 }
 
 export interface FontAwesomeIconItem {

@@ -449,10 +449,19 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
             onClick={handleClick}
             className={`${selectionClasses} inline-flex items-center justify-center`}
           >
-            <i
-              className={`${props.prefix || 'fas'} ${props.iconName || 'fa-star'}`}
-              style={{ color: style.color || '#0d99ff', ...style }}
-            />
+            {props.library === 'material_symbols' ? (
+              <span
+                className={props.prefix || 'material-icons-outlined'}
+                style={{ color: style.color || '#0d99ff', ...style }}
+              >
+                {props.iconName || 'star'}
+              </span>
+            ) : (
+              <i
+                className={`${props.prefix || ''} ${props.iconName || 'fa-star'}`}
+                style={{ color: style.color || '#0d99ff', ...style }}
+              ></i>
+            )}
           </div>
         );
 

@@ -25,12 +25,17 @@ import {
   Search,
   X,
 } from 'lucide-react';
-import { CanvasNode } from '../types';
-import { FONT_AWESOME_ICONS, FA_CATEGORIES } from '../data/fontAwesomeIcons';
+import { CanvasNode, ProjectType } from '../types';
+import {
+  ICON_LIBRARIES,
+  getLibrariesForWorkflow,
+  getLibraryById,
+} from '../data/iconLibraries';
 import { copyToClipboardSafe } from '../utils/exportEngine';
 
 interface RightSidebarProps {
   selectedNode: CanvasNode | null;
+  projectType: ProjectType;
   onUpdateStyle: (styleUpdates: Record<string, any>) => void;
   onUpdateProps: (propUpdates: Record<string, any>) => void;
   isOpen: boolean;
@@ -39,17 +44,44 @@ interface RightSidebarProps {
 
 export const RightSidebar: React.FC<RightSidebarProps> = ({
   selectedNode,
+  projectType,
   onUpdateStyle,
   onUpdateProps,
   isOpen,
   setIsOpen,
 }) => {
   const [activeTab, setActiveTab] = useState<'design' | 'inspect'>('design');
-  const [showFaModal, setShowFaModal] = useState(false);
-  const [faSearch, setFaSearch] = useState('');
-  const [faCategory, setFaCategory] = useState<string>('All');
-  const [faStyleFilter, setFaStyleFilter] = useState<'all' | 'solid' | 'regular' | 'brands'>('all');
+  const [showIconModal, setShowIconModal] = useState(false);
+  const [iconSearch, setIconSearch] = useState('');
   const [copiedCss, setCopiedCss] = useState(false);
+
+  // Available icon libraries based on active project type
+  const availableLibraries = getLibrariesForWorkflow(projectType);
+
+  // Active library state
+  const activeLibId =
+    selectedNode?.props?.library ||
+    availableLibraries[0]?.id ||
+    'fontawesome';
+
+  const [modalLibId, setModalLibId] = useState<string>(activeLibId);
+  const currentLib = getLibraryById(showIconModal ? modalLibId : activeLibId);
+
+  // Active style for the modal (defaults to library's first style)
+  const [modalStylePrefix, setModalStylePrefix] = useState<string>(
+    currentLib.styles[0]?.prefix || 'fas'
+  );
+
+  const handleLibraryChange = (newLibId: string) => {
+    const newLib = getLibraryById(newLibId);
+    const defaultPrefix = newLib.styles[0]?.prefix || '';
+    const defaultIcon = newLib.icons[0]?.class || '';
+    onUpdateProps({
+      library: newLibId,
+      prefix: defaultPrefix,
+      iconName: defaultIcon,
+    });
+  };
 
   if (!isOpen) {
     return (
@@ -104,7 +136,6 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   const currentAlign = style.alignItems || 'flex-start';
   const currentJustify = style.justifyContent || 'flex-start';
 
-  // Quick alignment bar handlers
   const handleQuickAlign = (type: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom') => {
     switch (type) {
       case 'left':
@@ -128,18 +159,15 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
     }
   };
 
-  const filteredIcons = FONT_AWESOME_ICONS.filter((item) => {
+  // Filter icons for active library in modal
+  const filteredModalIcons = currentLib.icons.filter((item) => {
+    const q = iconSearch.toLowerCase();
     const matchesSearch =
-      item.name.toLowerCase().includes(faSearch.toLowerCase()) ||
-      item.class.toLowerCase().includes(faSearch.toLowerCase()) ||
-      item.tags.some((t) => t.toLowerCase().includes(faSearch.toLowerCase()));
-    const matchesCategory =
-      faCategory === 'All' ||
-      item.category === faCategory ||
-      (faCategory === 'Brands (Marcas / Logos)' && item.styles.includes('brands'));
-    const matchesStyle =
-      faStyleFilter === 'all' || item.styles.includes(faStyleFilter);
-    return matchesSearch && matchesCategory && matchesStyle;
+      !q ||
+      item.name.toLowerCase().includes(q) ||
+      item.class.toLowerCase().includes(q) ||
+      item.tags?.some((t) => t.toLowerCase().includes(q));
+    return matchesSearch;
   });
 
   return (
@@ -287,13 +315,12 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
             </div>
           </div>
 
-          {/* Auto-Layout (Figma 3x3 Matrix & Spacing) */}
+          {/* Auto-Layout (Flexbox) */}
           <div className="pt-3 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
                 Auto-Layout (Flexbox)
               </span>
-              {/* Direction Row/Column toggle */}
               <div className="flex items-center bg-[#1e1e1e] border border-[#383838] rounded p-0.5">
                 <button
                   onClick={() => onUpdateStyle({ flexDirection: 'row', display: 'flex' })}
@@ -320,7 +347,6 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
 
             {/* 3x3 Matrix Grid & Gap/Padding */}
             <div className="flex items-center gap-4 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
-              {/* 3x3 interactive alignment box */}
               <div className="grid grid-cols-3 gap-1 w-20 h-20 bg-[#282829] p-1 rounded-md border border-[#3e3e42]">
                 {matrixPositions.map((pos) => {
                   const isActive =
@@ -345,7 +371,6 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                 })}
               </div>
 
-              {/* Gap & Padding inputs */}
               <div className="flex-1 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-zinc-400 text-[11px]">Item Gap</span>
@@ -376,7 +401,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
             </div>
           </div>
 
-          {/* Typography Settings */}
+          {/* Typography */}
           <div className="pt-3 space-y-2">
             <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
               Typography
@@ -513,35 +538,112 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
               </div>
             )}
 
-            {/* If FontAwesome Icon */}
+            {/* If Vector Icon Component (Multi-Library Support) */}
             {selectedNode.type === 'fontawesome_icon' && (
-              <div className="space-y-3">
+              <div className="space-y-3 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                {/* 1. Header with Live Icon Preview and Change Button */}
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <i
-                      className={`${props.prefix || 'fas'} ${props.iconName || 'fa-rocket'} text-2xl`}
-                      style={{ color: style.color || '#0d99ff' }}
-                    />
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded bg-[#252526] border border-[#383838] flex items-center justify-center">
+                      {currentLib.id === 'material_symbols' ? (
+                        <span
+                          className={props.prefix || 'material-icons-outlined'}
+                          style={{ color: style.color || '#0d99ff', fontSize: '20px' }}
+                        >
+                          {props.iconName || 'star'}
+                        </span>
+                      ) : (
+                        <i
+                          className={`${props.prefix || ''} ${props.iconName || 'fa-star'} text-xl`}
+                          style={{ color: style.color || '#0d99ff' }}
+                        />
+                      )}
+                    </div>
                     <div>
-                      <span className="font-mono text-zinc-200 block text-xs">{props.iconName || 'fa-rocket'}</span>
-                      <span className="text-[10px] text-zinc-500 font-mono">{props.prefix || 'fas'}</span>
+                      <span className="font-mono text-zinc-200 block text-xs truncate max-w-[130px]">
+                        {props.iconName || 'fa-rocket'}
+                      </span>
+                      <span className="text-[10px] text-zinc-500 font-sans">
+                        {currentLib.name}
+                      </span>
                     </div>
                   </div>
                   <button
-                    onClick={() => setShowFaModal(true)}
-                    className="px-2.5 py-1 rounded bg-[#0d99ff] text-white font-medium hover:bg-[#0082df] text-[11px]"
+                    onClick={() => {
+                      setModalLibId(currentLib.id);
+                      setModalStylePrefix(props.prefix || currentLib.styles[0]?.prefix || '');
+                      setShowIconModal(true);
+                    }}
+                    className="px-2.5 py-1 rounded bg-[#0d99ff] text-white font-medium hover:bg-[#0082df] text-[11px] shadow-xs"
                   >
-                    Change Icon
+                    Explorar
                   </button>
                 </div>
 
-                {/* Icon Color Picker & Presets */}
-                <div className="space-y-1.5 pt-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-zinc-400">Icon Color</span>
-                    <span className="text-[10px] text-zinc-500 font-mono">{style.color || '#0d99ff'}</span>
+                {/* 2. Combobox to select active Icon Library */}
+                <div className="space-y-1">
+                  <label className="text-[10px] text-zinc-400 font-medium">Librería de Iconos</label>
+                  <select
+                    value={currentLib.id}
+                    onChange={(e) => handleLibraryChange(e.target.value)}
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1.5 text-white text-xs focus:outline-none focus:border-[#0d99ff]"
+                  >
+                    {availableLibraries.map((lib) => (
+                      <option key={lib.id} value={lib.id} className="bg-[#1e1e1e]">
+                        {lib.name} ({lib.badge})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* 3. Dynamic Styles: ONLY styles that this specific library can change */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-[10px] text-zinc-400">
+                    <span>Estilos Soportados ({currentLib.name})</span>
+                    <span className="text-zinc-500 font-mono">
+                      {props.prefix || currentLib.styles[0]?.prefix}
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2 bg-[#1e1e1e] border border-[#383838] rounded-md p-1.5">
+
+                  {currentLib.styles.length > 1 ? (
+                    <div className="flex flex-wrap gap-1 bg-[#252526] p-1 rounded-md border border-[#383838]">
+                      {currentLib.styles.map((st) => {
+                        const isActive =
+                          (props.prefix || currentLib.styles[0]?.prefix) === st.prefix;
+                        return (
+                          <button
+                            key={st.id}
+                            onClick={() => onUpdateProps({ prefix: st.prefix })}
+                            className={`flex-1 min-w-[70px] py-1 px-1.5 text-[10px] rounded font-medium transition-colors text-center truncate ${
+                              isActive
+                                ? 'bg-[#0d99ff] text-white shadow-xs'
+                                : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                            }`}
+                          >
+                            {st.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between text-[10px] bg-[#252526] px-2 py-1 rounded border border-[#383838]">
+                      <span className="text-zinc-400">Estilo Único:</span>
+                      <span className="text-zinc-200 font-medium">
+                        {currentLib.styles[0]?.label || 'Estándar'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* 4. Dedicated Icon Color Control */}
+                <div className="space-y-1.5 pt-1 border-t border-[#383838]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-zinc-400">Color del Icono</span>
+                    <span className="text-[10px] text-zinc-500 font-mono">
+                      {style.color || '#0d99ff'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-[#252526] border border-[#383838] rounded-md p-1.5">
                     <input
                       type="color"
                       value={style.color?.startsWith('#') ? style.color : '#0d99ff'}
@@ -562,8 +664,9 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                       Reset
                     </button>
                   </div>
+
                   {/* Preset Color Swatches */}
-                  <div className="flex items-center gap-1.5 pt-1">
+                  <div className="flex items-center gap-1.5 pt-0.5">
                     {[
                       { color: '#0d99ff', label: 'Blue' },
                       { color: '#8b5cf6', label: 'Purple' },
@@ -580,48 +683,19 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                         style={{ backgroundColor: sw.color }}
                         title={sw.label}
                         className={`w-4 h-4 rounded-full border border-black/40 hover:scale-110 transition-transform ${
-                          style.color === sw.color ? 'ring-2 ring-white ring-offset-1 ring-offset-[#252526]' : ''
+                          style.color === sw.color
+                            ? 'ring-2 ring-white ring-offset-1 ring-offset-[#252526]'
+                            : ''
                         }`}
                       />
                     ))}
                   </div>
                 </div>
 
-                {/* FA5 Style / Family Switcher (fas, far, fab) */}
-                <div className="space-y-1">
-                  <span className="text-[10px] text-zinc-400">FA5 Style (Prefix)</span>
-                  <div className="grid grid-cols-3 gap-1 bg-[#1e1e1e] p-1 rounded-md border border-[#383838]">
-                    <button
-                      onClick={() => onUpdateProps({ prefix: 'fas' })}
-                      className={`py-1 text-[10px] rounded font-medium transition-colors ${
-                        (props.prefix || 'fas') === 'fas' ? 'bg-[#0d99ff] text-white' : 'text-zinc-400 hover:text-white'
-                      }`}
-                    >
-                      Solid (fas)
-                    </button>
-                    <button
-                      onClick={() => onUpdateProps({ prefix: 'far' })}
-                      className={`py-1 text-[10px] rounded font-medium transition-colors ${
-                        props.prefix === 'far' ? 'bg-[#0d99ff] text-white' : 'text-zinc-400 hover:text-white'
-                      }`}
-                    >
-                      Regular (far)
-                    </button>
-                    <button
-                      onClick={() => onUpdateProps({ prefix: 'fab' })}
-                      className={`py-1 text-[10px] rounded font-medium transition-colors ${
-                        props.prefix === 'fab' ? 'bg-[#0d99ff] text-white' : 'text-zinc-400 hover:text-white'
-                      }`}
-                    >
-                      Brands (fab)
-                    </button>
-                  </div>
-                </div>
-
-                {/* Size slider */}
-                <div className="space-y-1">
+                {/* 5. Size Slider */}
+                <div className="space-y-1 pt-1 border-t border-[#383838]">
                   <div className="flex justify-between text-[11px] text-zinc-400">
-                    <span>Size</span>
+                    <span>Tamaño</span>
                     <span>{props.size || 28}px</span>
                   </div>
                   <input
@@ -692,122 +766,137 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
         </div>
       )}
 
-      {/* FontAwesome Icon Picker Modal */}
-      {showFaModal && (
+      {/* Multi-Library Icon Picker Modal */}
+      {showIconModal && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#252526] border border-[#383838] rounded-xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl">
+          <div className="bg-[#252526] border border-[#383838] rounded-xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
             {/* Modal Header */}
             <div className="p-4 border-b border-[#383838] flex items-center justify-between bg-[#2c2c2c] rounded-t-xl">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
                 <Star className="w-4 h-4 text-amber-400" />
                 <div>
-                  <h3 className="font-semibold text-white text-sm">FontAwesome 5 Free (58 Categorías)</h3>
-                  <p className="text-[10px] text-zinc-400">Solid (fas) • Regular (far) • Brands (fab)</p>
+                  <h3 className="font-semibold text-white text-sm">Explorador de Iconos Universal</h3>
+                  <p className="text-[10px] text-zinc-400">
+                    {currentLib.name} • {currentLib.badge}
+                  </p>
                 </div>
               </div>
               <button
-                onClick={() => setShowFaModal(false)}
+                onClick={() => setShowIconModal(false)}
                 className="text-zinc-400 hover:text-white text-sm px-2 py-1 rounded hover:bg-[#383838]"
               >
                 ✕
               </button>
             </div>
 
-            {/* Modal Search & Filters */}
+            {/* Modal Search & Library Combobox */}
             <div className="p-3 border-b border-[#383838] space-y-2.5 bg-[#202021]">
               <div className="flex items-center gap-2">
+                {/* Search box with Clear 'X' Button */}
                 <div className="relative flex-1">
                   <Search className="w-4 h-4 absolute left-3 top-2.5 text-zinc-400" />
                   <input
                     type="text"
-                    placeholder="Search icons (rocket, user, wifi, coffee, github, etc.)..."
-                    value={faSearch}
-                    onChange={(e) => setFaSearch(e.target.value)}
+                    placeholder={`Buscar en ${currentLib.name} (nombre, tag)...`}
+                    value={iconSearch}
+                    onChange={(e) => setIconSearch(e.target.value)}
                     className="w-full bg-[#18181b] border border-[#383838] rounded-md pl-9 pr-8 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#0d99ff]"
                     autoFocus
                   />
-                  {faSearch && (
+                  {iconSearch && (
                     <button
                       type="button"
-                      onClick={() => setFaSearch('')}
+                      onClick={() => setIconSearch('')}
                       className="absolute right-2.5 top-2 p-0.5 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-700 transition-colors"
-                      title="Clear search"
+                      title="Limpiar búsqueda"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
                   )}
                 </div>
 
-                {/* Category Dropdown Selector for 58 Categories */}
+                {/* Library Combobox in Modal */}
                 <select
-                  value={faCategory}
-                  onChange={(e) => setFaCategory(e.target.value)}
-                  className="bg-[#18181b] border border-[#383838] text-zinc-200 text-xs rounded-md px-3 py-1.5 focus:outline-none focus:border-[#0d99ff] max-w-[240px]"
+                  value={currentLib.id}
+                  onChange={(e) => {
+                    const newLib = getLibraryById(e.target.value);
+                    setModalLibId(newLib.id);
+                    setModalStylePrefix(newLib.styles[0]?.prefix || '');
+                  }}
+                  className="bg-[#18181b] border border-[#383838] text-zinc-200 text-xs rounded-md px-3 py-1.5 focus:outline-none focus:border-[#0d99ff] max-w-[220px]"
                 >
-                  {FA_CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat} className="bg-[#18181b]">
-                      {cat}
+                  {availableLibraries.map((lib) => (
+                    <option key={lib.id} value={lib.id} className="bg-[#18181b]">
+                      {lib.name}
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* Style Family Filter (All, Solid, Regular, Brands) */}
-              <div className="flex items-center gap-1.5 pt-0.5">
-                <span className="text-[11px] text-zinc-400 mr-1">Style:</span>
-                {(
-                  [
-                    { id: 'all', label: 'All Styles' },
-                    { id: 'solid', label: 'Solid (fas)' },
-                    { id: 'regular', label: 'Regular (far)' },
-                    { id: 'brands', label: 'Brands (fab)' },
-                  ] as const
-                ).map((st) => (
-                  <button
-                    key={st.id}
-                    onClick={() => setFaStyleFilter(st.id)}
-                    className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${
-                      faStyleFilter === st.id
-                        ? 'bg-[#0d99ff] text-white shadow-xs'
-                        : 'bg-[#2c2c2c] text-zinc-400 hover:text-white'
-                    }`}
-                  >
-                    {st.label}
-                  </button>
-                ))}
-                <span className="ml-auto text-[10px] text-zinc-500 font-mono">
-                  {filteredIcons.length} icons found
+              {/* Dynamic Styles: ONLY styles that the selected library supports! */}
+              <div className="flex items-center justify-between pt-0.5">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] text-zinc-400 mr-1">Estilos:</span>
+                  {currentLib.styles.map((st) => (
+                    <button
+                      key={st.id}
+                      onClick={() => setModalStylePrefix(st.prefix)}
+                      className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${
+                        modalStylePrefix === st.prefix
+                          ? 'bg-[#0d99ff] text-white shadow-xs'
+                          : 'bg-[#2c2c2c] text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      {st.label}
+                    </button>
+                  ))}
+                </div>
+                <span className="text-[10px] text-zinc-500 font-mono">
+                  {filteredModalIcons.length} iconos disponibles
                 </span>
               </div>
             </div>
 
             {/* Icon Grid */}
             <div className="flex-1 overflow-y-auto p-4 grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
-              {filteredIcons.map((icon) => {
-                const prefix = icon.styles.includes('brands')
-                  ? 'fab'
-                  : faStyleFilter === 'regular' && icon.styles.includes('regular')
-                  ? 'far'
-                  : 'fas';
+              {filteredModalIcons.map((icon) => {
+                const prefixToUse =
+                  currentLib.id === 'fontawesome'
+                    ? icon.styles?.includes('brands')
+                      ? 'fab'
+                      : modalStylePrefix === 'far' && icon.styles?.includes('regular')
+                      ? 'far'
+                      : 'fas'
+                    : modalStylePrefix || currentLib.styles[0]?.prefix || '';
 
                 return (
                   <button
-                    key={icon.class}
+                    key={`${currentLib.id}_${icon.class}`}
                     onClick={() => {
-                      onUpdateProps({ iconName: icon.class, prefix });
-                      setShowFaModal(false);
+                      onUpdateProps({
+                        library: currentLib.id,
+                        iconName: icon.class,
+                        prefix: prefixToUse,
+                      });
+                      setShowIconModal(false);
                     }}
                     className="group flex flex-col items-center justify-center p-3 bg-[#1e1e1e] hover:bg-[#0d99ff]/15 border border-[#383838] hover:border-[#0d99ff] rounded-lg transition-all text-center"
-                    title={`${prefix} ${icon.class} (${icon.category})`}
+                    title={`${prefixToUse} ${icon.class}`}
                   >
-                    <i
-                      className={`${prefix} ${icon.class} text-xl mb-2 text-zinc-300 group-hover:text-[#0d99ff] group-hover:scale-110 transition-transform`}
-                    />
+                    {currentLib.id === 'material_symbols' ? (
+                      <span className={`${prefixToUse} text-2xl mb-2 text-zinc-300 group-hover:text-[#0d99ff] transition-transform group-hover:scale-110`}>
+                        {icon.class}
+                      </span>
+                    ) : (
+                      <i
+                        className={`${prefixToUse} ${icon.class} text-xl mb-2 text-zinc-300 group-hover:text-[#0d99ff] group-hover:scale-110 transition-transform`}
+                      />
+                    )}
                     <span className="text-[10px] text-zinc-400 group-hover:text-white truncate w-full">
                       {icon.name}
                     </span>
                     <span className="text-[9px] text-zinc-600 font-mono">
-                      {prefix}
+                      {prefixToUse || currentLib.name}
                     </span>
                   </button>
                 );

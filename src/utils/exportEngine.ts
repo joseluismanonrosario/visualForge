@@ -98,6 +98,9 @@ ${indent}</Card>`;
           const Tag = node.props.as || 'p';
           return `${indent}<${Tag} id="${node.id}"${styleAttr}>${node.props.text || ''}</${Tag}>`;
         case 'fontawesome_icon':
+          if (node.props.library === 'material_symbols') {
+            return `${indent}<span className="${node.props.prefix || 'material-icons-outlined'}" id="${node.id}"${styleAttr}>${node.props.iconName || 'star'}</span>`;
+          }
           return `${indent}<i className="${node.props.prefix || 'fas'} ${node.props.iconName || 'fa-star'}" id="${node.id}"${styleAttr} />`;
         case 'image':
           return `${indent}<img src="${node.props.src}" alt="${node.props.alt || ''}" id="${node.id}" className="rounded-lg object-cover"${styleAttr} />`;
@@ -163,6 +166,9 @@ ${indent}</div>`;
           const Tag = node.props.as || 'p';
           return `${indent}<${Tag} id="${node.id}"${styleAttr}>${node.props.text || ''}</${Tag}>`;
         case 'fontawesome_icon':
+          if (node.props.library === 'material_symbols') {
+            return `${indent}<span class="${node.props.prefix || 'material-icons-outlined'}" id="${node.id}"${styleAttr}>${node.props.iconName || 'star'}</span>`;
+          }
           return `${indent}<i class="${node.props.prefix || 'fas'} ${node.props.iconName || 'fa-star'}" id="${node.id}"${styleAttr}></i>`;
         case 'image':
           return `${indent}<img src="${node.props.src}" alt="${node.props.alt || ''}" class="img-fluid rounded" id="${node.id}"${styleAttr}>`;
