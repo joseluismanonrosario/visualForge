@@ -49,6 +49,46 @@ export const Canvas: React.FC<CanvasProps> = ({
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [isSpacePressed, setIsSpacePressed] = useState(false);
+
+  // Active Hand Mode: true if Hand Tool is selected OR Spacebar is held down
+  const isHandActive = toolMode === 'hand' || isSpacePressed;
+
+  // Listen for Spacebar press and release (Photoshop / Figma style space+drag)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      const isInput =
+        activeEl?.tagName === 'INPUT' ||
+        activeEl?.tagName === 'TEXTAREA' ||
+        (activeEl as HTMLElement)?.isContentEditable;
+
+      if (e.code === 'Space' && !isInput && !e.repeat) {
+        e.preventDefault();
+        setIsSpacePressed(true);
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        setIsSpacePressed(false);
+      }
+    };
+
+    const handleBlur = () => {
+      setIsSpacePressed(false);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleBlur);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', handleBlur);
+    };
+  }, []);
 
   // Drag-and-Drop state
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
@@ -82,7 +122,7 @@ export const Canvas: React.FC<CanvasProps> = ({
 
   // Hand Tool Pan Handlers
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (toolMode === 'hand' || e.button === 1) {
+    if (isHandActive || e.button === 1) {
       setIsPanning(true);
       setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
     }
@@ -232,12 +272,12 @@ export const Canvas: React.FC<CanvasProps> = ({
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleCanvasDrop}
       onClick={() => {
-        if (toolMode !== 'hand') {
+        if (!isHandActive) {
           onSelectNode(null);
         }
       }}
       className={`flex-1 relative overflow-auto bg-[#1e1e1e] canvas-dots flex flex-col items-center select-none ${
-        toolMode === 'hand' ? (isPanning ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default'
+        isHandActive ? (isPanning ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default'
       }`}
     >
       {/* Pan & Zoom Canvas Container */}
@@ -252,7 +292,7 @@ export const Canvas: React.FC<CanvasProps> = ({
           style={{ width: getViewportWidth(), maxWidth: '1440px' }}
           className="relative transition-all duration-200"
           onClick={(e) => {
-            if (toolMode === 'hand') return;
+            if (isHandActive) return;
             e.stopPropagation();
           }}
         >
@@ -267,10 +307,10 @@ export const Canvas: React.FC<CanvasProps> = ({
             </span>
           </div>
 
-          {/* Canvas Artboard Body - When toolMode is 'hand', disable pointer events to enable panning everywhere without selecting */}
+          {/* Canvas Artboard Body - When isHandActive is true, disable pointer events to enable panning everywhere without selecting */}
           <div
             className={`min-h-[800px] w-full bg-[#121214] border border-[#2e2e32] rounded-xl shadow-2xl relative transition-shadow ${
-              toolMode === 'hand' ? 'pointer-events-none' : ''
+              isHandActive ? 'pointer-events-none' : ''
             } ${isPreviewMode ? '' : 'hover:border-[#3e3e42]'}`}
           >
             {tree.length === 0 ? (
@@ -287,7 +327,7 @@ export const Canvas: React.FC<CanvasProps> = ({
                     projectType={projectType}
                     selectedId={selectedId}
                     onSelectNode={onSelectNode}
-                    toolMode={toolMode}
+                    toolMode={isHandActive ? 'hand' : toolMode}
                     isPreviewMode={isPreviewMode}
                     dropTargetId={dropTargetId}
                     dropPosition={dropPosition}
@@ -307,7 +347,7 @@ export const Canvas: React.FC<CanvasProps> = ({
           </div>
 
           {/* Floating Contextual Pill for Selected Node - Hidden in Hand Tool mode */}
-          {selectedId && !isPreviewMode && toolMode !== 'hand' && (
+          {selectedId && !isPreviewMode && !isHandActive && (
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-[#252526] border border-[#383838] px-3 py-1.5 rounded-full shadow-2xl flex items-center gap-2 text-xs text-zinc-200">
               <span className="text-[11px] font-mono text-[#0d99ff] border-r border-[#383838] pr-2">
                 {selectedId}
