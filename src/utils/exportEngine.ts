@@ -461,7 +461,10 @@ function generateReactShadcn(nodes: CanvasNode[], usedSvgs: Map<string, any>, in
         case 'calendar':
           return `${indent}<Calendar mode="single" className="rounded-md border border-zinc-800" id="${node.id}"${styleAttr} />`;
         case 'card':
-          return `${indent}<Card id="${node.id}"${styleAttr}>\n${indent}  <CardHeader>\n${indent}    <CardTitle>${node.props.title || 'Card Title'}</CardTitle>\n${indent}    <CardDescription>${node.props.subtitle || ''}</CardDescription>\n${indent}  </CardHeader>\n${indent}  <CardContent className="space-y-3">${childrenCode}</CardContent>\n${indent}</Card>`;
+          if (node.children && node.children.length > 0) {
+            return `${indent}<Card id="${node.id}"${styleAttr}>\n${indent}  <CardContent className="p-6 space-y-3">${childrenCode}</CardContent>\n${indent}</Card>`;
+          }
+          return `${indent}<Card id="${node.id}"${styleAttr}>\n${indent}  <CardHeader>\n${indent}    <CardTitle>${node.props.title || 'Card Title'}</CardTitle>\n${indent}    <CardDescription>${node.props.subtitle || ''}</CardDescription>\n${indent}  </CardHeader>\n${indent}  <CardContent className="space-y-3"></CardContent>\n${indent}</Card>`;
         case 'carousel':
           return `${indent}<Carousel className="w-full max-w-sm" id="${node.id}">\n${indent}  <CarouselContent>\n${indent}    <CarouselItem><div className="p-1"><Card><CardContent className="flex aspect-video items-center justify-center p-6"><span className="text-2xl font-semibold">Slide 1</span></CardContent></Card></div></CarouselItem>\n${indent}    <CarouselItem><div className="p-1"><Card><CardContent className="flex aspect-video items-center justify-center p-6"><span className="text-2xl font-semibold">Slide 2</span></CardContent></Card></div></CarouselItem>\n${indent}  </CarouselContent>\n${indent}  <CarouselPrevious />\n${indent}  <CarouselNext />\n${indent}</Carousel>`;
         case 'chart':
@@ -472,6 +475,9 @@ function generateReactShadcn(nodes: CanvasNode[], usedSvgs: Map<string, any>, in
 
         // Feedback (Catálogo A: Shadcn)
         case 'alert':
+          if (node.children && node.children.length > 0) {
+            return `${indent}<Alert id="${node.id}"${styleAttr}>${childrenCode}</Alert>`;
+          }
           return `${indent}<Alert id="${node.id}"${styleAttr}>\n${indent}  <AlertTitle>${node.props.title || 'Attention'}</AlertTitle>\n${indent}  <AlertDescription>${node.props.text || node.props.description || 'Important notification message.'}</AlertDescription>\n${indent}</Alert>`;
         case 'progress':
           return `${indent}<Progress value={${node.props.value || 50}} id="${node.id}"${styleAttr} />`;
@@ -585,6 +591,9 @@ function generateHtmlInlineSvg(nodes: CanvasNode[], indent = '      ', isEsp32 =
         case 'accordion':
           return `${indent}<div class="space-y-2" id="${node.id}"${styleAttr}>\n${indent}  <div class="border border-zinc-800 rounded-lg p-3 bg-zinc-900/60">\n${indent}    <button class="font-medium text-sm text-zinc-200 w-full flex justify-between items-center" type="button"><span>${node.props.title || 'Accordion Title'}</span><span>↓</span></button>\n${indent}    <div class="pt-2 text-xs text-zinc-400">${node.props.content || 'Contenido del acordeón.'}</div>\n${indent}  </div>\n${indent}</div>`;
         case 'alert':
+          if (node.children && node.children.length > 0) {
+            return `${indent}<div class="p-4 rounded-lg bg-blue-950/40 border border-blue-800 text-blue-200 text-sm" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
+          }
           return `${indent}<div class="p-4 rounded-lg bg-blue-950/40 border border-blue-800 text-blue-200 text-sm flex items-center justify-between" id="${node.id}"${styleAttr}><span>${node.props.text || 'Alerta informativa Preline UI'}</span></div>`;
         case 'avatar':
           return `${indent}<img class="inline-block size-10 rounded-full ring-2 ring-zinc-800 object-cover" src="${node.props.src || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'}" alt="${node.props.label || 'Avatar'}" id="${node.id}"${styleAttr}>`;
@@ -609,7 +618,10 @@ function generateHtmlInlineSvg(nodes: CanvasNode[], indent = '      ', isEsp32 =
         case 'button_group':
           return `${indent}<div class="inline-flex rounded-lg shadow-sm" role="group" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
         case 'card':
-          return `${indent}<div class="flex flex-col bg-zinc-900 border border-zinc-800 shadow-sm rounded-xl p-4 md:p-5" id="${node.id}"${styleAttr}>\n${indent}  <h3 class="text-base font-bold text-white mb-1">${node.props.title || 'Card Title'}</h3>\n${indent}  <p class="text-xs text-zinc-400 mb-3">${node.props.subtitle || ''}</p>\n${indent}  <div class="space-y-2">${childrenCode}</div>\n${indent}</div>`;
+          if (node.children && node.children.length > 0) {
+            return `${indent}<div class="flex flex-col bg-zinc-900 border border-zinc-800 shadow-sm rounded-xl p-4 md:p-5" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
+          }
+          return `${indent}<div class="flex flex-col bg-zinc-900 border border-zinc-800 shadow-sm rounded-xl p-4 md:p-5" id="${node.id}"${styleAttr}>\n${indent}  <h3 class="text-base font-bold text-white mb-1">${node.props.title || 'Card Title'}</h3>\n${indent}  <p class="text-xs text-zinc-400 mb-3">${node.props.subtitle || ''}</p>\n${indent}</div>`;
         case 'chat_bubble':
           return `${indent}<div class="flex gap-2.5 max-w-md p-3 rounded-2xl bg-zinc-800 text-zinc-100 text-sm" id="${node.id}"${styleAttr}>${node.props.text || 'Mensaje de chat'}</div>`;
         case 'carousel':

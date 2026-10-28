@@ -77,9 +77,14 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
 El panel lateral de componentes (`LeftSidebar`) se adapta dinámicamente según el tipo de proyecto activo (`projectType`), cargando estrictamente el catálogo correspondiente:
 
 ### Catálogo A: Para Frameworks (React / Vue - Basado en Shadcn/ui)
-Si el proyecto es de tipo Framework (`projectType === 'react' | 'framework'`), se cargan **únicamente** los siguientes componentes agrupados en sus 5 categorías oficiales:
+Si el proyecto es de tipo Framework (`projectType === 'react' | 'framework'`), se cargan los componentes agrupados en sus categorías:
 
-1. **Layout & Structure**:
+1. **Layout & Structure (Contenedores y Disposición)**:
+   - `Container`: Contenedor centrado responsivo con ancho máximo configurable (`max-w-7xl mx-auto px-4`)
+   - `Grid`: Cuadrícula auto-layout configurable en 2, 3 o 4 columnas
+   - `Columns`: Disposición horizontal flexible con separación proporcional (`flex gap-4`)
+   - `Stack (Flexbox)`: Disposición vertical u horizontal de elementos con espaciado uniforme
+   - `Section`: Sección semántica con espaciado vertical para bloques de página
    - `Aspect Ratio`: Frame de proporción fija (16:9, 4:3, 1:1)
    - `Collapsible`: Panel colapsable/expandible interactivo
    - `Resizable`: Grupo de paneles divisores ajustables con manejador
@@ -87,7 +92,18 @@ Si el proyecto es de tipo Framework (`projectType === 'react' | 'framework'`), s
    - `Separator`: Divisor horizontal o vertical de sección
    - `Skeleton`: Marcador de posición animado para estados de carga
 
-2. **Forms & Inputs**:
+2. **Basic HTML & Typography (Átomos HTML Universales)**:
+   - `Heading 1 (H1)`: Título principal de página (32px Bold, `<h1 >`)
+   - `Heading 2 (H2)`: Título de sección (24px Bold, `<h2 >`)
+   - `Heading 3 (H3)`: Subtítulo o encabezado de bloque (20px SemiBold, `<h3 >`)
+   - `Paragraph (P)`: Párrafo de texto descriptivo adaptable (14px, `<p >`)
+   - `Text Span`: Texto en línea estirable para acentos o etiquetas (`<span >`)
+   - `Link (Enlace)`: Enlace web interactivo con estado hover (`<a >`)
+   - `Blockquote (Cita)`: Cita en bloque estilizada con borde lateral
+   - `Image (Imagen)`: Elemento de imagen responsiva con bordes redondeados (`<img >`)
+   - `Divider (<hr>)`: Línea divisoria semántica horizontal
+
+3. **Forms & Inputs**:
    - `Button`: Botón con variantes Shadcn (default, outline, ghost, secondary, destructive, link)
    - `Checkbox`: Casilla de verificación con estado booleano
    - `Form`: Estructura contenedora de formulario con espaciado uniforme
@@ -101,28 +117,28 @@ Si el proyecto es de tipo Framework (`projectType === 'react' | 'framework'`), s
    - `Textarea`: Área de texto multilinea para mensajes largos
    - `Toggle / Toggle Group`: Botones de pulsación de estado persistente
 
-3. **Data Display**:
+4. **Data Display**:
    - `Avatar`: Imagen de perfil de usuario con fallback tipográfico
    - `Badge`: Píldora de estado o etiqueta contextual
    - `Calendar`: Vista de selector de calendario mensual
-   - `Card`: Tarjeta con CardHeader, CardTitle, CardDescription y CardContent
+   - `Card`: Tarjeta compuesta basada en Atomic Design con título, descripción y botones hijos seleccionables
    - `Carousel`: Carrusel de diapositivas con botones de navegación previa/siguiente
    - `Chart`: Vista de contenedor para gráficos y visualización de datos
    - `Data Table`: Tabla de datos estructurada con paginación y cabeceras
    - `Table`: Tabla semántica con TableHeader, TableRow, TableHead y TableCell
 
-4. **Feedback**:
-   - `Alert`: Notificación contextual con AlertTitle y AlertDescription
+5. **Feedback**:
+   - `Alert`: Notificación contextual compuesta con título y descripción independientes
    - `Progress`: Barra de progreso de porcentaje con valor dinámico
    - `Sonner / Toast`: Disparador de notificaciones toast flotantes
    - `Skeleton`: Esqueleto de carga para bloques de contenido
 
-5. **Overlays & Navigation**:
+6. **Overlays & Navigation**:
    - `Accordion`: Lista colapsable con AccordionTrigger y AccordionContent
    - `Alert Dialog`: Modal de confirmación crítica no descartable accidentalmente
    - `Command`: Paleta de comandos y buscador rápido con atajos
    - `Context Menu`: Menú flotante al hacer clic derecho
-   - `Dialog (Modal)`: Ventana modal emergente con diálogo interactivo
+   - `Dialog (Modal)`: Ventana modal emergente compuesta con título, descripción y acciones hijas
    - `Drawer`: Panel deslizante inferior o lateral para dispositivos
    - `Dropdown Menu`: Menú desplegable anclado a un botón disparador
    - `Hover Card`: Tarjeta emergente que aparece al pasar el cursor
@@ -137,14 +153,19 @@ Si el proyecto es de tipo Framework (`projectType === 'react' | 'framework'`), s
 ---
 
 ### Catálogo B: Para HTML / ESP32 (HTML Plano con Clases de Tailwind CSS - Basado en Preline UI)
-Si el proyecto es de tipo HTML o ESP32 (`projectType === 'html_css' | 'esp32'`), se cargan **únicamente** los siguientes componentes agrupados en sus 7 categorías oficiales:
+Si el proyecto es de tipo HTML o ESP32 (`projectType === 'html_css' | 'esp32'`), se cargan los componentes agrupados en sus 7 categorías oficiales:
 
 1. **Layout & Content**:
    - `Container`: Contenedor responsivo centrado (`max-w-7xl mx-auto px-4`)
    - `Columns`: Disposición en columnas responsivas (`grid grid-cols-1 md:grid-cols-X`)
    - `Grid`: Cuadrícula con espaciado configurable
    - `Layout Splitter`: Divisor de diseño horizontal/vertical con bordes sutiles
-   - `Typography`: Encabezados H1-H6 y párrafos con clases de texto de Tailwind
+   - `Heading 1 (H1)`: Título principal H1 (32px Bold)
+   - `Heading 2 (H2)`: Título de sección H2 (24px Bold)
+   - `Heading 3 (H3)`: Subtítulo o bloque H3 (20px SemiBold)
+   - `Paragraph (P)`: Párrafo de texto con contenido descriptivo y legible
+   - `Text Span`: Texto en línea (`span`) para inline styling
+   - `Typography`: Bloque tipográfico semántico con selector dinámico de etiquetas HTML
    - `Images`: Imágenes responsivas con bordes redondeados y modo fit
    - `Links`: Enlaces estilizados con transiciones y colores de acento
    - `Dividers and <hr>`: Separadores horizontales con estilo sutil Preline
@@ -153,14 +174,14 @@ Si el proyecto es de tipo HTML o ESP32 (`projectType === 'html_css' | 'esp32'`),
 
 2. **Base Components**:
    - `Accordion`: Acordeones expandibles Preline (`hs-accordion`)
-   - `Alerts`: Alertas con bordes y fondos translúcidos
+   - `Alerts`: Alertas compuestas basadas en Atomic Design con título y descripción independientes
    - `Avatar`: Avatares circulares o cuadrados con aro de contraste
    - `Avatar Group`: Conjunto apilado de avatares con superposición negativa
    - `Badge`: Etiquetas redondeadas de estado Preline
    - `Blockquote`: Citas destacadas con barra lateral azul
    - `Buttons`: Botones con variantes sólida, outline, ghost y soft
    - `Button Group`: Grupo de botones agrupados contiguos
-   - `Cards`: Tarjetas Preline con borde, sombra y contenedor de contenido
+   - `Cards`: Tarjetas compuestas con título, descripción y botones de acción hijos
    - `Chat Bubbles`: Globos de conversación de mensajería
    - `Carousel`: Carrusel Preline para banners y medios
    - `Collapse`: Secciones desplegables simples
@@ -181,7 +202,7 @@ Si el proyecto es de tipo HTML o ESP32 (`projectType === 'html_css' | 'esp32'`),
    - `Marquee`: Texto continuo o marquesina deslizante
 
 3. **Navigations**:
-   - `Navbar`: Barra de navegación adaptable con branding y enlaces
+   - `Navbar`: Barra de navegación compuesta con logo, enlaces interactivos y botón de acción
    - `Mega Menu`: Menú desplegable amplio para múltiples columnas de navegación
    - `Navs`: Enlaces de navegación tipo pastilla o subrayado
    - `Tabs`: Pestañas interactivas de cambio de vista
@@ -190,6 +211,31 @@ Si el proyecto es de tipo HTML o ESP32 (`projectType === 'html_css' | 'esp32'`),
    - `Breadcrumb`: Miga de pan con separadores
    - `Pagination`: Paginador con botones numéricos y anterior/siguiente
    - `Stepper`: Indicador visual de progreso paso a paso
+
+---
+
+### 2.1 ARQUITECTURA DE ATOMIC DESIGN Y COMPONENTES COMPUESTOS PERSONALIZABLES
+
+Tanto en el catálogo de Frameworks (Shadcn/ui) como en el de HTML / ESP32 (Preline UI), los componentes complejos se rigen bajo los principios de **Atomic Design**:
+
+1. **Jerarquía Átomos, Moléculas y Organismos**:
+   - **Átomos**: Elementos individuales básicos como `Heading (H1-H3)`, `Paragraph (P)`, `Text Span`, `Button`, `Link`, `Badge`, `Image` y `Divider`.
+   - **Moléculas y Organismos (Componentes Compuestos)**: Componentes estructurados como `Card`, `Alert`, `Dialog / Modal` y `Navbar`.
+
+2. **Sub-elementos Hijos Seleccionables e Independientes (`defaultChildren`)**:
+   - Al insertar un componente compuesto (por ejemplo, una `Card`), este se descompone en un árbol de nodos hijos reales (`defaultChildren`):
+     - `Card Title (H3)`: Nodo tipográfico individual.
+     - `Card Description (P)`: Nodo de párrafo descriptivo individual.
+     - `Card Actions (Container)`: Contenedor flex con botones hijos primario y secundario.
+   - **Selección Directa en Canvas y Capas**: Al hacer clic sobre el título dentro de una tarjeta en el lienzo, la propagación del evento se detiene (`e.stopPropagation()`) y se selecciona exclusivamente el título, mostrando su bounding box y etiqueta pill correspondiente. El usuario también puede seleccionar el elemento hijo desde el árbol de capas (`LeftSidebar`).
+   - **Personalización Completa en el Inspector de Diseño**: Al seleccionar cualquier sub-elemento, el panel lateral derecho (`RightSidebar`) activa todos sus controles para ese nodo específico: cambio de texto, selector de etiqueta HTML (`h1`-`h6`, `p`, `span`), tamaño de fuente, peso tipográfico, color de texto, espaciados (padding y margin), alineación, bordes y sombras.
+   - **Selección del Contenedor Padre**: Para estilizar el fondo, bordes o paddings del componente completo (ej. la tarjeta o el modal), el usuario puede hacer clic en el margen/área vacía del contenedor o seleccionarlo en el panel de capas.
+
+3. **Instanciación con IDs Únicos Recursivos (`instantiateNodeWithFreshIds`)**:
+   - Para evitar colisiones de identificadores cuando se insertan múltiples instancias de un mismo componente compuesto, el motor de inserción recorre recursivamente el árbol de `defaultChildren` asignando IDs aleatorios únicos (`${type}_...`) a cada sub-elemento, preservando íntegramente sus propiedades, estilos y etiquetas.
+
+4. **Exportación Limpia y No Duplicada**:
+   - Los generadores de código (`nodeToJSX` y `nodeToPrelineHtml`) detectan si un componente compuesto contiene nodos hijos. Si contiene `children`, emiten directamente el markup de los sub-elementos hijos sin generar cabeceras estáticas duplicadas, garantizando un código de salida 100% fiel al diseño visual y optimizado tanto para React 19 / JSX como para HTML5 con clases de Tailwind y firmware ESP32 en C++.
 
 4. **Basic Forms**:
    - `Input`: Entrada de texto con borde Preline y foco interactivo

@@ -22,7 +22,7 @@ interface CanvasProps {
   zoom: number;
   onZoom?: (newZoom: number | ((prev: number) => number)) => void;
   isPreviewMode: boolean;
-  onDropAsset: (componentType: string, targetId: string | null, position: DropPosition) => void;
+  onDropAsset: (componentType: string, targetId: string | null, position: DropPosition, componentName?: string) => void;
   onReorderNode: (draggedId: string, targetId: string, position: DropPosition) => void;
   onDuplicateNode: (id: string) => void;
   onDeleteNode: (id: string) => void;
@@ -328,7 +328,7 @@ export const Canvas: React.FC<CanvasProps> = ({
       const data = JSON.parse(dataStr);
 
       if (data.sourceType === 'catalog') {
-        onDropAsset(data.componentType, targetId, currentPosition);
+        onDropAsset(data.componentType, targetId, currentPosition, data.componentName);
       } else if (data.sourceType === 'canvas' && data.nodeId) {
         if (data.nodeId !== targetId) {
           onReorderNode(data.nodeId, targetId, currentPosition);
@@ -351,7 +351,7 @@ export const Canvas: React.FC<CanvasProps> = ({
       const data = JSON.parse(dataStr);
 
       if (data.sourceType === 'catalog') {
-        onDropAsset(data.componentType, null, 'after');
+        onDropAsset(data.componentType, null, 'after', data.componentName);
       } else if (data.sourceType === 'canvas' && data.nodeId) {
         // Move to root level (end of root tree)
         if (tree.length > 0) {

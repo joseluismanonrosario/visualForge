@@ -191,6 +191,16 @@ export function cloneNodeWithNewIds(node: CanvasNode): CanvasNode {
   };
 }
 
+export function instantiateNodeWithFreshIds(node: CanvasNode): CanvasNode {
+  const newId = `${node.type}_${Math.random().toString(36).substring(2, 9)}`;
+  return {
+    ...node,
+    id: newId,
+    name: node.name,
+    children: (node.children || []).map(instantiateNodeWithFreshIds),
+  };
+}
+
 export function reorderNodeInTree(
   nodes: CanvasNode[],
   draggedId: string,

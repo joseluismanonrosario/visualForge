@@ -17,6 +17,7 @@ import {
   insertNodeRelative,
   moveNodeSibling,
   cloneNodeWithNewIds,
+  instantiateNodeWithFreshIds,
   reorderNodeInTree,
 } from './utils/treeUtils';
 import { TopBar } from './components/TopBar';
@@ -83,6 +84,7 @@ export function App() {
     (compDef: ComponentDefinition, targetId?: string | null, position: DropPosition = 'inside') => {
       const newId = `${compDef.type}_${Math.random().toString(36).substring(2, 9)}`;
       const isFramework = projectType === 'react' || projectType === 'framework';
+      const instantiatedChildren = (compDef.defaultChildren || []).map(instantiateNodeWithFreshIds);
       const newNode: CanvasNode = {
         id: newId,
         name: compDef.name,
@@ -91,7 +93,7 @@ export function App() {
         isContainer: compDef.isContainer,
         style: { ...compDef.defaultStyle },
         props: { ...compDef.defaultProps, catalog: compDef.catalog || (isFramework ? 'shadcn' : 'preline') },
-        children: compDef.defaultChildren || [],
+        children: instantiatedChildren,
       };
 
       let newTree: CanvasNode[];
@@ -208,10 +210,12 @@ export function App() {
 
   // Drop catalog asset onto canvas
   const handleDropAsset = useCallback(
-    (componentType: string, targetId: string | null, position: DropPosition) => {
+    (componentType: string, targetId: string | null, position: DropPosition, componentName?: string) => {
       const activeCatalog = getCatalogForProject(projectType);
       const compDef =
+        (componentName ? activeCatalog.find((c) => c.name === componentName) : null) ||
         activeCatalog.find((c) => c.type === componentType) ||
+        (componentName ? COMPONENT_CATALOG.find((c) => c.name === componentName) : null) ||
         COMPONENT_CATALOG.find((c) => c.type === componentType);
       if (compDef) {
         handleInsertComponent(compDef, targetId, position);

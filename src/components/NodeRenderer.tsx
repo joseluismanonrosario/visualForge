@@ -722,13 +722,19 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
             onDrop={handleDrop}
             className={`${selectionClasses} ${dropClasses}`}
           >
-            {props.title && (
-              <div className="border-b border-zinc-800 pb-2 mb-2">
-                <h4 className="font-semibold text-zinc-100 text-sm">{props.title}</h4>
-                {props.subtitle && <p className="text-zinc-400 text-xs">{props.subtitle}</p>}
-              </div>
+            {node.children && node.children.length > 0 ? (
+              renderChildren()
+            ) : (
+              <>
+                {props.title && (
+                  <div className="border-b border-zinc-800 pb-2 mb-2">
+                    <h4 className="font-semibold text-zinc-100 text-sm">{props.title}</h4>
+                    {props.subtitle && <p className="text-zinc-400 text-xs">{props.subtitle}</p>}
+                  </div>
+                )}
+                {renderChildren()}
+              </>
             )}
-            {renderChildren()}
           </div>
         );
 
@@ -879,9 +885,22 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
       case 'alert':
       case 'alert_dialog':
         return (
-          <div id={node.id} style={style} onClick={handleClick} className={`${selectionClasses} p-3 rounded-lg border border-sky-500/30 bg-sky-500/10 text-sky-300 text-xs w-full`}>
-            <div className="font-semibold">{props.title || 'Aviso del Sistema'}</div>
-            <div className="text-sky-400/80 mt-0.5">{props.description || props.text || 'Operación completada con éxito.'}</div>
+          <div
+            id={node.id}
+            style={style}
+            onClick={handleClick}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+            className={`${selectionClasses} ${dropClasses} p-3 rounded-lg border border-sky-500/30 bg-sky-500/10 text-sky-300 text-xs w-full`}
+          >
+            {node.children && node.children.length > 0 ? (
+              renderChildren()
+            ) : (
+              <>
+                <div className="font-semibold">{props.title || 'Aviso del Sistema'}</div>
+                <div className="text-sky-400/80 mt-0.5">{props.description || props.text || 'Operación completada con éxito.'}</div>
+              </>
+            )}
           </div>
         );
 
@@ -934,17 +953,30 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
       case 'navbar':
       case 'mega_menu':
         return (
-          <header id={node.id} style={style} onClick={handleClick} onDragOver={handleDragOver} onDrop={handleDrop} className={`${selectionClasses} ${dropClasses} flex items-center justify-between`}>
-            <div className="font-bold text-sm text-white flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#0d99ff]" />
-              {props.brand || 'VisualForge'}
-            </div>
-            <nav className="flex items-center gap-4 text-xs text-zinc-300">
-              {(props.links || [{ label: 'Inicio', href: '#' }, { label: 'Panel', href: '#' }]).map((l: any, i: number) => (
-                <a key={i} href={l.href} className="hover:text-white">{l.label}</a>
-              ))}
-            </nav>
-            <div className="flex items-center gap-2">{renderChildren()}</div>
+          <header
+            id={node.id}
+            style={style}
+            onClick={handleClick}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+            className={`${selectionClasses} ${dropClasses} flex items-center justify-between w-full`}
+          >
+            {node.children && node.children.length > 0 ? (
+              renderChildren()
+            ) : (
+              <>
+                <div className="font-bold text-sm text-white flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#0d99ff]" />
+                  {props.brand || 'VisualForge'}
+                </div>
+                <nav className="flex items-center gap-4 text-xs text-zinc-300">
+                  {(props.links || [{ label: 'Inicio', href: '#' }, { label: 'Panel', href: '#' }]).map((l: any, i: number) => (
+                    <a key={i} href={l.href} className="hover:text-white">{l.label}</a>
+                  ))}
+                </nav>
+                <div className="flex items-center gap-2">{renderChildren()}</div>
+              </>
+            )}
           </header>
         );
 
@@ -1036,9 +1068,15 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
       case 'offcanvas':
         return (
           <div id={node.id} style={style} onClick={handleClick} onDragOver={handleDragOver} onDrop={handleDrop} className={`${selectionClasses} ${dropClasses} border border-zinc-800 rounded-xl p-4 bg-zinc-900 shadow-2xl w-full`}>
-            <div className="font-semibold text-sm text-white mb-1">{props.title || 'Ventana Modal'}</div>
-            <div className="text-xs text-zinc-400 mb-3">{props.subtitle || props.description || 'Contenido overlay.'}</div>
-            {renderChildren()}
+            {node.children && node.children.length > 0 ? (
+              renderChildren()
+            ) : (
+              <>
+                <div className="font-semibold text-sm text-white mb-1">{props.title || 'Ventana Modal'}</div>
+                <div className="text-xs text-zinc-400 mb-3">{props.subtitle || props.description || 'Contenido overlay.'}</div>
+                {renderChildren()}
+              </>
+            )}
           </div>
         );
 
