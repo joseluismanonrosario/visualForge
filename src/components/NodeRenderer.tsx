@@ -67,7 +67,16 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
   const isSelected = selectedId === node.id && !isPreviewMode && !isHandMode;
   const isDropTarget = dropTargetId === node.id && !isPreviewMode && !isHandMode && draggedNodeId !== node.id;
 
-  const style = node.style || {};
+  const style: React.CSSProperties = isPreviewMode
+    ? (node.style || {})
+    : {
+        ...(node.style || {}),
+        marginTop: undefined,
+        marginRight: undefined,
+        marginBottom: undefined,
+        marginLeft: undefined,
+        margin: undefined,
+      };
   const props = node.props || {};
 
   const isFramework =
@@ -1063,13 +1072,35 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
       // ==========================================
       // 6. CONTENT & MEDIA
       // ==========================================
-      case 'typography':
-        const Tag = props.as || 'p';
+      case 'typography': {
+        const Tag = (props.as as any) || 'p';
+        const defaultClass =
+          Tag === 'h1'
+            ? 'text-3xl font-bold tracking-tight text-white'
+            : Tag === 'h2'
+            ? 'text-2xl font-bold tracking-tight text-zinc-100'
+            : Tag === 'h3'
+            ? 'text-xl font-semibold text-zinc-100'
+            : Tag === 'h4'
+            ? 'text-lg font-semibold text-zinc-200'
+            : Tag === 'h5'
+            ? 'text-base font-semibold text-zinc-200'
+            : Tag === 'h6'
+            ? 'text-sm font-semibold text-zinc-300'
+            : Tag === 'blockquote'
+            ? 'italic border-l-4 border-blue-500 pl-3 text-zinc-300'
+            : Tag === 'code'
+            ? 'font-mono text-xs bg-zinc-800 px-1.5 py-0.5 rounded text-amber-300'
+            : Tag === 'span'
+            ? 'inline'
+            : 'text-zinc-200';
+
         return (
-          <Tag id={node.id} style={style} onClick={handleClick} className={`${selectionClasses}`}>
-            {props.text || 'Texto semántico'}
+          <Tag id={node.id} style={style} onClick={handleClick} className={`${selectionClasses} ${defaultClass}`}>
+            {props.text || (typeof Tag === 'string' && Tag.startsWith('h') ? `Encabezado ${Tag.toUpperCase()}` : 'Texto semántico')}
           </Tag>
         );
+      }
 
       case 'link':
         return (
@@ -1125,15 +1156,18 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
   }
 
   const isInline =
-    node.style?.display === 'inline-flex' ||
-    node.style?.display === 'inline-block' ||
-    node.type === 'button' ||
-    node.type === 'badge' ||
-    node.type === 'svg_icon' ||
-    node.type === 'fontawesome_icon' ||
-    node.type === 'link' ||
-    node.type === 'kbd' ||
-    node.type === 'legend_indicator';
+    node.style?.display === 'block'
+      ? false
+      : node.style?.display === 'inline-flex' ||
+        node.style?.display === 'inline-block' ||
+        node.style?.display === 'inline' ||
+        node.type === 'button' ||
+        node.type === 'badge' ||
+        node.type === 'svg_icon' ||
+        node.type === 'fontawesome_icon' ||
+        node.type === 'link' ||
+        node.type === 'kbd' ||
+        node.type === 'legend_indicator';
 
   return (
     <div
@@ -1146,8 +1180,14 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
       onDrop={handleDrop}
       onClick={handleClick}
       style={{
+        ...(node.style?.marginTop ? { marginTop: node.style.marginTop } : {}),
+        ...(node.style?.marginRight ? { marginRight: node.style.marginRight } : {}),
+        ...(node.style?.marginBottom ? { marginBottom: node.style.marginBottom } : {}),
+        ...(node.style?.marginLeft ? { marginLeft: node.style.marginLeft } : {}),
+        ...(node.style?.margin ? { margin: node.style.margin } : {}),
         ...(node.style?.width && node.style.width !== '100%' ? { width: node.style.width } : {}),
         ...(node.style?.maxWidth ? { maxWidth: node.style.maxWidth } : {}),
+        ...(node.style?.minWidth ? { minWidth: node.style.minWidth } : {}),
         ...(node.style?.flex ? { flex: node.style.flex } : {}),
       }}
       className={`relative group/node transition-all duration-75 ${

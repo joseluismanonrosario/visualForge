@@ -274,30 +274,89 @@ El lienzo implementa un sistema integral de arrastre, reordenamiento y desplazam
 
 ---
 
-## 4. AUTO-LAYOUT Y MATRIZ DE ALINEACIÓN (FIGMA STYLE)
+## 4. INSPECTOR DE DISEÑO Y PROPIEDADES ESTILO FIGMA (ELEMENTOS DE BLOQUE, TEXTO, TIPOGRAFÍA, BOX MODEL, MÁRGENES, PADDING Y RELLENOS)
 
-En lugar de selectores genéricos, el panel de propiedades cuenta con un control de **Auto-Layout / Alineación** idéntico al de Figma:
+El panel lateral derecho (`RightSidebar`) cuenta con un inspector de diseño exhaustivo de alta fidelidad idéntico a Figma, permitiendo modificar en tiempo real tanto las propiedades semánticas y de contenido de cada componente como sus estilos CSS completos:
 
-1. **Matriz 3x3 de Alineación de Contenido**:
-   - Caja interactiva de 9 puntos para definir simultáneamente `justifyContent` y `alignItems`:
-     - `Top-Left`, `Top-Center`, `Top-Right`
-     - `Center-Left`, `Center-Center`, `Center-Right`
-     - `Bottom-Left`, `Bottom-Center`, `Bottom-Right`
-2. **Dimensionamiento y Restricciones (Constraints & Resizing)**:
-   - **Horizontal Resizing**:
-     - `Fixed`: Ancho fijo en píxeles o porcentaje.
-     - `Hug Contents`: Adaptarse al contenido (`width: max-content` / `auto`).
-     - `Fill Container`: Ocupar todo el ancho disponible (`width: 100%` / `flex-1`).
-   - **Vertical Resizing**:
-     - `Fixed`: Alto fijo.
-     - `Hug Contents`: Alto según contenido.
-     - `Fill Container`: Ocupar todo el alto disponible (`height: 100%`).
-3. **Dirección y Espaciado (Direction & Spacing)**:
-   - Conmutador de dirección: **Horizontal (Row)** o **Vertical (Column)**.
-   - Campo numérico para `Gap` (espacio entre elementos).
-   - Control de Padding conmutador:
-     - Padding uniforme (un solo valor).
-     - Padding independiente en 4 lados: `Top`, `Right`, `Bottom`, `Left`.
+### 1. Identificación Semántica y Propiedades Contextuales del Elemento
+Al seleccionar cualquier elemento en el lienzo o en el árbol de capas, el inspector muestra en la cabecera el nombre del componente, su tipo y una insignia de etiqueta HTML:
+- **Elementos de Bloque y Encabezados HTML (`h1`-`h6`, `p`, `span`, `blockquote`, `div`, `code`)**:
+  - **Selector de Etiqueta HTML**: Menú desplegable organizado por grupos (*Encabezados*: `h1`, `h2`, `h3`, `h4`, `h5`, `h6`; *Texto & Bloques*: `p`, `span`, `blockquote`, `div`, `code`).
+  - **Píldoras Rápidas de Jerarquía**: Botones de 1 clic para conmutar al instante entre `H1`, `H2`, `H3`, `H4`, `P`, `Span` y `Quote`.
+  - **Escalado Tipográfico Inteligente**: Al cambiar de etiqueta, el sistema adapta automáticamente el tamaño y peso de la jerarquía (ej. `h1` a 32px Bold, `h2` a 24px Bold, `p` a 15px Regular) si el usuario aún no ha fijado un tamaño personalizado.
+  - **Editor de Contenido Textual**: Área de texto multilínea para editar directamente el texto (`props.text`) con actualización inmediata en el lienzo.
+- **Componentes Específicos e Interactivos**:
+  - **Botones y Badges (`button`, `badge`)**: Edición del texto de etiqueta (`props.label`) y selector de variantes visuales (*Default*, *Secondary*, *Outline*, *Destructive*, *Ghost*, *Link*).
+  - **Enlaces (`link`)**: Edición del texto (`props.label`), dirección URL (`props.href`) y destino de apertura (`props.target`: `_self` o `_blank`).
+  - **Imágenes (`image`)**: Entrada de URL de imagen (`props.src`), texto alternativo (`props.alt`) y modo de ajuste visual (`props.objectFit`: *cover*, *contain*, *fill*, *none*).
+  - **Campos de Formulario (`input`, `textarea`, `searchbox`)**: Edición de marcador de posición (`props.placeholder`) y valor inicial (`props.value`).
+  - **Tarjetas, Alertas y Colapsables (`card`, `alert`, `collapsible`)**: Edición de título (`props.title`) y descripción multilínea (`props.description`).
+  - **Teclado (`kbd`)**: Configuración de combinación de teclas (`props.keys`).
+  - **Interruptores y Deslizadores (`switch`, `slider`)**: Etiqueta, valores mínimo, máximo y valor activo.
+  - **Iconos Vectoriales (`svg_icon`, `fontawesome_icon`)**: Integración directa con el explorador universal Iconify Offline (244 colecciones y +418.000 iconos), tamaño, color de trazo y relleno.
+
+---
+
+### 2. Tipografía de Alta Fidelidad Estilo Figma (Typography Panel)
+Control completo de todas las propiedades tipográficas estándar para cualquier elemento seleccionado:
+- **Color de Texto (`color`)**: Selector visual cromático (`<input type="color">`), entrada manual hexadecimal y 10 muestras de color rápidas (*Blanco*, *Zinc Claro*, *Zinc Medio*, *Gris*, *Figma Blue*, *Violeta*, *Esmeralda*, *Ámbar*, *Rojo*, *Oscuro*), además de botón *Clear* para heredar el color.
+- **Tamaño de Fuente (`fontSize`)**: Campo de texto con unidad en píxeles y barra de 8 píldoras de acceso rápido (`12px`, `14px`, `16px`, `18px`, `20px`, `24px`, `32px`, `40px`).
+- **Peso de Fuente (`fontWeight`)**: Menú desplegable con 9 escalas numéricas (*Thin 100*, *Extra-Light 200*, *Light 300*, *Regular 400*, *Medium 500*, *Semi-Bold 600*, *Bold 700*, *Extra-Bold 800*, *Black 900*).
+- **Interlineado (`lineHeight`)**: Control de espaciado entre líneas (ej. `1.2`, `1.5`, `1.75`, `24px`).
+- **Tracking / Letter Spacing (`letterSpacing`)**: Control de espaciado entre caracteres (ej. `-0.05em`, `0px`, `0.05em`, `1px`).
+- **Alineación de Texto (`textAlign`)**: 4 botones iconográficos Figma (`AlignLeft`, `AlignCenter`, `AlignRight`, `AlignJustify`) con resaltado azul del estado activo.
+- **Transformación de Texto (`textTransform`)**: 4 botones de texto (*Aa Normal*, *AA Mayúsculas*, *aa Minúsculas*, *Ab Capitalizar*).
+- **Decoración de Texto (`textDecoration`)**: 3 botones de formato (*Ninguna*, *Subrayado*, *Tachado*).
+
+---
+
+### 3. Sistema de Espaciado y Box Model Estilo Figma (Padding, Márgenes y Gap)
+Control intuitivo del modelo de caja de CSS con conmutadores de vinculación uniforme e independiente:
+- **Padding (Relleno Interior)**:
+  - Botón de enlace (`Link2` / `Unlink`) para alternar entre modo uniforme y 4 lados independientes.
+  - *Modo Uniforme*: Entrada única que actualiza simultáneamente los 4 lados (`paddingTop`, `paddingRight`, `paddingBottom`, `paddingLeft`) con píldoras de valores rápidos (`0px`, `8px`, `12px`, `16px`, `24px`).
+  - *Modo Independiente*: Cuadrícula de 4 entradas dedicadas (`Top`, `Right`, `Bottom`, `Left`).
+- **Margin (Márgenes Exteriores)**:
+  - Botón de enlace (`Link2` / `Unlink`) para alternar entre modo uniforme y 4 lados independientes.
+  - *Modo Uniforme*: Entrada única que actualiza los 4 márgenes (`marginTop`, `marginRight`, `marginBottom`, `marginLeft`) con píldoras rápidas (`0px`, `8px`, `16px`, `24px`, `32px`).
+  - *Modo Independiente*: Cuadrícula de 4 entradas dedicadas (`Top`, `Right`, `Bottom`, `Left`).
+  - **Botón Auto Center**: Aplica `marginLeft: auto; marginRight: auto;` para centrado horizontal automático.
+- **Item Gap (`gap`)**: Campo numérico y píldoras rápidas (`0px`, `8px`, `16px`, `24px`) para separar elementos hijos en contenedores flexibles o grids.
+
+---
+
+### 4. Disposición y Dimensionamiento (Layout & Dimensions)
+- **Modo Display**: Selector desplegable con soporte para `block` (bloque completo), `flex` (auto-layout flexible), `inline-block` (en línea dimensionable), `inline-flex`, `grid` y `inline`.
+- **Dimensiones W & H**: Entradas directas para ancho (`width`) y alto (`height`).
+- **Restricciones de Ajuste**:
+  - `Hug Contents`: Ajusta el ancho al contenido (`width: auto`).
+  - `Fill Container`: Ocupa todo el contenedor padre (`width: 100%`).
+- **Límites de Tamaño**: Entradas para ancho mínimo (`minWidth`) y ancho máximo (`maxWidth`).
+- **Auto-Layout y Matriz 3x3 (Flexbox)**:
+  - Selector de dirección: Horizontal (*Row*) o Vertical (*Column*).
+  - Barra rápida de alineación en 6 direcciones (*Izquierda*, *Centro Horizontal*, *Derecha*, *Arriba*, *Centro Vertical*, *Abajo*).
+  - Matriz interactiva de 9 puntos para fijar simultáneamente `alignItems` y `justifyContent`.
+
+---
+
+### 5. Relleno, Fondos y Opacidad (Fill & Background)
+- **Color de Fondo (`backgroundColor`)**: Selector cromático, entrada hexadecimal y 8 muestras de fondo (*Transparente*, *Zinc 950*, *Zinc 900*, *Zinc 800*, *Figma Blue*, *Esmeralda*, *Rojo*, *Blanco*), además de botón *Clear*.
+- **Deslizador de Opacidad (`opacity`)**: Rango de 0% a 100% con visualización porcentual continua en tiempo real.
+
+---
+
+### 6. Trazo, Bordes y Esquinas (Stroke & Border)
+- **Radio de Esquinas (`borderRadius`)**: Entrada directa y 6 píldoras rápidas (`0px`, `4px`, `8px`, `12px`, `16px`, `9999px Pill`).
+- **Grosor de Borde (`borderWidth`)**: Entrada directa en píxeles.
+- **Estilo de Borde (`borderStyle`)**: Selector desplegable (*Solid*, *Dashed*, *Dotted*, *None*).
+- **Color de Borde (`borderColor`)**: Selector visual cromático con entrada hexadecimal y botón *Clear*.
+- **Sombra de Caja (`boxShadow`)**: Menú desplegable con preajustes de sombra calibrados (*Ninguna*, *Small*, *Medium*, *Large*, *Extra Large*, *Blue Glow*, *Emerald Glow*).
+
+---
+
+### 7. Fidelidad Visual en el Lienzo y Prevención de Desfase de Márgenes
+- En el lienzo (`NodeRenderer`), cuando un elemento no está en modo vista previa, los márgenes exteriores se aplican al contenedor interactivo exterior del nodo. Esto garantiza que la pastilla de agarre Figma (`GripVertical`) y el marco azul de selección (`ring-2 ring-[#0d99ff]`) se ajusten con precisión milimétrica al contorno del componente sin duplicar márgenes ni desplazar visualmente el recuadro de selección.
+- En modo vista previa (`Preview`) y en la exportación de código, los estilos se consolidan fielmente en línea o mediante objetos JSX.
 
 ---
 

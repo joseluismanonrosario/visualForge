@@ -27,6 +27,23 @@ import {
   Cpu,
   Zap,
   Radio,
+  Link2,
+  Unlink,
+  Heading,
+  Heading1,
+  Heading2,
+  Heading3,
+  Baseline,
+  Box,
+  Underline,
+  Strikethrough,
+  ExternalLink,
+  Image as ImageIcon,
+  Tag,
+  Split,
+  Eye,
+  EyeOff,
+  Move,
 } from 'lucide-react';
 import { CanvasNode, ProjectType, GpioConfig, GpioAction, GpioCommMode } from '../types';
 import {
@@ -91,6 +108,8 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   const [showIconModal, setShowIconModal] = useState(false);
   const [iconSearch, setIconSearch] = useState('');
   const [copiedCss, setCopiedCss] = useState(false);
+  const [paddingLinked, setPaddingLinked] = useState(true);
+  const [marginLinked, setMarginLinked] = useState(true);
 
   // Available icon libraries based on active project type
   const availableLibraries = getLibrariesForWorkflow(projectType);
@@ -132,6 +151,21 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
     } else if (selectedNode?.props?.iconName) {
       const p = parseIconIdentifier(selectedNode.props.iconName);
       if (p.prefix) setSelectedCollection(p.prefix);
+    }
+
+    if (selectedNode?.style) {
+      const s = selectedNode.style;
+      const pDiff =
+        (s.paddingTop && s.paddingRight && s.paddingTop !== s.paddingRight) ||
+        (s.paddingTop && s.paddingBottom && s.paddingTop !== s.paddingBottom) ||
+        (s.paddingTop && s.paddingLeft && s.paddingTop !== s.paddingLeft);
+      if (pDiff) setPaddingLinked(false);
+
+      const mDiff =
+        (s.marginTop && s.marginRight && s.marginTop !== s.marginRight) ||
+        (s.marginTop && s.marginBottom && s.marginTop !== s.marginBottom) ||
+        (s.marginTop && s.marginLeft && s.marginTop !== s.marginLeft);
+      if (mDiff) setMarginLinked(false);
     }
   }, [selectedNode?.id, selectedNode?.props?.iconName, selectedNode?.props?.prefix]);
 
@@ -255,6 +289,30 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
       case 'bottom':
         onUpdateStyle({ justifyContent: 'flex-end' });
         break;
+    }
+  };
+
+  const handleTagChange = (newTag: string) => {
+    onUpdateProps({ as: newTag });
+    const currentSize = style.fontSize || '';
+    const isStandard = !currentSize || Boolean(currentSize.match(/^(12|13|14|15|16|18|20|24|32)px$/));
+    if (isStandard) {
+      const tagStyles: Record<string, any> = {
+        h1: { fontSize: '32px', fontWeight: '700', lineHeight: '1.2' },
+        h2: { fontSize: '24px', fontWeight: '700', lineHeight: '1.25' },
+        h3: { fontSize: '20px', fontWeight: '600', lineHeight: '1.3' },
+        h4: { fontSize: '18px', fontWeight: '600', lineHeight: '1.4' },
+        h5: { fontSize: '16px', fontWeight: '600', lineHeight: '1.4' },
+        h6: { fontSize: '14px', fontWeight: '600', lineHeight: '1.4' },
+        p: { fontSize: '15px', fontWeight: '400', lineHeight: '1.6' },
+        span: { fontSize: '14px', fontWeight: '400', display: 'inline' },
+        blockquote: { fontSize: '15px', fontWeight: '400', fontStyle: 'italic' },
+        code: { fontSize: '13px', fontWeight: '400', fontFamily: 'monospace' },
+        div: { fontSize: '14px', fontWeight: '400' },
+      };
+      if (tagStyles[newTag]) {
+        onUpdateStyle(tagStyles[newTag]);
+      }
     }
   };
 
@@ -489,360 +547,292 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
 
       {activeTab === 'design' && (
         <div className="flex-1 overflow-y-auto divide-y divide-[#383838] p-3 space-y-4">
-          {/* Quick Alignment Bar */}
-          <div className="space-y-2">
-            <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
-              Alignment
-            </span>
-            <div className="grid grid-cols-6 gap-1 bg-[#1e1e1e] p-1 rounded-lg border border-[#383838]">
-              <button
-                onClick={() => handleQuickAlign('left')}
-                title="Align Left"
-                className="p-1.5 hover:bg-[#323232] rounded flex justify-center text-zinc-400 hover:text-white"
-              >
-                <AlignLeft className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => handleQuickAlign('center')}
-                title="Align Horizontal Center"
-                className="p-1.5 hover:bg-[#323232] rounded flex justify-center text-zinc-400 hover:text-white"
-              >
-                <AlignCenter className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => handleQuickAlign('right')}
-                title="Align Right"
-                className="p-1.5 hover:bg-[#323232] rounded flex justify-center text-zinc-400 hover:text-white"
-              >
-                <AlignRight className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => handleQuickAlign('top')}
-                title="Align Top"
-                className="p-1.5 hover:bg-[#323232] rounded flex justify-center text-zinc-400 hover:text-white"
-              >
-                <AlignJustify className="w-3.5 h-3.5 rotate-90" />
-              </button>
-              <button
-                onClick={() => handleQuickAlign('middle')}
-                title="Align Vertical Center"
-                className="p-1.5 hover:bg-[#323232] rounded flex justify-center text-zinc-400 hover:text-white"
-              >
-                <AlignCenter className="w-3.5 h-3.5 rotate-90" />
-              </button>
-              <button
-                onClick={() => handleQuickAlign('bottom')}
-                title="Align Bottom"
-                className="p-1.5 hover:bg-[#323232] rounded flex justify-center text-zinc-400 hover:text-white"
-              >
-                <AlignJustify className="w-3.5 h-3.5 -rotate-90" />
-              </button>
-            </div>
-          </div>
-
-          {/* Frame & Dimensions */}
-          <div className="pt-3 space-y-2">
-            <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
-              Dimensions & Sizing
-            </span>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex items-center bg-[#1e1e1e] border border-[#383838] rounded px-2 py-1">
-                <span className="text-zinc-500 font-mono text-[11px] mr-2">W</span>
-                <input
-                  type="text"
-                  value={style.width || '100%'}
-                  onChange={(e) => onUpdateStyle({ width: e.target.value })}
-                  className="w-full bg-transparent text-white focus:outline-none text-xs"
-                />
+          {/* ======================================================== */}
+          {/* 1. ELEMENT IDENTIFICATION & CONTEXTUAL PROPERTIES       */}
+          {/* ======================================================== */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between pb-1">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#0d99ff]" />
+                <span className="text-xs font-semibold text-white truncate max-w-[170px]">
+                  {selectedNode.name || selectedNode.type}
+                </span>
               </div>
-              <div className="flex items-center bg-[#1e1e1e] border border-[#383838] rounded px-2 py-1">
-                <span className="text-zinc-500 font-mono text-[11px] mr-2">H</span>
-                <input
-                  type="text"
-                  value={style.height || 'auto'}
-                  onChange={(e) => onUpdateStyle({ height: e.target.value })}
-                  className="w-full bg-transparent text-white focus:outline-none text-xs"
-                />
-              </div>
-            </div>
-
-            {/* Sizing constraints: Hug / Fill / Fixed */}
-            <div className="flex items-center gap-1 pt-1">
-              <button
-                onClick={() => onUpdateStyle({ width: 'auto', alignSelf: 'auto' })}
-                className="flex-1 py-1 rounded bg-[#1e1e1e] hover:bg-[#323232] border border-[#383838] text-[11px] text-zinc-300 text-center"
-              >
-                Hug Contents
-              </button>
-              <button
-                onClick={() => onUpdateStyle({ width: '100%', alignSelf: 'stretch' })}
-                className="flex-1 py-1 rounded bg-[#1e1e1e] hover:bg-[#323232] border border-[#383838] text-[11px] text-zinc-300 text-center"
-              >
-                Fill Container
-              </button>
-            </div>
-
-            {/* Corner Radius */}
-            <div className="flex items-center justify-between pt-1">
-              <span className="text-zinc-400">Corner Radius</span>
-              <div className="w-24 flex items-center bg-[#1e1e1e] border border-[#383838] rounded px-2 py-1">
-                <input
-                  type="text"
-                  value={style.borderRadius || '0px'}
-                  onChange={(e) => onUpdateStyle({ borderRadius: e.target.value })}
-                  className="w-full bg-transparent text-white focus:outline-none text-xs text-right"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Auto-Layout (Flexbox) */}
-          <div className="pt-3 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
-                Auto-Layout (Flexbox)
+              <span className="px-1.5 py-0.5 rounded bg-[#1e1e1e] border border-[#383838] font-mono text-[10px] text-zinc-400 uppercase">
+                {selectedNode.type === 'typography'
+                  ? `<${props.as || 'p'}>`
+                  : selectedNode.type}
               </span>
-              <div className="flex items-center bg-[#1e1e1e] border border-[#383838] rounded p-0.5">
-                <button
-                  onClick={() => onUpdateStyle({ flexDirection: 'row', display: 'flex' })}
-                  title="Horizontal Layout"
-                  className={`p-1 rounded ${
-                    style.flexDirection === 'row' ? 'bg-[#0d99ff] text-white' : 'text-zinc-400'
-                  }`}
-                >
-                  <ArrowRight className="w-3 h-3" />
-                </button>
-                <button
-                  onClick={() => onUpdateStyle({ flexDirection: 'column', display: 'flex' })}
-                  title="Vertical Layout"
-                  className={`p-1 rounded ${
-                    style.flexDirection === 'column' || !style.flexDirection
-                      ? 'bg-[#0d99ff] text-white'
-                      : 'text-zinc-400'
-                  }`}
-                >
-                  <ArrowDown className="w-3 h-3" />
-                </button>
-              </div>
             </div>
 
-            {/* 3x3 Matrix Grid & Gap/Padding */}
-            <div className="flex items-center gap-4 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
-              <div className="grid grid-cols-3 gap-1 w-20 h-20 bg-[#282829] p-1 rounded-md border border-[#3e3e42]">
-                {matrixPositions.map((pos) => {
-                  const isActive =
-                    currentAlign === pos.align && currentJustify === pos.justify;
-                  return (
-                    <button
-                      key={pos.label}
-                      onClick={() =>
-                        onUpdateStyle({
-                          alignItems: pos.align,
-                          justifyContent: pos.justify,
-                        })
-                      }
-                      title={pos.label}
-                      className={`rounded-sm transition-colors ${
-                        isActive
-                          ? 'bg-[#0d99ff] ring-1 ring-white'
-                          : 'bg-[#383838] hover:bg-[#525252]'
-                      }`}
-                    />
-                  );
-                })}
-              </div>
-
-              <div className="flex-1 space-y-2">
+            {/* Typography / Headings Tag & Content Control */}
+            {selectedNode.type === 'typography' && (
+              <div className="space-y-2 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
                 <div className="flex items-center justify-between">
-                  <span className="text-zinc-400 text-[11px]">Item Gap</span>
-                  <input
-                    type="text"
-                    value={style.gap || '0px'}
-                    onChange={(e) => onUpdateStyle({ gap: e.target.value })}
-                    className="w-16 bg-[#252526] border border-[#383838] rounded px-1.5 py-0.5 text-right text-white focus:outline-none"
-                  />
+                  <label className="text-[10px] font-medium text-zinc-400 flex items-center gap-1">
+                    <Heading className="w-3 h-3 text-[#0d99ff]" />
+                    <span>Tipo de Elemento HTML</span>
+                  </label>
+                  <span className="text-[10px] font-mono text-[#0d99ff] font-semibold">
+                    &lt;{props.as || 'p'}&gt;
+                  </span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-zinc-400 text-[11px]">Padding</span>
-                  <input
-                    type="text"
-                    value={style.paddingTop || '0px'}
-                    onChange={(e) =>
-                      onUpdateStyle({
-                        paddingTop: e.target.value,
-                        paddingRight: e.target.value,
-                        paddingBottom: e.target.value,
-                        paddingLeft: e.target.value,
-                      })
-                    }
-                    className="w-16 bg-[#252526] border border-[#383838] rounded px-1.5 py-0.5 text-right text-white focus:outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
 
-          {/* Typography */}
-          <div className="pt-3 space-y-2">
-            <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
-              Typography
-            </span>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex items-center bg-[#1e1e1e] border border-[#383838] rounded px-2 py-1">
-                <span className="text-zinc-500 text-[11px] mr-1">Size</span>
-                <input
-                  type="text"
-                  value={style.fontSize || '14px'}
-                  onChange={(e) => onUpdateStyle({ fontSize: e.target.value })}
-                  className="w-full bg-transparent text-white focus:outline-none text-xs text-right"
-                />
-              </div>
-              <div className="flex items-center bg-[#1e1e1e] border border-[#383838] rounded px-2 py-1">
-                <span className="text-zinc-500 text-[11px] mr-1">Weight</span>
+                {/* Dropdown HTML Tag */}
                 <select
-                  value={style.fontWeight || '400'}
-                  onChange={(e) => onUpdateStyle({ fontWeight: e.target.value })}
-                  className="w-full bg-transparent text-white focus:outline-none text-xs"
+                  value={props.as || 'p'}
+                  onChange={(e) => handleTagChange(e.target.value)}
+                  className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2.5 py-1.5 text-white text-xs focus:outline-none"
                 >
-                  <option value="300" className="bg-[#1e1e1e]">Light (300)</option>
-                  <option value="400" className="bg-[#1e1e1e]">Regular (400)</option>
-                  <option value="500" className="bg-[#1e1e1e]">Medium (500)</option>
-                  <option value="600" className="bg-[#1e1e1e]">Semi-Bold (600)</option>
-                  <option value="700" className="bg-[#1e1e1e]">Bold (700)</option>
-                  <option value="800" className="bg-[#1e1e1e]">Extra-Bold (800)</option>
+                  <optgroup label="Encabezados (Headings)" className="bg-[#1e1e1e] text-zinc-400">
+                    <option value="h1" className="bg-[#1e1e1e] text-white">h1 — Título Principal H1 (32px Bold)</option>
+                    <option value="h2" className="bg-[#1e1e1e] text-white">h2 — Título de Sección H2 (24px Bold)</option>
+                    <option value="h3" className="bg-[#1e1e1e] text-white">h3 — Subtítulo H3 (20px SemiBold)</option>
+                    <option value="h4" className="bg-[#1e1e1e] text-white">h4 — Encabezado H4 (18px SemiBold)</option>
+                    <option value="h5" className="bg-[#1e1e1e] text-white">h5 — Encabezado H5 (16px SemiBold)</option>
+                    <option value="h6" className="bg-[#1e1e1e] text-white">h6 — Encabezado Menor H6 (14px SemiBold)</option>
+                  </optgroup>
+                  <optgroup label="Texto & Bloques" className="bg-[#1e1e1e] text-zinc-400">
+                    <option value="p" className="bg-[#1e1e1e] text-white">p — Párrafo Estándar (15px)</option>
+                    <option value="span" className="bg-[#1e1e1e] text-white">span — Texto en Línea (Inline)</option>
+                    <option value="blockquote" className="bg-[#1e1e1e] text-white">blockquote — Cita en Bloque (Italic)</option>
+                    <option value="div" className="bg-[#1e1e1e] text-white">div — Bloque Genérico (div)</option>
+                    <option value="code" className="bg-[#1e1e1e] text-white">code — Código en Línea (Monospace)</option>
+                  </optgroup>
                 </select>
+
+                {/* Quick Heading Selector Pills */}
+                <div className="flex items-center gap-1 pt-1 flex-wrap">
+                  {[
+                    { tag: 'h1', label: 'H1' },
+                    { tag: 'h2', label: 'H2' },
+                    { tag: 'h3', label: 'H3' },
+                    { tag: 'h4', label: 'H4' },
+                    { tag: 'p', label: 'P' },
+                    { tag: 'span', label: 'Span' },
+                    { tag: 'blockquote', label: 'Quote' },
+                  ].map((item) => (
+                    <button
+                      key={item.tag}
+                      onClick={() => handleTagChange(item.tag)}
+                      className={`px-2 py-0.5 rounded text-[10px] font-medium border transition-colors ${
+                        (props.as || 'p') === item.tag
+                          ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                          : 'bg-[#252526] hover:bg-[#323232] text-zinc-300 border-[#383838]'
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Text Content Editor */}
+                <div className="space-y-1 pt-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Contenido del Texto</label>
+                  <textarea
+                    value={props.text || ''}
+                    onChange={(e) => onUpdateProps({ text: e.target.value })}
+                    rows={3}
+                    placeholder="Escribe el texto aquí..."
+                    className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2 py-1.5 text-white focus:outline-none resize-none text-xs"
+                  />
+                </div>
               </div>
-            </div>
-          </div>
+            )}
 
-          {/* Fill (Background Color) */}
-          <div className="pt-3 space-y-2">
-            <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
-              Fill & Background
-            </span>
-            <div className="flex items-center gap-2 bg-[#1e1e1e] border border-[#383838] rounded-md p-1.5">
-              <input
-                type="color"
-                value={style.backgroundColor?.startsWith('#') ? style.backgroundColor : '#18181b'}
-                onChange={(e) => onUpdateStyle({ backgroundColor: e.target.value })}
-                className="w-6 h-6 rounded cursor-pointer border border-[#383838] bg-transparent"
-              />
-              <input
-                type="text"
-                value={style.backgroundColor || 'transparent'}
-                onChange={(e) => onUpdateStyle({ backgroundColor: e.target.value })}
-                className="flex-1 bg-transparent text-white focus:outline-none text-xs font-mono"
-              />
-              <button
-                onClick={() => onUpdateStyle({ backgroundColor: 'transparent' })}
-                className="px-2 py-0.5 text-[10px] rounded bg-zinc-800 text-zinc-400 hover:text-white"
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-
-          {/* Stroke (Border) */}
-          <div className="pt-3 space-y-2">
-            <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
-              Stroke & Border
-            </span>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex items-center bg-[#1e1e1e] border border-[#383838] rounded px-2 py-1">
-                <input
-                  type="color"
-                  value={style.borderColor?.startsWith('#') ? style.borderColor : '#27272a'}
-                  onChange={(e) => onUpdateStyle({ borderColor: e.target.value })}
-                  className="w-5 h-5 rounded cursor-pointer mr-2 border border-[#383838] bg-transparent"
-                />
-                <input
-                  type="text"
-                  value={style.borderColor || 'none'}
-                  onChange={(e) => onUpdateStyle({ borderColor: e.target.value })}
-                  className="w-full bg-transparent text-white focus:outline-none text-xs font-mono"
-                />
-              </div>
-              <div className="flex items-center bg-[#1e1e1e] border border-[#383838] rounded px-2 py-1">
-                <span className="text-zinc-500 text-[11px] mr-1">Width</span>
-                <input
-                  type="text"
-                  value={style.borderWidth || '0px'}
-                  onChange={(e) => onUpdateStyle({ borderWidth: e.target.value, borderStyle: 'solid' })}
-                  className="w-full bg-transparent text-white focus:outline-none text-xs text-right"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Component-Specific Properties */}
-          <div className="pt-3 space-y-2">
-            <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
-              Component Properties ({selectedNode.type})
-            </span>
-
-            {/* If Button or Badge */}
-            {(selectedNode.type === 'button' || selectedNode.type === 'badge') && (
-              <div className="space-y-1.5">
-                <label className="text-zinc-400 text-[11px]">Label Text</label>
-                <input
-                  type="text"
-                  value={props.label || ''}
-                  onChange={(e) => onUpdateProps({ label: e.target.value })}
-                  className="w-full bg-[#1e1e1e] border border-[#383838] rounded px-2 py-1 text-white focus:outline-none"
+            {/* Other Component Text / Content if applicable */}
+            {selectedNode.type !== 'typography' && (props.text !== undefined || selectedNode.type === 'blockquote' || selectedNode.type === 'label') && (
+              <div className="space-y-1.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                <label className="text-[10px] font-medium text-zinc-400">Texto del Elemento</label>
+                <textarea
+                  value={props.text || ''}
+                  onChange={(e) => onUpdateProps({ text: e.target.value })}
+                  rows={2}
+                  className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2 py-1.5 text-white focus:outline-none resize-none text-xs"
                 />
               </div>
             )}
 
-            {/* If Typography */}
-            {selectedNode.type === 'typography' && (
-              <div className="space-y-1.5">
-                <label className="text-zinc-400 text-[11px]">Content Text</label>
-                <textarea
-                  value={props.text || ''}
-                  onChange={(e) => onUpdateProps({ text: e.target.value })}
-                  rows={3}
-                  className="w-full bg-[#1e1e1e] border border-[#383838] rounded px-2 py-1 text-white focus:outline-none resize-none"
-                />
+            {/* If Button or Badge */}
+            {(selectedNode.type === 'button' || selectedNode.type === 'badge') && (
+              <div className="space-y-2 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Texto del Botón / Badge</label>
+                  <input
+                    type="text"
+                    value={props.label || ''}
+                    onChange={(e) => onUpdateProps({ label: e.target.value })}
+                    className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Variante Visual</label>
+                  <select
+                    value={props.variant || 'default'}
+                    onChange={(e) => onUpdateProps({ variant: e.target.value })}
+                    className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  >
+                    <option value="default" className="bg-[#1e1e1e]">Default (Primario)</option>
+                    <option value="secondary" className="bg-[#1e1e1e]">Secondary</option>
+                    <option value="outline" className="bg-[#1e1e1e]">Outline (Borde)</option>
+                    <option value="destructive" className="bg-[#1e1e1e]">Destructive (Rojo)</option>
+                    <option value="ghost" className="bg-[#1e1e1e]">Ghost (Transparente)</option>
+                    <option value="link" className="bg-[#1e1e1e]">Link (Enlace)</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {/* If Link */}
+            {selectedNode.type === 'link' && (
+              <div className="space-y-2 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Texto del Enlace</label>
+                  <input
+                    type="text"
+                    value={props.label || ''}
+                    onChange={(e) => onUpdateProps({ label: e.target.value })}
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">URL Destino (href)</label>
+                  <input
+                    type="text"
+                    value={props.href || ''}
+                    onChange={(e) => onUpdateProps({ href: e.target.value })}
+                    placeholder="https://..."
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Destino (Target)</label>
+                  <select
+                    value={props.target || '_self'}
+                    onChange={(e) => onUpdateProps({ target: e.target.value })}
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  >
+                    <option value="_self" className="bg-[#1e1e1e]">Misma pestaña (_self)</option>
+                    <option value="_blank" className="bg-[#1e1e1e]">Nueva pestaña (_blank)</option>
+                  </select>
+                </div>
               </div>
             )}
 
             {/* If Image */}
             {selectedNode.type === 'image' && (
-              <div className="space-y-1.5">
-                <label className="text-zinc-400 text-[11px]">Image URL</label>
-                <input
-                  type="text"
-                  value={props.src || ''}
-                  onChange={(e) => onUpdateProps({ src: e.target.value })}
-                  className="w-full bg-[#1e1e1e] border border-[#383838] rounded px-2 py-1 text-white focus:outline-none"
-                />
+              <div className="space-y-2 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">URL de Imagen</label>
+                  <input
+                    type="text"
+                    value={props.src || ''}
+                    onChange={(e) => onUpdateProps({ src: e.target.value })}
+                    placeholder="https://images.unsplash.com/..."
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Texto Alternativo (Alt)</label>
+                  <input
+                    type="text"
+                    value={props.alt || ''}
+                    onChange={(e) => onUpdateProps({ alt: e.target.value })}
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Ajuste (Object Fit)</label>
+                  <select
+                    value={props.objectFit || style.objectFit || 'cover'}
+                    onChange={(e) => {
+                      onUpdateProps({ objectFit: e.target.value });
+                      onUpdateStyle({ objectFit: e.target.value });
+                    }}
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  >
+                    <option value="cover" className="bg-[#1e1e1e]">Cover (Llenar y recortar)</option>
+                    <option value="contain" className="bg-[#1e1e1e]">Contain (Ajustar dentro)</option>
+                    <option value="fill" className="bg-[#1e1e1e]">Fill (Estirar)</option>
+                    <option value="none" className="bg-[#1e1e1e]">None (Original)</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {/* If Input or Textarea */}
+            {(selectedNode.type === 'input' || selectedNode.type === 'textarea' || selectedNode.type === 'searchbox') && (
+              <div className="space-y-2 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Placeholder</label>
+                  <input
+                    type="text"
+                    value={props.placeholder || ''}
+                    onChange={(e) => onUpdateProps({ placeholder: e.target.value })}
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Valor por Defecto</label>
+                  <input
+                    type="text"
+                    value={props.value || ''}
+                    onChange={(e) => onUpdateProps({ value: e.target.value })}
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* If Card, Alert or Collapsible */}
+            {(selectedNode.type === 'card' || selectedNode.type === 'alert' || selectedNode.type === 'collapsible') && (
+              <div className="space-y-2 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Título</label>
+                  <input
+                    type="text"
+                    value={props.title || props.label || ''}
+                    onChange={(e) => onUpdateProps({ title: e.target.value, label: e.target.value })}
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
+                </div>
+                {props.description !== undefined && (
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Descripción</label>
+                    <textarea
+                      value={props.description || ''}
+                      onChange={(e) => onUpdateProps({ description: e.target.value })}
+                      rows={2}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none resize-none"
+                    />
+                  </div>
+                )}
               </div>
             )}
 
             {/* If Switch */}
             {selectedNode.type === 'switch' && (
-              <div className="space-y-1.5">
-                <label className="text-zinc-400 text-[11px]">Etiqueta Switch</label>
+              <div className="space-y-1.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                <label className="text-zinc-400 text-[10px] font-medium">Etiqueta Switch</label>
                 <input
                   type="text"
                   value={props.label || ''}
                   onChange={(e) => onUpdateProps({ label: e.target.value })}
-                  className="w-full bg-[#1e1e1e] border border-[#383838] rounded px-2 py-1 text-white focus:outline-none"
+                  className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
                 />
               </div>
             )}
 
             {/* If Slider */}
             {selectedNode.type === 'slider' && (
-              <div className="space-y-2">
+              <div className="space-y-2 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
                 <div className="space-y-1">
-                  <label className="text-zinc-400 text-[11px]">Etiqueta Slider</label>
+                  <label className="text-zinc-400 text-[10px] font-medium">Etiqueta Slider</label>
                   <input
                     type="text"
                     value={props.label || ''}
                     onChange={(e) => onUpdateProps({ label: e.target.value })}
-                    className="w-full bg-[#1e1e1e] border border-[#383838] rounded px-2 py-1 text-white focus:outline-none"
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
                   />
                 </div>
                 <div className="grid grid-cols-3 gap-2">
@@ -852,7 +842,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                       type="number"
                       value={props.min ?? 0}
                       onChange={(e) => onUpdateProps({ min: Number(e.target.value) })}
-                      className="w-full bg-[#1e1e1e] border border-[#383838] rounded px-1.5 py-1 text-white text-xs"
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-1.5 py-1 text-white text-xs"
                     />
                   </div>
                   <div>
@@ -861,7 +851,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                       type="number"
                       value={props.max ?? 255}
                       onChange={(e) => onUpdateProps({ max: Number(e.target.value) })}
-                      className="w-full bg-[#1e1e1e] border border-[#383838] rounded px-1.5 py-1 text-white text-xs"
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-1.5 py-1 text-white text-xs"
                     />
                   </div>
                   <div>
@@ -870,17 +860,29 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                       type="number"
                       value={props.value ?? 128}
                       onChange={(e) => onUpdateProps({ value: Number(e.target.value) })}
-                      className="w-full bg-[#1e1e1e] border border-[#383838] rounded px-1.5 py-1 text-white text-xs"
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-1.5 py-1 text-white text-xs"
                     />
                   </div>
                 </div>
               </div>
             )}
 
+            {/* If Kbd */}
+            {selectedNode.type === 'kbd' && (
+              <div className="space-y-1.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                <label className="text-zinc-400 text-[10px] font-medium">Combinación de Teclas (Keys)</label>
+                <input
+                  type="text"
+                  value={props.keys || props.label || '⌘K'}
+                  onChange={(e) => onUpdateProps({ keys: e.target.value, label: e.target.value })}
+                  className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs font-mono focus:outline-none"
+                />
+              </div>
+            )}
+
             {/* If Vector Icon Component (Iconify Universal Offline) */}
             {(selectedNode.type === 'fontawesome_icon' || selectedNode.type === 'svg_icon') && (
               <div className="space-y-3 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
-                {/* 1. Header with Live Icon Preview and Explorar Button */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <div className="w-9 h-9 rounded bg-[#252526] border border-[#383838] flex items-center justify-center">
@@ -912,7 +914,6 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                   </button>
                 </div>
 
-                {/* 2. Combobox: Categoría Temática de Iconify */}
                 <div className="space-y-1">
                   <label className="text-[10px] text-zinc-400 font-medium">Categoría de Iconos</label>
                   <select
@@ -935,7 +936,6 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                   </select>
                 </div>
 
-                {/* 3. Combobox: Colección / Set de Iconify (244 sets disponibles localmente) */}
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-[10px] text-zinc-400">
                     <span>Colección Iconify (Offline)</span>
@@ -956,7 +956,6 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                   </select>
                 </div>
 
-                {/* 4. Subcategoría interna si la colección lo soporta */}
                 {subcategories.length > 1 && (
                   <div className="space-y-1">
                     <label className="text-[10px] text-zinc-400 font-medium">Subcategoría Interna</label>
@@ -977,95 +976,6 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                   </div>
                 )}
 
-                {/* 4. Dedicated Icon Color & Stroke Control */}
-                <div className="space-y-1.5 pt-1 border-t border-[#383838]">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-zinc-400">Color / Trazo (Stroke)</span>
-                    <span className="text-[10px] text-zinc-500 font-mono">
-                      {style.color || '#0d99ff'}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-[#252526] border border-[#383838] rounded-md p-1.5">
-                    <input
-                      type="color"
-                      value={style.color?.startsWith('#') ? style.color : '#0d99ff'}
-                      onChange={(e) => onUpdateStyle({ color: e.target.value })}
-                      className="w-6 h-6 rounded cursor-pointer border border-[#383838] bg-transparent"
-                    />
-                    <input
-                      type="text"
-                      value={style.color || '#0d99ff'}
-                      onChange={(e) => onUpdateStyle({ color: e.target.value })}
-                      className="flex-1 bg-transparent text-white focus:outline-none text-xs font-mono"
-                    />
-                    <button
-                      onClick={() => onUpdateStyle({ color: '#0d99ff' })}
-                      className="px-2 py-0.5 text-[10px] rounded bg-zinc-800 text-zinc-400 hover:text-white"
-                      title="Reset to default blue"
-                    >
-                      Reset
-                    </button>
-                  </div>
-
-                  {/* Preset Color Swatches */}
-                  <div className="flex items-center gap-1.5 pt-0.5">
-                    {[
-                      { color: '#0d99ff', label: 'Blue' },
-                      { color: '#8b5cf6', label: 'Purple' },
-                      { color: '#f43f5e', label: 'Pink' },
-                      { color: '#10b981', label: 'Emerald' },
-                      { color: '#f59e0b', label: 'Amber' },
-                      { color: '#ef4444', label: 'Red' },
-                      { color: '#ffffff', label: 'White' },
-                      { color: '#a1a1aa', label: 'Gray' },
-                    ].map((sw) => (
-                      <button
-                        key={sw.color}
-                        onClick={() => onUpdateStyle({ color: sw.color })}
-                        style={{ backgroundColor: sw.color }}
-                        title={sw.label}
-                        className={`w-4 h-4 rounded-full border border-black/40 hover:scale-110 transition-transform ${
-                          style.color === sw.color
-                            ? 'ring-2 ring-white ring-offset-1 ring-offset-[#252526]'
-                            : ''
-                        }`}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Relleno (Fill SVG) */}
-                  <div className="pt-2">
-                    <div className="flex items-center justify-between pb-1">
-                      <span className="text-[10px] text-zinc-400">Relleno SVG (Fill)</span>
-                      <span className="text-[10px] text-zinc-500 font-mono">
-                        {style.fill || 'none'}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 bg-[#252526] border border-[#383838] rounded-md p-1.5">
-                      <input
-                        type="color"
-                        value={style.fill && style.fill !== 'none' && style.fill.startsWith('#') ? style.fill : '#0d99ff'}
-                        onChange={(e) => onUpdateStyle({ fill: e.target.value })}
-                        className="w-6 h-6 rounded cursor-pointer border border-[#383838] bg-transparent"
-                      />
-                      <input
-                        type="text"
-                        value={style.fill || 'none'}
-                        onChange={(e) => onUpdateStyle({ fill: e.target.value })}
-                        className="flex-1 bg-transparent text-white focus:outline-none text-xs font-mono"
-                      />
-                      <button
-                        onClick={() => onUpdateStyle({ fill: 'none' })}
-                        className="px-2 py-0.5 text-[10px] rounded bg-zinc-800 text-zinc-400 hover:text-white"
-                        title="Quitar relleno"
-                      >
-                        None
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 5. Size Slider */}
                 <div className="space-y-1 pt-1 border-t border-[#383838]">
                   <div className="flex justify-between text-[11px] text-zinc-400">
                     <span>Tamaño</span>
@@ -1086,13 +996,934 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                 </div>
               </div>
             )}
-            {/* Conditional ESP32 Hardware Inspector Section inside Design Tab */}
-            {projectType === 'esp32' && isInteractiveForEsp32 && (
-              <div className="pt-2">
-                {renderHardwareGpioContent(false)}
-              </div>
-            )}
           </div>
+
+          {/* ======================================================== */}
+          {/* 2. FIGMA-STYLE TYPOGRAPHY                                 */}
+          {/* ======================================================== */}
+          <div className="pt-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Type className="w-3.5 h-3.5 text-[#0d99ff]" />
+                <span>Typography</span>
+              </span>
+              <span className="text-[10px] text-zinc-500 font-mono">
+                {style.fontSize || 'inherit'}
+              </span>
+            </div>
+
+            {/* Font Size & Weight Grid */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-center bg-[#1e1e1e] border border-[#383838] focus-within:border-[#0d99ff] rounded px-2 py-1">
+                <span className="text-zinc-500 text-[11px] mr-1">Size</span>
+                <input
+                  type="text"
+                  value={style.fontSize || '16px'}
+                  onChange={(e) => onUpdateStyle({ fontSize: e.target.value })}
+                  placeholder="16px"
+                  className="w-full bg-transparent text-white focus:outline-none text-xs text-right font-mono"
+                />
+              </div>
+
+              <div className="flex items-center bg-[#1e1e1e] border border-[#383838] focus-within:border-[#0d99ff] rounded px-2 py-1">
+                <span className="text-zinc-500 text-[11px] mr-1">Weight</span>
+                <select
+                  value={style.fontWeight || '400'}
+                  onChange={(e) => onUpdateStyle({ fontWeight: e.target.value })}
+                  className="w-full bg-transparent text-white focus:outline-none text-xs"
+                >
+                  <option value="100" className="bg-[#1e1e1e]">Thin (100)</option>
+                  <option value="200" className="bg-[#1e1e1e]">Extra-Light (200)</option>
+                  <option value="300" className="bg-[#1e1e1e]">Light (300)</option>
+                  <option value="400" className="bg-[#1e1e1e]">Regular (400)</option>
+                  <option value="500" className="bg-[#1e1e1e]">Medium (500)</option>
+                  <option value="600" className="bg-[#1e1e1e]">Semi-Bold (600)</option>
+                  <option value="700" className="bg-[#1e1e1e]">Bold (700)</option>
+                  <option value="800" className="bg-[#1e1e1e]">Extra-Bold (800)</option>
+                  <option value="900" className="bg-[#1e1e1e]">Black (900)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Quick Size Presets */}
+            <div className="flex items-center gap-1 flex-wrap">
+              {['12px', '14px', '16px', '18px', '20px', '24px', '32px', '40px'].map((sz) => (
+                <button
+                  key={sz}
+                  onClick={() => onUpdateStyle({ fontSize: sz })}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-mono border transition-colors ${
+                    style.fontSize === sz
+                      ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                      : 'bg-[#1e1e1e] hover:bg-[#323232] text-zinc-400 border-[#383838]'
+                  }`}
+                >
+                  {sz.replace('px', '')}
+                </button>
+              ))}
+            </div>
+
+            {/* Line Height & Letter Spacing Grid */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-center bg-[#1e1e1e] border border-[#383838] focus-within:border-[#0d99ff] rounded px-2 py-1" title="Line Height (Interlineado)">
+                <span className="text-zinc-500 text-[11px] mr-1 font-mono">LH</span>
+                <input
+                  type="text"
+                  value={style.lineHeight || '1.5'}
+                  onChange={(e) => onUpdateStyle({ lineHeight: e.target.value })}
+                  placeholder="1.5"
+                  className="w-full bg-transparent text-white focus:outline-none text-xs text-right font-mono"
+                />
+              </div>
+
+              <div className="flex items-center bg-[#1e1e1e] border border-[#383838] focus-within:border-[#0d99ff] rounded px-2 py-1" title="Letter Spacing / Tracking (Espaciado entre letras)">
+                <span className="text-zinc-500 text-[11px] mr-1 font-mono">LS</span>
+                <input
+                  type="text"
+                  value={style.letterSpacing || '0px'}
+                  onChange={(e) => onUpdateStyle({ letterSpacing: e.target.value })}
+                  placeholder="0px"
+                  className="w-full bg-transparent text-white focus:outline-none text-xs text-right font-mono"
+                />
+              </div>
+            </div>
+
+            {/* Text Alignment (Left, Center, Right, Justify) */}
+            <div className="space-y-1">
+              <span className="text-[10px] text-zinc-500 font-medium block">Alineación</span>
+              <div className="grid grid-cols-4 gap-1 bg-[#1e1e1e] p-1 rounded-lg border border-[#383838]">
+                {[
+                  { align: 'left', icon: AlignLeft, label: 'Izquierda' },
+                  { align: 'center', icon: AlignCenter, label: 'Centro' },
+                  { align: 'right', icon: AlignRight, label: 'Derecha' },
+                  { align: 'justify', icon: AlignJustify, label: 'Justificado' },
+                ].map((item) => {
+                  const Icon = item.icon;
+                  const isActive = (style.textAlign || 'left') === item.align;
+                  return (
+                    <button
+                      key={item.align}
+                      onClick={() => onUpdateStyle({ textAlign: item.align })}
+                      title={item.label}
+                      className={`p-1 rounded flex justify-center items-center transition-colors ${
+                        isActive
+                          ? 'bg-[#0d99ff] text-white shadow-xs'
+                          : 'text-zinc-400 hover:text-white hover:bg-[#323232]'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Text Transform & Decoration */}
+            <div className="grid grid-cols-2 gap-2">
+              {/* Transform */}
+              <div className="space-y-1">
+                <span className="text-[10px] text-zinc-500 font-medium block">Transformación</span>
+                <div className="grid grid-cols-4 gap-0.5 bg-[#1e1e1e] p-0.5 rounded border border-[#383838]">
+                  {[
+                    { val: 'none', label: 'Aa', title: 'Normal' },
+                    { val: 'uppercase', label: 'AA', title: 'Mayúsculas' },
+                    { val: 'lowercase', label: 'aa', title: 'Minúsculas' },
+                    { val: 'capitalize', label: 'Ab', title: 'Capitalizar' },
+                  ].map((t) => (
+                    <button
+                      key={t.val}
+                      onClick={() => onUpdateStyle({ textTransform: t.val })}
+                      title={t.title}
+                      className={`py-1 text-[10px] font-semibold rounded text-center transition-colors ${
+                        (style.textTransform || 'none') === t.val
+                          ? 'bg-[#0d99ff] text-white'
+                          : 'text-zinc-400 hover:text-white hover:bg-[#323232]'
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Decoration */}
+              <div className="space-y-1">
+                <span className="text-[10px] text-zinc-500 font-medium block">Decoración</span>
+                <div className="grid grid-cols-3 gap-0.5 bg-[#1e1e1e] p-0.5 rounded border border-[#383838]">
+                  {[
+                    { val: 'none', label: '—', title: 'Ninguna' },
+                    { val: 'underline', icon: Underline, title: 'Subrayado' },
+                    { val: 'line-through', icon: Strikethrough, title: 'Tachado' },
+                  ].map((d) => {
+                    const Icon = d.icon;
+                    const isActive = (style.textDecoration || 'none') === d.val;
+                    return (
+                      <button
+                        key={d.val}
+                        onClick={() => onUpdateStyle({ textDecoration: d.val })}
+                        title={d.title}
+                        className={`py-1 flex items-center justify-center text-[10px] rounded transition-colors ${
+                          isActive
+                            ? 'bg-[#0d99ff] text-white'
+                            : 'text-zinc-400 hover:text-white hover:bg-[#323232]'
+                        }`}
+                      >
+                        {Icon ? <Icon className="w-3 h-3" /> : d.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Text Color (Color Picker, Hex, Swatches) */}
+            <div className="space-y-1.5 pt-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-zinc-400 font-medium">Color de Texto</span>
+                <span className="text-[10px] text-zinc-500 font-mono">
+                  {style.color || 'inherit'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 bg-[#1e1e1e] border border-[#383838] focus-within:border-[#0d99ff] rounded-md p-1.5">
+                <input
+                  type="color"
+                  value={style.color?.startsWith('#') ? style.color : '#ffffff'}
+                  onChange={(e) => onUpdateStyle({ color: e.target.value })}
+                  className="w-6 h-6 rounded cursor-pointer border border-[#383838] bg-transparent"
+                />
+                <input
+                  type="text"
+                  value={style.color || ''}
+                  onChange={(e) => onUpdateStyle({ color: e.target.value })}
+                  placeholder="#ffffff"
+                  className="flex-1 bg-transparent text-white focus:outline-none text-xs font-mono"
+                />
+                <button
+                  onClick={() => onUpdateStyle({ color: 'inherit' })}
+                  className="px-2 py-0.5 text-[10px] rounded bg-[#2c2c2c] hover:bg-[#383838] text-zinc-400 hover:text-white"
+                  title="Heredar color de texto"
+                >
+                  Clear
+                </button>
+              </div>
+
+              {/* Color Presets */}
+              <div className="flex items-center gap-1.5 pt-0.5">
+                {[
+                  { color: '#ffffff', label: 'Blanco' },
+                  { color: '#e4e4e7', label: 'Zinc Claro' },
+                  { color: '#a1a1aa', label: 'Zinc Medio' },
+                  { color: '#71717a', label: 'Gris' },
+                  { color: '#0d99ff', label: 'Figma Blue' },
+                  { color: '#8b5cf6', label: 'Violeta' },
+                  { color: '#10b981', label: 'Esmeralda' },
+                  { color: '#f59e0b', label: 'Ámbar' },
+                  { color: '#ef4444', label: 'Rojo' },
+                  { color: '#18181b', label: 'Oscuro' },
+                ].map((sw) => (
+                  <button
+                    key={sw.color}
+                    onClick={() => onUpdateStyle({ color: sw.color })}
+                    style={{ backgroundColor: sw.color }}
+                    title={sw.label}
+                    className={`w-4 h-4 rounded-full border border-black/40 hover:scale-110 transition-transform ${
+                      style.color === sw.color
+                        ? 'ring-2 ring-[#0d99ff] ring-offset-1 ring-offset-[#1e1e1e]'
+                        : ''
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ======================================================== */}
+          {/* 3. FIGMA-STYLE SPACING & BOX MODEL (PADDING & MARGINS)   */}
+          {/* ======================================================== */}
+          <div className="pt-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Box className="w-3.5 h-3.5 text-[#0d99ff]" />
+                <span>Spacing & Box Model</span>
+              </span>
+            </div>
+
+            {/* PADDING CONTROL */}
+            <div className="space-y-1.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-medium text-zinc-300">Padding (Interior)</span>
+                  <button
+                    onClick={() => setPaddingLinked(!paddingLinked)}
+                    className="p-1 hover:bg-[#2c2c2c] rounded text-zinc-400 hover:text-white transition-colors"
+                    title={paddingLinked ? 'Desvincular (4 lados independientes: T, R, B, L)' : 'Vincular lados uniformes'}
+                  >
+                    {paddingLinked ? (
+                      <Link2 className="w-3 h-3 text-[#0d99ff]" />
+                    ) : (
+                      <Unlink className="w-3 h-3 text-zinc-500" />
+                    )}
+                  </button>
+                </div>
+                <span className="text-[10px] text-zinc-500 font-mono">
+                  {paddingLinked
+                    ? style.paddingTop || style.padding || '0px'
+                    : `${style.paddingTop || '0'} · ${style.paddingRight || '0'} · ${style.paddingBottom || '0'} · ${style.paddingLeft || '0'}`}
+                </span>
+              </div>
+
+              {paddingLinked ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={style.paddingTop || style.padding || '0px'}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      onUpdateStyle({
+                        paddingTop: val,
+                        paddingRight: val,
+                        paddingBottom: val,
+                        paddingLeft: val,
+                        padding: val,
+                      });
+                    }}
+                    placeholder="0px"
+                    className="flex-1 bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2.5 py-1 text-white text-xs font-mono focus:outline-none"
+                  />
+                  <div className="flex items-center gap-1">
+                    {['0px', '8px', '12px', '16px', '24px'].map((preset) => (
+                      <button
+                        key={preset}
+                        onClick={() =>
+                          onUpdateStyle({
+                            paddingTop: preset,
+                            paddingRight: preset,
+                            paddingBottom: preset,
+                            paddingLeft: preset,
+                            padding: preset,
+                          })
+                        }
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-mono border ${
+                          (style.paddingTop || style.padding) === preset
+                            ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                            : 'bg-[#252526] hover:bg-[#323232] text-zinc-400 border-[#383838]'
+                        }`}
+                      >
+                        {preset.replace('px', '')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-4 gap-1.5 pt-1">
+                  <div>
+                    <span className="text-[9px] text-zinc-500 block text-center uppercase tracking-wider mb-0.5">Top</span>
+                    <input
+                      type="text"
+                      value={style.paddingTop || '0px'}
+                      onChange={(e) => onUpdateStyle({ paddingTop: e.target.value })}
+                      placeholder="0px"
+                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-1.5 py-1 text-center text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[9px] text-zinc-500 block text-center uppercase tracking-wider mb-0.5">Right</span>
+                    <input
+                      type="text"
+                      value={style.paddingRight || '0px'}
+                      onChange={(e) => onUpdateStyle({ paddingRight: e.target.value })}
+                      placeholder="0px"
+                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-1.5 py-1 text-center text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[9px] text-zinc-500 block text-center uppercase tracking-wider mb-0.5">Bottom</span>
+                    <input
+                      type="text"
+                      value={style.paddingBottom || '0px'}
+                      onChange={(e) => onUpdateStyle({ paddingBottom: e.target.value })}
+                      placeholder="0px"
+                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-1.5 py-1 text-center text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[9px] text-zinc-500 block text-center uppercase tracking-wider mb-0.5">Left</span>
+                    <input
+                      type="text"
+                      value={style.paddingLeft || '0px'}
+                      onChange={(e) => onUpdateStyle({ paddingLeft: e.target.value })}
+                      placeholder="0px"
+                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-1.5 py-1 text-center text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* MARGIN CONTROL */}
+            <div className="space-y-1.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-medium text-zinc-300">Margin (Exterior)</span>
+                  <button
+                    onClick={() => setMarginLinked(!marginLinked)}
+                    className="p-1 hover:bg-[#2c2c2c] rounded text-zinc-400 hover:text-white transition-colors"
+                    title={marginLinked ? 'Desvincular (4 lados independientes: T, R, B, L)' : 'Vincular lados uniformes'}
+                  >
+                    {marginLinked ? (
+                      <Link2 className="w-3 h-3 text-[#0d99ff]" />
+                    ) : (
+                      <Unlink className="w-3 h-3 text-zinc-500" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => onUpdateStyle({ marginLeft: 'auto', marginRight: 'auto' })}
+                    className="px-1.5 py-0.5 rounded bg-[#252526] hover:bg-[#323232] border border-[#383838] text-[9px] text-zinc-300 transition-colors"
+                    title="Centrar horizontalmente (margin: 0 auto)"
+                  >
+                    Auto Center
+                  </button>
+                </div>
+                <span className="text-[10px] text-zinc-500 font-mono">
+                  {marginLinked
+                    ? style.marginTop || style.margin || '0px'
+                    : `${style.marginTop || '0'} · ${style.marginRight || '0'} · ${style.marginBottom || '0'} · ${style.marginLeft || '0'}`}
+                </span>
+              </div>
+
+              {marginLinked ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={style.marginTop || style.margin || '0px'}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      onUpdateStyle({
+                        marginTop: val,
+                        marginRight: val,
+                        marginBottom: val,
+                        marginLeft: val,
+                        margin: val,
+                      });
+                    }}
+                    placeholder="0px"
+                    className="flex-1 bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2.5 py-1 text-white text-xs font-mono focus:outline-none"
+                  />
+                  <div className="flex items-center gap-1">
+                    {['0px', '8px', '16px', '24px', '32px'].map((preset) => (
+                      <button
+                        key={preset}
+                        onClick={() =>
+                          onUpdateStyle({
+                            marginTop: preset,
+                            marginRight: preset,
+                            marginBottom: preset,
+                            marginLeft: preset,
+                            margin: preset,
+                          })
+                        }
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-mono border ${
+                          (style.marginTop || style.margin) === preset
+                            ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                            : 'bg-[#252526] hover:bg-[#323232] text-zinc-400 border-[#383838]'
+                        }`}
+                      >
+                        {preset.replace('px', '')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-4 gap-1.5 pt-1">
+                  <div>
+                    <span className="text-[9px] text-zinc-500 block text-center uppercase tracking-wider mb-0.5">Top</span>
+                    <input
+                      type="text"
+                      value={style.marginTop || '0px'}
+                      onChange={(e) => onUpdateStyle({ marginTop: e.target.value })}
+                      placeholder="0px"
+                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-1.5 py-1 text-center text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[9px] text-zinc-500 block text-center uppercase tracking-wider mb-0.5">Right</span>
+                    <input
+                      type="text"
+                      value={style.marginRight || '0px'}
+                      onChange={(e) => onUpdateStyle({ marginRight: e.target.value })}
+                      placeholder="0px"
+                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-1.5 py-1 text-center text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[9px] text-zinc-500 block text-center uppercase tracking-wider mb-0.5">Bottom</span>
+                    <input
+                      type="text"
+                      value={style.marginBottom || '0px'}
+                      onChange={(e) => onUpdateStyle({ marginBottom: e.target.value })}
+                      placeholder="0px"
+                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-1.5 py-1 text-center text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[9px] text-zinc-500 block text-center uppercase tracking-wider mb-0.5">Left</span>
+                    <input
+                      type="text"
+                      value={style.marginLeft || '0px'}
+                      onChange={(e) => onUpdateStyle({ marginLeft: e.target.value })}
+                      placeholder="0px"
+                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-1.5 py-1 text-center text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ITEM GAP */}
+            <div className="flex items-center justify-between bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+              <span className="text-[11px] font-medium text-zinc-300">Item Gap (Espaciado)</span>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="text"
+                  value={style.gap || '0px'}
+                  onChange={(e) => onUpdateStyle({ gap: e.target.value })}
+                  placeholder="0px"
+                  className="w-20 bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2 py-1 text-right text-white text-xs font-mono focus:outline-none"
+                />
+                <div className="flex items-center gap-1">
+                  {['0px', '8px', '16px', '24px'].map((preset) => (
+                    <button
+                      key={preset}
+                      onClick={() => onUpdateStyle({ gap: preset })}
+                      className={`px-1.5 py-0.5 rounded text-[10px] font-mono border ${
+                        style.gap === preset
+                          ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                          : 'bg-[#252526] hover:bg-[#323232] text-zinc-400 border-[#383838]'
+                      }`}
+                    >
+                      {preset.replace('px', '')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ======================================================== */}
+          {/* 4. LAYOUT, DISPLAY & DIMENSIONS                          */}
+          {/* ======================================================== */}
+          <div className="pt-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Columns3 className="w-3.5 h-3.5 text-[#0d99ff]" />
+                <span>Layout & Dimensions</span>
+              </span>
+            </div>
+
+            {/* Display property */}
+            <div className="space-y-1">
+              <span className="text-[10px] text-zinc-500 font-medium block">Display</span>
+              <select
+                value={style.display || (selectedNode.isContainer ? 'flex' : 'block')}
+                onChange={(e) => onUpdateStyle({ display: e.target.value })}
+                className="w-full bg-[#1e1e1e] border border-[#383838] focus:border-[#0d99ff] rounded px-2.5 py-1 text-white text-xs focus:outline-none"
+              >
+                <option value="block" className="bg-[#1e1e1e]">Block (Elemento de Bloque / Full Width)</option>
+                <option value="flex" className="bg-[#1e1e1e]">Flex (Contenedor Flexible Auto-Layout)</option>
+                <option value="inline-block" className="bg-[#1e1e1e]">Inline-Block (En línea con dimensiones)</option>
+                <option value="inline-flex" className="bg-[#1e1e1e]">Inline-Flex (Flex en línea)</option>
+                <option value="grid" className="bg-[#1e1e1e]">Grid (Rejilla CSS)</option>
+                <option value="inline" className="bg-[#1e1e1e]">Inline (Texto en línea puro)</option>
+              </select>
+            </div>
+
+            {/* Dimensions W & H */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-center bg-[#1e1e1e] border border-[#383838] focus-within:border-[#0d99ff] rounded px-2 py-1">
+                <span className="text-zinc-500 font-mono text-[11px] mr-2">W</span>
+                <input
+                  type="text"
+                  value={style.width || '100%'}
+                  onChange={(e) => onUpdateStyle({ width: e.target.value })}
+                  className="w-full bg-transparent text-white focus:outline-none text-xs font-mono"
+                />
+              </div>
+              <div className="flex items-center bg-[#1e1e1e] border border-[#383838] focus-within:border-[#0d99ff] rounded px-2 py-1">
+                <span className="text-zinc-500 font-mono text-[11px] mr-2">H</span>
+                <input
+                  type="text"
+                  value={style.height || 'auto'}
+                  onChange={(e) => onUpdateStyle({ height: e.target.value })}
+                  className="w-full bg-transparent text-white focus:outline-none text-xs font-mono"
+                />
+              </div>
+            </div>
+
+            {/* Sizing shortcuts */}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => onUpdateStyle({ width: 'auto', alignSelf: 'auto' })}
+                className="flex-1 py-1 rounded bg-[#1e1e1e] hover:bg-[#323232] border border-[#383838] text-[11px] text-zinc-300 text-center"
+              >
+                Hug Contents
+              </button>
+              <button
+                onClick={() => onUpdateStyle({ width: '100%', alignSelf: 'stretch' })}
+                className="flex-1 py-1 rounded bg-[#1e1e1e] hover:bg-[#323232] border border-[#383838] text-[11px] text-zinc-300 text-center"
+              >
+                Fill Container
+              </button>
+            </div>
+
+            {/* Min-Width & Max-Width */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-center bg-[#1e1e1e] border border-[#383838] rounded px-2 py-1">
+                <span className="text-zinc-500 font-mono text-[10px] mr-1">MinW</span>
+                <input
+                  type="text"
+                  value={style.minWidth || ''}
+                  onChange={(e) => onUpdateStyle({ minWidth: e.target.value })}
+                  placeholder="none"
+                  className="w-full bg-transparent text-white focus:outline-none text-xs font-mono"
+                />
+              </div>
+              <div className="flex items-center bg-[#1e1e1e] border border-[#383838] rounded px-2 py-1">
+                <span className="text-zinc-500 font-mono text-[10px] mr-1">MaxW</span>
+                <input
+                  type="text"
+                  value={style.maxWidth || ''}
+                  onChange={(e) => onUpdateStyle({ maxWidth: e.target.value })}
+                  placeholder="none"
+                  className="w-full bg-transparent text-white focus:outline-none text-xs font-mono"
+                />
+              </div>
+            </div>
+
+            {/* Flexbox Controls (Direction, Align Bar & 3x3 Matrix) */}
+            <div className="space-y-2 pt-1 border-t border-[#383838]">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-medium text-zinc-400">Dirección y Alineación Flex</span>
+                <div className="flex items-center bg-[#1e1e1e] border border-[#383838] rounded p-0.5">
+                  <button
+                    onClick={() => onUpdateStyle({ flexDirection: 'row', display: 'flex' })}
+                    title="Horizontal Layout (Row)"
+                    className={`p-1 rounded ${
+                      style.flexDirection === 'row' ? 'bg-[#0d99ff] text-white' : 'text-zinc-400'
+                    }`}
+                  >
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={() => onUpdateStyle({ flexDirection: 'column', display: 'flex' })}
+                    title="Vertical Layout (Column)"
+                    className={`p-1 rounded ${
+                      style.flexDirection === 'column' || !style.flexDirection
+                        ? 'bg-[#0d99ff] text-white'
+                        : 'text-zinc-400'
+                    }`}
+                  >
+                    <ArrowDown className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Quick Alignment Bar */}
+              <div className="grid grid-cols-6 gap-1 bg-[#1e1e1e] p-1 rounded-lg border border-[#383838]">
+                <button
+                  onClick={() => handleQuickAlign('left')}
+                  title="Align Left"
+                  className="p-1 hover:bg-[#323232] rounded flex justify-center text-zinc-400 hover:text-white"
+                >
+                  <AlignLeft className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => handleQuickAlign('center')}
+                  title="Align Horizontal Center"
+                  className="p-1 hover:bg-[#323232] rounded flex justify-center text-zinc-400 hover:text-white"
+                >
+                  <AlignCenter className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => handleQuickAlign('right')}
+                  title="Align Right"
+                  className="p-1 hover:bg-[#323232] rounded flex justify-center text-zinc-400 hover:text-white"
+                >
+                  <AlignRight className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => handleQuickAlign('top')}
+                  title="Align Top"
+                  className="p-1 hover:bg-[#323232] rounded flex justify-center text-zinc-400 hover:text-white"
+                >
+                  <AlignJustify className="w-3.5 h-3.5 rotate-90" />
+                </button>
+                <button
+                  onClick={() => handleQuickAlign('middle')}
+                  title="Align Vertical Center"
+                  className="p-1 hover:bg-[#323232] rounded flex justify-center text-zinc-400 hover:text-white"
+                >
+                  <AlignCenter className="w-3.5 h-3.5 rotate-90" />
+                </button>
+                <button
+                  onClick={() => handleQuickAlign('bottom')}
+                  title="Align Bottom"
+                  className="p-1 hover:bg-[#323232] rounded flex justify-center text-zinc-400 hover:text-white"
+                >
+                  <AlignJustify className="w-3.5 h-3.5 -rotate-90" />
+                </button>
+              </div>
+
+              {/* 3x3 Matrix Grid */}
+              <div className="flex items-center gap-3 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                <div className="grid grid-cols-3 gap-1 w-20 h-20 bg-[#282829] p-1 rounded-md border border-[#3e3e42] shrink-0">
+                  {matrixPositions.map((pos) => {
+                    const isActive =
+                      currentAlign === pos.align && currentJustify === pos.justify;
+                    return (
+                      <button
+                        key={pos.label}
+                        onClick={() =>
+                          onUpdateStyle({
+                            alignItems: pos.align,
+                            justifyContent: pos.justify,
+                            display: 'flex',
+                          })
+                        }
+                        title={pos.label}
+                        className={`rounded-sm transition-colors ${
+                          isActive
+                            ? 'bg-[#0d99ff] ring-1 ring-white'
+                            : 'bg-[#383838] hover:bg-[#525252]'
+                        }`}
+                      />
+                    );
+                  })}
+                </div>
+                <div className="text-[10px] text-zinc-400 space-y-1">
+                  <div>
+                    <span className="text-zinc-500">Align:</span>{' '}
+                    <span className="font-mono text-zinc-200">{currentAlign}</span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500">Justify:</span>{' '}
+                    <span className="font-mono text-zinc-200">{currentJustify}</span>
+                  </div>
+                  <div className="pt-1">
+                    <span className="text-[9px] text-zinc-500">Haz clic en los puntos para posicionar los hijos en la cuadrícula</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ======================================================== */}
+          {/* 5. FILL & BACKGROUND                                     */}
+          {/* ======================================================== */}
+          <div className="pt-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Palette className="w-3.5 h-3.5 text-[#0d99ff]" />
+                <span>Fill & Background</span>
+              </span>
+              <span className="text-[10px] text-zinc-500 font-mono">
+                {style.backgroundColor || 'transparent'}
+              </span>
+            </div>
+
+            {/* Background Color Picker & Hex */}
+            <div className="flex items-center gap-2 bg-[#1e1e1e] border border-[#383838] focus-within:border-[#0d99ff] rounded-md p-1.5">
+              <input
+                type="color"
+                value={style.backgroundColor?.startsWith('#') ? style.backgroundColor : '#18181b'}
+                onChange={(e) => onUpdateStyle({ backgroundColor: e.target.value })}
+                className="w-6 h-6 rounded cursor-pointer border border-[#383838] bg-transparent"
+              />
+              <input
+                type="text"
+                value={style.backgroundColor || 'transparent'}
+                onChange={(e) => onUpdateStyle({ backgroundColor: e.target.value })}
+                className="flex-1 bg-transparent text-white focus:outline-none text-xs font-mono"
+              />
+              <button
+                onClick={() => onUpdateStyle({ backgroundColor: 'transparent' })}
+                className="px-2 py-0.5 text-[10px] rounded bg-[#2c2c2c] hover:bg-[#383838] text-zinc-400 hover:text-white"
+                title="Fondo transparente"
+              >
+                Clear
+              </button>
+            </div>
+
+            {/* Background Presets */}
+            <div className="flex items-center gap-1.5 pt-0.5">
+              {[
+                { color: 'transparent', label: 'Transparente' },
+                { color: '#09090b', label: 'Zinc 950' },
+                { color: '#18181b', label: 'Zinc 900' },
+                { color: '#27272a', label: 'Zinc 800' },
+                { color: '#0d99ff', label: 'Figma Blue' },
+                { color: '#10b981', label: 'Esmeralda' },
+                { color: '#ef4444', label: 'Rojo' },
+                { color: '#ffffff', label: 'Blanco' },
+              ].map((sw) => (
+                <button
+                  key={sw.color}
+                  onClick={() => onUpdateStyle({ backgroundColor: sw.color })}
+                  style={{
+                    backgroundColor: sw.color === 'transparent' ? '#252526' : sw.color,
+                  }}
+                  title={sw.label}
+                  className={`w-4 h-4 rounded border border-black/40 hover:scale-110 transition-transform ${
+                    style.backgroundColor === sw.color
+                      ? 'ring-2 ring-[#0d99ff] ring-offset-1 ring-offset-[#1e1e1e]'
+                      : ''
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Opacity */}
+            <div className="space-y-1 pt-1">
+              <div className="flex items-center justify-between text-[10px] text-zinc-400">
+                <span>Opacidad</span>
+                <span className="font-mono text-zinc-300">
+                  {Math.round(parseFloat(style.opacity ?? '1') * 100)}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={style.opacity !== undefined ? Number(style.opacity) : 1}
+                onChange={(e) => onUpdateStyle({ opacity: e.target.value })}
+                className="w-full accent-[#0d99ff]"
+              />
+            </div>
+          </div>
+
+          {/* ======================================================== */}
+          {/* 6. STROKE & BORDER (CORNER RADIUS, BORDER, SHADOW)       */}
+          {/* ======================================================== */}
+          <div className="pt-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Square className="w-3.5 h-3.5 text-[#0d99ff]" />
+                <span>Stroke & Border</span>
+              </span>
+              <span className="text-[10px] text-zinc-500 font-mono">
+                {style.borderRadius || '0px'}
+              </span>
+            </div>
+
+            {/* Corner Radius */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-zinc-400 font-medium">Radio de Esquinas (Corner Radius)</span>
+                <div className="w-20 flex items-center bg-[#1e1e1e] border border-[#383838] focus-within:border-[#0d99ff] rounded px-2 py-0.5">
+                  <input
+                    type="text"
+                    value={style.borderRadius || '0px'}
+                    onChange={(e) => onUpdateStyle({ borderRadius: e.target.value })}
+                    className="w-full bg-transparent text-white focus:outline-none text-xs text-right font-mono"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                {['0px', '4px', '8px', '12px', '16px', '9999px'].map((preset) => (
+                  <button
+                    key={preset}
+                    onClick={() => onUpdateStyle({ borderRadius: preset })}
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-mono border ${
+                      style.borderRadius === preset
+                        ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                        : 'bg-[#1e1e1e] hover:bg-[#323232] text-zinc-400 border-[#383838]'
+                    }`}
+                  >
+                    {preset === '9999px' ? 'Pill' : preset.replace('px', '')}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Border Width & Style */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <span className="text-[10px] text-zinc-500 font-medium block">Grosor de Borde</span>
+                <div className="flex items-center bg-[#1e1e1e] border border-[#383838] focus-within:border-[#0d99ff] rounded px-2 py-1">
+                  <input
+                    type="text"
+                    value={style.borderWidth || '0px'}
+                    onChange={(e) => onUpdateStyle({ borderWidth: e.target.value, borderStyle: style.borderStyle || 'solid' })}
+                    placeholder="0px"
+                    className="w-full bg-transparent text-white focus:outline-none text-xs font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <span className="text-[10px] text-zinc-500 font-medium block">Estilo de Borde</span>
+                <select
+                  value={style.borderStyle || 'solid'}
+                  onChange={(e) => onUpdateStyle({ borderStyle: e.target.value })}
+                  className="w-full bg-[#1e1e1e] border border-[#383838] focus:border-[#0d99ff] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                >
+                  <option value="solid" className="bg-[#1e1e1e]">Solid (Sólido)</option>
+                  <option value="dashed" className="bg-[#1e1e1e]">Dashed (Guiones)</option>
+                  <option value="dotted" className="bg-[#1e1e1e]">Dotted (Puntos)</option>
+                  <option value="none" className="bg-[#1e1e1e]">None (Sin borde)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Border Color */}
+            <div className="space-y-1">
+              <span className="text-[10px] text-zinc-500 font-medium block">Color de Borde</span>
+              <div className="flex items-center gap-2 bg-[#1e1e1e] border border-[#383838] focus-within:border-[#0d99ff] rounded-md p-1.5">
+                <input
+                  type="color"
+                  value={style.borderColor?.startsWith('#') ? style.borderColor : '#27272a'}
+                  onChange={(e) => onUpdateStyle({ borderColor: e.target.value })}
+                  className="w-5 h-5 rounded cursor-pointer border border-[#383838] bg-transparent"
+                />
+                <input
+                  type="text"
+                  value={style.borderColor || 'none'}
+                  onChange={(e) => onUpdateStyle({ borderColor: e.target.value })}
+                  className="flex-1 bg-transparent text-white focus:outline-none text-xs font-mono"
+                />
+                <button
+                  onClick={() => onUpdateStyle({ borderColor: 'transparent', borderWidth: '0px' })}
+                  className="px-2 py-0.5 text-[10px] rounded bg-[#2c2c2c] hover:bg-[#383838] text-zinc-400 hover:text-white"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+
+            {/* Box Shadow */}
+            <div className="space-y-1">
+              <span className="text-[10px] text-zinc-500 font-medium block">Sombra (Box Shadow)</span>
+              <select
+                value={style.boxShadow || 'none'}
+                onChange={(e) => onUpdateStyle({ boxShadow: e.target.value })}
+                className="w-full bg-[#1e1e1e] border border-[#383838] focus:border-[#0d99ff] rounded px-2.5 py-1 text-white text-xs focus:outline-none"
+              >
+                <option value="none" className="bg-[#1e1e1e]">Ninguna (None)</option>
+                <option value="0 1px 2px 0 rgb(0 0 0 / 0.05)" className="bg-[#1e1e1e]">Small (Sutil)</option>
+                <option value="0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)" className="bg-[#1e1e1e]">Medium</option>
+                <option value="0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)" className="bg-[#1e1e1e]">Large</option>
+                <option value="0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" className="bg-[#1e1e1e]">Extra Large</option>
+                <option value="0 0 15px rgba(13, 153, 255, 0.4)" className="bg-[#1e1e1e]">Blue Glow (Neón Azul)</option>
+                <option value="0 0 15px rgba(16, 185, 129, 0.4)" className="bg-[#1e1e1e]">Emerald Glow (Neón Verde)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Conditional ESP32 Hardware Inspector Section inside Design Tab */}
+          {projectType === 'esp32' && isInteractiveForEsp32 && (
+            <div className="pt-2">
+              {renderHardwareGpioContent(false)}
+            </div>
+          )}
         </div>
       )}
 
