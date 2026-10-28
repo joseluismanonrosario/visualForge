@@ -16,6 +16,7 @@ import {
   Plus,
   Square,
   Sparkles,
+  X,
 } from 'lucide-react';
 import { CanvasNode, ComponentLibrary, ComponentDefinition } from '../types';
 import { COMPONENT_CATALOG } from '../data/componentCatalog';
@@ -242,8 +243,18 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                 placeholder="Search components..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[#1e1e1e] border border-[#383838] rounded-md pl-8 pr-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#0d99ff]"
+                className="w-full bg-[#1e1e1e] border border-[#383838] rounded-md pl-8 pr-7 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#0d99ff]"
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2 top-2 p-0.5 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-700 transition-colors"
+                  title="Clear search"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
             </div>
 
             {/* Filter pills */}

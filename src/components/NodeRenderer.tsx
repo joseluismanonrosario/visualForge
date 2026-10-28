@@ -451,7 +451,7 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
           >
             <i
               className={`${props.prefix || 'fas'} ${props.iconName || 'fa-star'}`}
-              style={style}
+              style={{ color: style.color || '#0d99ff', ...style }}
             />
           </div>
         );

@@ -23,6 +23,7 @@ import {
   Columns3,
   Star,
   Search,
+  X,
 } from 'lucide-react';
 import { CanvasNode } from '../types';
 import { FONT_AWESOME_ICONS, FA_CATEGORIES } from '../data/fontAwesomeIcons';
@@ -132,7 +133,10 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
       item.name.toLowerCase().includes(faSearch.toLowerCase()) ||
       item.class.toLowerCase().includes(faSearch.toLowerCase()) ||
       item.tags.some((t) => t.toLowerCase().includes(faSearch.toLowerCase()));
-    const matchesCategory = faCategory === 'All' || item.category === faCategory;
+    const matchesCategory =
+      faCategory === 'All' ||
+      item.category === faCategory ||
+      (faCategory === 'Brands (Marcas / Logos)' && item.styles.includes('brands'));
     const matchesStyle =
       faStyleFilter === 'all' || item.styles.includes(faStyleFilter);
     return matchesSearch && matchesCategory && matchesStyle;
@@ -515,7 +519,8 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <i
-                      className={`${props.prefix || 'fas'} ${props.iconName || 'fa-rocket'} text-xl text-[#0d99ff]`}
+                      className={`${props.prefix || 'fas'} ${props.iconName || 'fa-rocket'} text-2xl`}
+                      style={{ color: style.color || '#0d99ff' }}
                     />
                     <div>
                       <span className="font-mono text-zinc-200 block text-xs">{props.iconName || 'fa-rocket'}</span>
@@ -528,6 +533,58 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                   >
                     Change Icon
                   </button>
+                </div>
+
+                {/* Icon Color Picker & Presets */}
+                <div className="space-y-1.5 pt-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-zinc-400">Icon Color</span>
+                    <span className="text-[10px] text-zinc-500 font-mono">{style.color || '#0d99ff'}</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-[#1e1e1e] border border-[#383838] rounded-md p-1.5">
+                    <input
+                      type="color"
+                      value={style.color?.startsWith('#') ? style.color : '#0d99ff'}
+                      onChange={(e) => onUpdateStyle({ color: e.target.value })}
+                      className="w-6 h-6 rounded cursor-pointer border border-[#383838] bg-transparent"
+                    />
+                    <input
+                      type="text"
+                      value={style.color || '#0d99ff'}
+                      onChange={(e) => onUpdateStyle({ color: e.target.value })}
+                      className="flex-1 bg-transparent text-white focus:outline-none text-xs font-mono"
+                    />
+                    <button
+                      onClick={() => onUpdateStyle({ color: '#0d99ff' })}
+                      className="px-2 py-0.5 text-[10px] rounded bg-zinc-800 text-zinc-400 hover:text-white"
+                      title="Reset to default blue"
+                    >
+                      Reset
+                    </button>
+                  </div>
+                  {/* Preset Color Swatches */}
+                  <div className="flex items-center gap-1.5 pt-1">
+                    {[
+                      { color: '#0d99ff', label: 'Blue' },
+                      { color: '#8b5cf6', label: 'Purple' },
+                      { color: '#f43f5e', label: 'Pink' },
+                      { color: '#10b981', label: 'Emerald' },
+                      { color: '#f59e0b', label: 'Amber' },
+                      { color: '#ef4444', label: 'Red' },
+                      { color: '#ffffff', label: 'White' },
+                      { color: '#a1a1aa', label: 'Gray' },
+                    ].map((sw) => (
+                      <button
+                        key={sw.color}
+                        onClick={() => onUpdateStyle({ color: sw.color })}
+                        style={{ backgroundColor: sw.color }}
+                        title={sw.label}
+                        className={`w-4 h-4 rounded-full border border-black/40 hover:scale-110 transition-transform ${
+                          style.color === sw.color ? 'ring-2 ring-white ring-offset-1 ring-offset-[#252526]' : ''
+                        }`}
+                      />
+                    ))}
+                  </div>
                 </div>
 
                 {/* FA5 Style / Family Switcher (fas, far, fab) */}
@@ -666,9 +723,19 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                     placeholder="Search icons (rocket, user, wifi, coffee, github, etc.)..."
                     value={faSearch}
                     onChange={(e) => setFaSearch(e.target.value)}
-                    className="w-full bg-[#18181b] border border-[#383838] rounded-md pl-9 pr-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#0d99ff]"
+                    className="w-full bg-[#18181b] border border-[#383838] rounded-md pl-9 pr-8 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#0d99ff]"
                     autoFocus
                   />
+                  {faSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setFaSearch('')}
+                      className="absolute right-2.5 top-2 p-0.5 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-700 transition-colors"
+                      title="Clear search"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
 
                 {/* Category Dropdown Selector for 58 Categories */}
