@@ -20,6 +20,7 @@ interface CanvasProps {
   viewportMode: ViewportMode;
   toolMode: ToolMode;
   zoom: number;
+  onZoom?: (newZoom: number | ((prev: number) => number)) => void;
   isPreviewMode: boolean;
   onDropAsset: (componentType: string, targetId: string | null, position: DropPosition) => void;
   onReorderNode: (draggedId: string, targetId: string, position: DropPosition) => void;
@@ -36,6 +37,7 @@ export const Canvas: React.FC<CanvasProps> = ({
   viewportMode,
   toolMode,
   zoom,
+  onZoom,
   isPreviewMode,
   onDropAsset,
   onReorderNode,
@@ -54,7 +56,7 @@ export const Canvas: React.FC<CanvasProps> = ({
   // Active Hand Mode: true if Hand Tool is selected, Spacebar is held down, or actively panning
   const isHandActive = toolMode === 'hand' || isSpacePressed || isPanning;
 
-  // Listen for Spacebar press and release (Photoshop / Figma style space+drag)
+  // Listen for Spacebar press and release (Photoshop / Figma style space+drag) + Keyboard scroll
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const activeEl = document.activeElement;
@@ -67,6 +69,21 @@ export const Canvas: React.FC<CanvasProps> = ({
       if ((e.code === 'Space' || e.key === ' ') && !isInput) {
         e.preventDefault();
         setIsSpacePressed(true);
+        return;
+      }
+
+      // PageUp / PageDown / Home keyboard scroll support
+      if (!isInput) {
+        if (e.key === 'PageDown') {
+          e.preventDefault();
+          setPan((p) => ({ ...p, y: p.y - 350 }));
+        } else if (e.key === 'PageUp') {
+          e.preventDefault();
+          setPan((p) => ({ ...p, y: p.y + 350 }));
+        } else if (e.key === 'Home') {
+          e.preventDefault();
+          setPan({ x: 0, y: 0 });
+        }
       }
     };
 
@@ -90,6 +107,80 @@ export const Canvas: React.FC<CanvasProps> = ({
       window.removeEventListener('blur', handleBlur);
     };
   }, []);
+
+  // Listen for wheel events on container to allow buttery smooth scrolling on the canvas
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleWheelNative = (e: WheelEvent) => {
+      // 1. If Ctrl or Meta is held, handle zoom
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        if (onZoom) {
+          const zoomDelta = e.deltaY < 0 ? 0.08 : -0.08;
+          onZoom((prevZoom: number) => {
+            const next = Math.min(Math.max(0.25, Number((prevZoom + zoomDelta).toFixed(2))), 2.5);
+            return next;
+          });
+        }
+        return;
+      }
+
+      // 2. Check if the target is an inner scrollable element with scroll remaining
+      const target = e.target as HTMLElement;
+      let el: HTMLElement | null = target;
+      let hasScrollableParent = false;
+      while (el && el !== container) {
+        if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
+          if (el.scrollHeight > el.clientHeight) {
+            hasScrollableParent = true;
+            break;
+          }
+        }
+        const overflowY = window.getComputedStyle(el).overflowY;
+        if ((overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight) {
+          if (
+            (e.deltaY > 0 && el.scrollTop + el.clientHeight < el.scrollHeight) ||
+            (e.deltaY < 0 && el.scrollTop > 0)
+          ) {
+            hasScrollableParent = true;
+            break;
+          }
+        }
+        el = el.parentElement;
+      }
+
+      if (hasScrollableParent) {
+        return;
+      }
+
+      // 3. Otherwise, scroll the canvas smoothly
+      e.preventDefault();
+
+      setPan((prev) => {
+        if (e.shiftKey) {
+          // Shift + Wheel = Horizontal scroll
+          return {
+            ...prev,
+            x: Math.round(prev.x - e.deltaY),
+          };
+        }
+
+        // Standard Wheel = Vertical scroll (and horizontal if deltaX present from trackpad)
+        return {
+          x: Math.round(prev.x - (e.deltaX || 0)),
+          y: Math.round(prev.y - e.deltaY),
+        };
+      });
+    };
+
+    container.addEventListener('wheel', handleWheelNative, { passive: false });
+
+    return () => {
+      container.removeEventListener('wheel', handleWheelNative);
+    };
+  }, [onZoom]);
 
   // Ensure canvas container never has native scroll offset that fights pan.x / pan.y
   useEffect(() => {
@@ -294,7 +385,7 @@ export const Canvas: React.FC<CanvasProps> = ({
     >
       {/* Pan & Zoom Canvas Container */}
       <div
-        className="w-full flex-1 flex flex-col items-center p-8 transition-transform duration-75 origin-top"
+        className="w-full flex-1 flex flex-col items-center p-8 origin-top"
         style={{
           transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
         }}
@@ -400,6 +491,21 @@ export const Canvas: React.FC<CanvasProps> = ({
           )}
         </div>
       </div>
+
+      {/* Floating Center / Reset Pan Button - Visible when scrolled or panned */}
+      {(pan.x !== 0 || pan.y !== 0) && (
+        <button
+          onClick={() => setPan({ x: 0, y: 0 })}
+          className="absolute bottom-4 right-4 z-20 px-2.5 py-1 rounded-full bg-[#252526]/90 hover:bg-[#323232] border border-[#383838] text-[11px] text-zinc-300 shadow-lg flex items-center gap-1.5 transition-all backdrop-blur-xs hover:text-white"
+          title="Restablecer posición del lienzo (0, 0)"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-[#0d99ff]" />
+          <span>Centrar lienzo</span>
+          <span className="text-[10px] text-zinc-500 font-mono">
+            {pan.y !== 0 ? `${-pan.y > 0 ? `+${-pan.y}` : -pan.y}px` : ''}
+          </span>
+        </button>
+      )}
     </main>
   );
 };

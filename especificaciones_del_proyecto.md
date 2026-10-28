@@ -51,7 +51,13 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
 
 3. **Lienzo Central (Infinite Canvas & Artboard Viewport)**:
    - Fondo de lienzo estilo Figma (`bg-[#1e1e1e]`) con cuadrícula sutil opcional (patrón de puntos o rejilla de 8px).
-   - Soporte para **Pan** (arrastre con rueda del ratón o barra espaciadora/Hand Tool) y **Zoom** fluido (`Ctrl + rueda`).
+   - **Sistema Integral de Scroll y Desplazamiento Fluido en el Canvas**:
+     - **Scroll Vertical y Horizontal con Rueda / Trackpad**: Desplazamiento libre bidireccional mediante la rueda del ratón o gestos de dos dedos en trackpad (`deltaY` para vertical, `deltaX` o `Shift + Rueda` para horizontal), permitiendo navegar páginas web completas de cualquier longitud con respuesta instantánea a 60-144 FPS sin retardos de transición.
+     - **Zoom Fluido no Bloqueante (`Ctrl + Rueda / Pinch`)**: Zoom continuo entre 25% y 250% previniendo el escalado accidental de la ventana del navegador (`e.preventDefault()`).
+     - **Desplazamiento por Teclado**: Soporte para teclas `PageDown` (bajar 350px), `PageUp` (subir 350px) y `Home` (volver al origen `0, 0`).
+     - **Botón Flotante "Centrar Lienzo"**: Indicador visual en la esquina inferior derecha que muestra el desplazamiento acumulado (ej. `+450px`) y permite regresar al origen en un solo clic.
+     - **Detección de Contenedores Internos con Scroll**: Respeta el scroll nativo en campos de texto multilínea (`textarea`) o bloques con scroll interno cuando aún tienen contenido por desplazar.
+   - Soporte para **Pan** (arrastre con rueda del ratón o barra espaciadora/Hand Tool) y navegación panorámica en 360 grados.
    - El diseño se aloja dentro de un **Artboard / Frame central** con sombra flotante y etiqueta superior (ej. *"Desktop - 1440 × 900"*).
    - **Selección Estilo Figma**:
      - Borde de selección azul/violeta (`border-[#0d99ff]` o `ring-2 ring-violet-500`).

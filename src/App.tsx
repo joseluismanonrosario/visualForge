@@ -360,6 +360,7 @@ export function App() {
           viewportMode={viewportMode}
           toolMode={toolMode}
           zoom={zoom}
+          onZoom={setZoom}
           isPreviewMode={isPreviewMode}
           onDropAsset={handleDropAsset}
           onReorderNode={handleReorderNode}
