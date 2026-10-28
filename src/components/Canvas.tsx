@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   CanvasNode,
   ViewportMode,
@@ -100,6 +100,30 @@ export const Canvas: React.FC<CanvasProps> = ({
   const handleMouseUp = () => {
     setIsPanning(false);
   };
+
+  // Window pan listener to ensure buttery smooth dragging with Hand Tool
+  useEffect(() => {
+    if (!isPanning) return;
+
+    const handleWindowMouseMove = (e: MouseEvent) => {
+      setPan({
+        x: e.clientX - panStart.x,
+        y: e.clientY - panStart.y,
+      });
+    };
+
+    const handleWindowMouseUp = () => {
+      setIsPanning(false);
+    };
+
+    window.addEventListener('mousemove', handleWindowMouseMove);
+    window.addEventListener('mouseup', handleWindowMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleWindowMouseMove);
+      window.removeEventListener('mouseup', handleWindowMouseUp);
+    };
+  }, [isPanning, panStart]);
 
   // HTML5 Drag and Drop Handlers
   const handleDragOverNode = (e: React.DragEvent, targetId: string) => {
@@ -207,7 +231,11 @@ export const Canvas: React.FC<CanvasProps> = ({
       onMouseUp={handleMouseUp}
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleCanvasDrop}
-      onClick={() => onSelectNode(null)}
+      onClick={() => {
+        if (toolMode !== 'hand') {
+          onSelectNode(null);
+        }
+      }}
       className={`flex-1 relative overflow-auto bg-[#1e1e1e] canvas-dots flex flex-col items-center select-none ${
         toolMode === 'hand' ? (isPanning ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default'
       }`}
@@ -223,7 +251,10 @@ export const Canvas: React.FC<CanvasProps> = ({
         <div
           style={{ width: getViewportWidth(), maxWidth: '1440px' }}
           className="relative transition-all duration-200"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            if (toolMode === 'hand') return;
+            e.stopPropagation();
+          }}
         >
           {/* Frame Label Header (Figma Artboard Tag) */}
           <div className="flex items-center justify-between mb-2 px-1 text-[11px] text-zinc-400 font-medium">
@@ -236,11 +267,11 @@ export const Canvas: React.FC<CanvasProps> = ({
             </span>
           </div>
 
-          {/* Canvas Artboard Body */}
+          {/* Canvas Artboard Body - When toolMode is 'hand', disable pointer events to enable panning everywhere without selecting */}
           <div
             className={`min-h-[800px] w-full bg-[#121214] border border-[#2e2e32] rounded-xl shadow-2xl relative transition-shadow ${
-              isPreviewMode ? '' : 'hover:border-[#3e3e42]'
-            }`}
+              toolMode === 'hand' ? 'pointer-events-none' : ''
+            } ${isPreviewMode ? '' : 'hover:border-[#3e3e42]'}`}
           >
             {tree.length === 0 ? (
               <div className="h-96 flex flex-col items-center justify-center text-zinc-500 text-xs">
@@ -256,6 +287,7 @@ export const Canvas: React.FC<CanvasProps> = ({
                     projectType={projectType}
                     selectedId={selectedId}
                     onSelectNode={onSelectNode}
+                    toolMode={toolMode}
                     isPreviewMode={isPreviewMode}
                     dropTargetId={dropTargetId}
                     dropPosition={dropPosition}
@@ -274,8 +306,8 @@ export const Canvas: React.FC<CanvasProps> = ({
             )}
           </div>
 
-          {/* Floating Contextual Pill for Selected Node */}
-          {selectedId && !isPreviewMode && (
+          {/* Floating Contextual Pill for Selected Node - Hidden in Hand Tool mode */}
+          {selectedId && !isPreviewMode && toolMode !== 'hand' && (
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-[#252526] border border-[#383838] px-3 py-1.5 rounded-full shadow-2xl flex items-center gap-2 text-xs text-zinc-200">
               <span className="text-[11px] font-mono text-[#0d99ff] border-r border-[#383838] pr-2">
                 {selectedId}

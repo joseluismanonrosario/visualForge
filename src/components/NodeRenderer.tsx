@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CanvasNode, DropPosition, ProjectType } from '../types';
+import { CanvasNode, DropPosition, ProjectType, ToolMode } from '../types';
 import { SvgIconRenderer } from '../utils/svgIconRenderer';
 import {
   Maximize2,
@@ -35,6 +35,7 @@ interface NodeRendererProps {
   projectType?: ProjectType;
   selectedId: string | null;
   onSelectNode: (id: string, e: React.MouseEvent) => void;
+  toolMode?: ToolMode;
   isPreviewMode: boolean;
   dropTargetId: string | null;
   dropPosition: DropPosition | null;
@@ -50,6 +51,7 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
   projectType = 'react',
   selectedId,
   onSelectNode,
+  toolMode = 'select',
   isPreviewMode,
   dropTargetId,
   dropPosition,
@@ -61,8 +63,9 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
 }) => {
   if (node.hidden) return null;
 
-  const isSelected = selectedId === node.id && !isPreviewMode;
-  const isDropTarget = dropTargetId === node.id && !isPreviewMode && draggedNodeId !== node.id;
+  const isHandMode = toolMode === 'hand';
+  const isSelected = selectedId === node.id && !isPreviewMode && !isHandMode;
+  const isDropTarget = dropTargetId === node.id && !isPreviewMode && !isHandMode && draggedNodeId !== node.id;
 
   const style = node.style || {};
   const props = node.props || {};
@@ -83,14 +86,15 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
   const [isSelfDragging, setIsSelfDragging] = useState(false);
 
   const handleClick = (e: React.MouseEvent) => {
-    if (!isPreviewMode) {
-      e.stopPropagation();
-      onSelectNode(node.id, e);
+    if (isHandMode || isPreviewMode) {
+      return;
     }
+    e.stopPropagation();
+    onSelectNode(node.id, e);
   };
 
   const handleDragStart = (e: React.DragEvent) => {
-    if (isPreviewMode || node.locked) {
+    if (isHandMode || isPreviewMode || node.locked) {
       e.preventDefault();
       return;
     }
@@ -119,19 +123,21 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
   };
 
   const handleDragOver = (e: React.DragEvent) => {
-    if (!isPreviewMode) {
-      e.stopPropagation();
-      e.preventDefault();
-      onDragOverNode(e, node.id);
+    if (isHandMode || isPreviewMode) {
+      return;
     }
+    e.stopPropagation();
+    e.preventDefault();
+    onDragOverNode(e, node.id);
   };
 
   const handleDrop = (e: React.DragEvent) => {
-    if (!isPreviewMode) {
-      e.stopPropagation();
-      e.preventDefault();
-      onDropNode(e, node.id);
+    if (isHandMode || isPreviewMode) {
+      return;
     }
+    e.stopPropagation();
+    e.preventDefault();
+    onDropNode(e, node.id);
   };
 
   const selectionClasses = isSelected ? 'relative' : '';
@@ -139,7 +145,7 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
 
   const renderChildren = () => {
     if (!node.children || node.children.length === 0) {
-      if (node.isContainer && !isPreviewMode) {
+      if (node.isContainer && !isPreviewMode && !isHandMode) {
         return (
           <div
             onDragOver={handleDragOver}
@@ -160,6 +166,7 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
         projectType={projectType}
         selectedId={selectedId}
         onSelectNode={onSelectNode}
+        toolMode={toolMode}
         isPreviewMode={isPreviewMode}
         dropTargetId={dropTargetId}
         dropPosition={dropPosition}
@@ -1132,7 +1139,7 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
     <div
       data-canvas-node-id={node.id}
       data-is-container={node.isContainer ? 'true' : 'false'}
-      draggable={!node.locked}
+      draggable={!isHandMode && !node.locked}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onDragOver={handleDragOver}
@@ -1146,13 +1153,15 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
       className={`relative group/node transition-all duration-75 ${
         isSelfDragging ? 'opacity-30 scale-[0.98]' : ''
       } ${
-        !node.locked ? 'cursor-grab active:cursor-grabbing' : ''
+        !isHandMode && !node.locked ? 'cursor-grab active:cursor-grabbing' : ''
       } ${
         isInline ? 'inline-block align-top' : 'w-full'
       } ${
         isSelected
           ? 'ring-2 ring-[#0d99ff] ring-offset-1 ring-offset-[#1e1e1e] z-30'
-          : 'hover:ring-1 hover:ring-[#0d99ff]/50'
+          : !isHandMode
+          ? 'hover:ring-1 hover:ring-[#0d99ff]/50'
+          : ''
       }`}
     >
       {/* Top Figma Pill with Move Handle & Element Name */}

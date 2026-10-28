@@ -15,7 +15,10 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
      - Botón de Menú Figma (ícono menú / logo degradado violeta/azul con nombre "VisualForge").
      - Herramientas principales estilo Figma en pill container:
        - **Move Tool (`V`)**: Herramienta de selección y movimiento.
-       - **Hand Tool (`H`)**: Modo de navegación / arrastre del lienzo (Pan).
+       - **Hand Tool (`H`)**: Modo exclusivo de navegación y desplazamiento panorámico (Pan) del lienzo:
+         - No permite seleccionar elementos ni modificar selecciones existentes.
+         - Deshabilita los eventos de selección, clics, tiradores de arrastre y guías hover sobre los componentes (`pointer-events-none`).
+         - Permite arrastrar el lienzo fluidamente desde cualquier punto de la pantalla (fondo, artboard o sobre cualquier componente) con cursores `cursor-grab` y `cursor-grabbing`.
        - **Frame / Device Selector**: Menú desplegable para alternar viewports (*Desktop 1440px*, *Tablet 768px*, *Mobile 375px*).
    - **Centro**:
      - Título del proyecto editable en línea (ej. `Landing Page - v1`).
