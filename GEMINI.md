@@ -8,3 +8,6 @@
 ## Regla de Ejecución Directa sin Preguntas (Project Scope: winWebFormApp)
 - **Ejecución directa sin confirmaciones**: No preguntes ni pidas confirmación o autorización previa para realizar los cambios solicitados; procede e implementa las modificaciones de forma directa e inmediata.
 - **Ámbito exclusivo**: Esta regla aplica única y exclusivamente a este proyecto (`winWebFormApp`).
+
+## Regla de Sincronización Obligatoria de Especificaciones (Specification Sync Rule)
+- **Actualización mandatoria del documento de especificaciones**: Cada vez que se solicite un cambio, actualización, adición o eliminación en el proyecto, se debe actualizar obligatoriamente el archivo `especificaciones_del_proyecto.md` para reflejar fielmente el estado actual, las características y el comportamiento del proyecto.
