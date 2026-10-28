@@ -19,7 +19,7 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
          - No permite seleccionar elementos ni modificar selecciones existentes.
          - Deshabilita los eventos de selección, clics, tiradores de arrastre y guías hover sobre los componentes (`pointer-events-none`).
          - Permite arrastrar el lienzo fluidamente desde cualquier punto de la pantalla (fondo, artboard o sobre cualquier componente) con cursores `cursor-grab` y `cursor-grabbing`.
-         - **Activación rápida con Barra Espaciadora (`Space + Drag` estilo Photoshop / Figma)**: Al mantener presionada la barra espaciadora (sin estar escribiendo en un campo de texto), se activa de forma instantánea el modo Hand temporal con cursor de mano para desplazar la pantalla. Al soltar la barra espaciadora, se restaura automáticamente la herramienta previa sin perder el foco ni la selección.
+         - **Activación rápida con Barra Espaciadora (`Space + Drag` estilo Photoshop / Figma)**: Al mantener presionada la barra espaciadora (sin estar escribiendo en un campo de texto), se activa de forma instantánea el modo Hand temporal con cursor de mano para desplazar la pantalla en 360 grados libres sin que el navegador haga scroll descendente ni mueva el lienzo al fondo (prevención estricta de eventos `Space` repetidos y contenedor del lienzo en `overflow-hidden`). Al soltar la barra espaciadora, se restaura automáticamente la herramienta previa sin perder el foco ni la selección.
        - **Frame / Device Selector**: Menú desplegable para alternar viewports (*Desktop 1440px*, *Tablet 768px*, *Mobile 375px*).
    - **Centro**:
      - Título del proyecto editable en línea (ej. `Landing Page - v1`).

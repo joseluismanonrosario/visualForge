@@ -229,6 +229,11 @@ export function App() {
         activeEl?.tagName === 'TEXTAREA' ||
         (activeEl as HTMLElement)?.isContentEditable;
 
+      // Prevent browser default page scroll on Space when not typing in an input
+      if ((e.code === 'Space' || e.key === ' ') && !isInput) {
+        e.preventDefault();
+      }
+
       // Undo: Ctrl+Z or Cmd+Z
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
         if (!isInput) {

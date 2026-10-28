@@ -51,8 +51,8 @@ export const Canvas: React.FC<CanvasProps> = ({
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [isSpacePressed, setIsSpacePressed] = useState(false);
 
-  // Active Hand Mode: true if Hand Tool is selected OR Spacebar is held down
-  const isHandActive = toolMode === 'hand' || isSpacePressed;
+  // Active Hand Mode: true if Hand Tool is selected, Spacebar is held down, or actively panning
+  const isHandActive = toolMode === 'hand' || isSpacePressed || isPanning;
 
   // Listen for Spacebar press and release (Photoshop / Figma style space+drag)
   useEffect(() => {
@@ -63,14 +63,15 @@ export const Canvas: React.FC<CanvasProps> = ({
         activeEl?.tagName === 'TEXTAREA' ||
         (activeEl as HTMLElement)?.isContentEditable;
 
-      if (e.code === 'Space' && !isInput && !e.repeat) {
+      // Always prevent default space scrolling (even on repeat events)
+      if ((e.code === 'Space' || e.key === ' ') && !isInput) {
         e.preventDefault();
         setIsSpacePressed(true);
       }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.code === 'Space') {
+      if (e.code === 'Space' || e.key === ' ') {
         setIsSpacePressed(false);
       }
     };
@@ -79,7 +80,7 @@ export const Canvas: React.FC<CanvasProps> = ({
       setIsSpacePressed(false);
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, { passive: false });
     window.addEventListener('keyup', handleKeyUp);
     window.addEventListener('blur', handleBlur);
 
@@ -89,6 +90,14 @@ export const Canvas: React.FC<CanvasProps> = ({
       window.removeEventListener('blur', handleBlur);
     };
   }, []);
+
+  // Ensure canvas container never has native scroll offset that fights pan.x / pan.y
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = 0;
+      containerRef.current.scrollLeft = 0;
+    }
+  }, [isHandActive, pan]);
 
   // Drag-and-Drop state
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
@@ -123,6 +132,7 @@ export const Canvas: React.FC<CanvasProps> = ({
   // Hand Tool Pan Handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     if (isHandActive || e.button === 1) {
+      e.preventDefault();
       setIsPanning(true);
       setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
     }
@@ -130,6 +140,7 @@ export const Canvas: React.FC<CanvasProps> = ({
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (isPanning) {
+      e.preventDefault();
       setPan({
         x: e.clientX - panStart.x,
         y: e.clientY - panStart.y,
@@ -146,6 +157,7 @@ export const Canvas: React.FC<CanvasProps> = ({
     if (!isPanning) return;
 
     const handleWindowMouseMove = (e: MouseEvent) => {
+      e.preventDefault();
       setPan({
         x: e.clientX - panStart.x,
         y: e.clientY - panStart.y,
@@ -276,7 +288,7 @@ export const Canvas: React.FC<CanvasProps> = ({
           onSelectNode(null);
         }
       }}
-      className={`flex-1 relative overflow-auto bg-[#1e1e1e] canvas-dots flex flex-col items-center select-none ${
+      className={`flex-1 relative overflow-hidden bg-[#1e1e1e] canvas-dots flex flex-col items-center select-none ${
         isHandActive ? (isPanning ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default'
       }`}
     >
