@@ -236,18 +236,31 @@ El sistema garantiza coherencia total entre el lienzo de edición y el código e
 
 ---
 
-## 3. MOTOR DE DRAG & DROP Y SMART GUIDES ESTILO FIGMA
+## 3. MOTOR DE DRAG & DROP Y MOVIMIENTO DE COMPONENTES DENTRO DEL CANVAS
 
-El lienzo implementa interacción drag-and-drop con retroalimentación visual de precisión:
-- **Arrastre de Assets al Canvas**: Arrastrar cualquier componente desde el panel de Assets al Frame o anidarlo dentro de contenedores existentes (`isContainer: true`).
-- **Guías Inteligentes de Alineación (Smart Guides)**:
-  - Al arrastrar o mover elementos, aparecen líneas guía magnéticas de color fucsia/magenta (`#f43f5e` o `#d946ef`) indicando alineación con centros, bordes y espaciados iguales entre hermanos.
-  - Indicador de distancia en píxeles (badges flotantes con etiquetas `16px`, `24px`).
-- **Detección Dinámica de Inserción (3 Zonas)**:
-  - Cursor en borde superior/izquierdo: Inserción `before` con línea guía magenta iluminada.
-  - Cursor en el centro de un contenedor: Inserción `inside` con marco contenedor resaltado con borde azul Figma (`#0d99ff`).
-  - Cursor en borde inferior/derecho: Inserción `after` con línea guía magenta.
-- **Inserción Rápida**: Si hay un contenedor seleccionado, hacer clic en un asset lo añade automáticamente al final de su lista de hijos.
+El lienzo implementa un sistema integral de arrastre, reordenamiento y desplazamiento de componentes con precisión estilo Figma:
+
+1. **Movimiento Directo en el Canvas (Drag-and-Drop Reordering)**:
+   - **Tirador / Handle Figma Integrado**: Al seleccionar cualquier componente en el lienzo (modo edición), se despliega una pastilla superior azul (`bg-[#0d99ff]`) con icono de agarre (`GripVertical`) y el nombre del elemento, permitiendo agarrarlo y arrastrarlo fluidamente.
+   - **Arrastre Directo**: El usuario puede hacer clic y arrastrar directamente el componente o su tirador superior con cursor visual de agarre (`cursor-grab` / `cursor-grabbing`).
+   - **Retroalimentación Visual Durante el Arrastre**: El componente en movimiento adquiere opacidad translúcida (`opacity-30 scale-[0.98]`), indicando que está siendo reposicionado.
+   - **Prevención de Auto-anidado e Inconsistencias**: El sistema impide que un componente sea soltado sobre sí mismo o dentro de uno de sus propios descendientes.
+
+2. **Detección Dinámica de Zonas de Inserción (Smart Drop Zones)**:
+   - **Para Contenedores (`isContainer: true`)**:
+     - *Borde Superior (25%)*: Inserción `before` indicada por una barra de neón magenta (`#d946ef`) con marcadores circulares en los extremos.
+     - *Centro (50%)*: Inserción `inside` señalada por un recuadro violeta translúcido (`ring-2 ring-violet-500 bg-violet-500/15`) con insignia descriptiva *"Soltar dentro de [Nombre]"*.
+     - *Borde Inferior (25%)*: Inserción `after` con barra de neón magenta.
+   - **Para Componentes No Contenedores (Botones, Inputs, Textos, etc.)**:
+     - *Mitad Superior (50%)*: Inserción `before`.
+     - *Mitad Inferior (50%)*: Inserción `after`.
+     - Elimina el error de soltar elementos dentro de componentes que no admiten hijos.
+   - **Soltar en el Fondo del Lienzo**: Mueve el componente directamente al nivel raíz del diseño.
+
+3. **Atajos de Teclado y Controles Contextuales de Movimiento**:
+   - **Atajo `Alt + ↑` (ArrowUp)**: Mueve inmediatamente el componente seleccionado hacia arriba entre sus hermanos.
+   - **Atajo `Alt + ↓` (ArrowDown)**: Mueve inmediatamente el componente seleccionado hacia abajo entre sus hermanos.
+   - **Pastilla Flotante Inferior**: Botones dedicados "Subir" (`ArrowUp`) y "Bajar" (`ArrowDown`) disponibles en todo momento mientras haya un elemento seleccionado.
 
 ---
 

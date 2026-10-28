@@ -9,6 +9,7 @@ import {
 } from '../types';
 import { NodeRenderer } from './NodeRenderer';
 import { COMPONENT_CATALOG } from '../data/componentCatalog';
+import { findNodeInTree } from '../utils/treeUtils';
 import { Copy, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 
 interface CanvasProps {
@@ -52,6 +53,7 @@ export const Canvas: React.FC<CanvasProps> = ({
   // Drag-and-Drop state
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
   const [dropPosition, setDropPosition] = useState<DropPosition | null>(null);
+  const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
 
   // Viewport width calculation
   const getViewportWidth = () => {
@@ -101,17 +103,43 @@ export const Canvas: React.FC<CanvasProps> = ({
 
   // HTML5 Drag and Drop Handlers
   const handleDragOverNode = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Prevent dragging onto itself
+    if (draggedNodeId === targetId) return;
+
+    // Prevent dragging a parent into one of its descendants
+    const targetNode = findNodeInTree(tree, targetId);
+    if (draggedNodeId && targetNode) {
+      const draggedNode = findNodeInTree(tree, draggedNodeId);
+      if (draggedNode && findNodeInTree([draggedNode], targetId)) return;
+    }
+
     const targetElement = e.currentTarget as HTMLElement;
     const rect = targetElement.getBoundingClientRect();
     const clientY = e.clientY - rect.top;
     const height = rect.height;
 
-    // 3-zone calculation: top 25% = before, center = inside, bottom 25% = after
-    let position: DropPosition = 'inside';
-    if (clientY < height * 0.25) {
-      position = 'before';
-    } else if (clientY > height * 0.75) {
-      position = 'after';
+    let position: DropPosition = 'after';
+    const isContainer = targetNode?.isContainer ?? false;
+
+    if (isContainer) {
+      // 3-zone calculation for containers: top 25% = before, center = inside, bottom 25% = after
+      if (clientY < height * 0.25) {
+        position = 'before';
+      } else if (clientY > height * 0.75) {
+        position = 'after';
+      } else {
+        position = 'inside';
+      }
+    } else {
+      // 2-zone calculation for non-containers: top 50% = before, bottom 50% = after
+      if (clientY < height * 0.5) {
+        position = 'before';
+      } else {
+        position = 'after';
+      }
     }
 
     setDropTargetId(targetId);
@@ -119,8 +147,13 @@ export const Canvas: React.FC<CanvasProps> = ({
   };
 
   const handleDropNode = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const currentPosition = dropPosition || 'after';
     setDropTargetId(null);
     setDropPosition(null);
+    setDraggedNodeId(null);
 
     try {
       const dataStr = e.dataTransfer.getData('application/json');
@@ -128,9 +161,11 @@ export const Canvas: React.FC<CanvasProps> = ({
       const data = JSON.parse(dataStr);
 
       if (data.sourceType === 'catalog') {
-        onDropAsset(data.componentType, targetId, dropPosition || 'inside');
+        onDropAsset(data.componentType, targetId, currentPosition);
       } else if (data.sourceType === 'canvas' && data.nodeId) {
-        onReorderNode(data.nodeId, targetId, dropPosition || 'inside');
+        if (data.nodeId !== targetId) {
+          onReorderNode(data.nodeId, targetId, currentPosition);
+        }
       }
     } catch {
       // Fallback
@@ -138,8 +173,10 @@ export const Canvas: React.FC<CanvasProps> = ({
   };
 
   const handleCanvasDrop = (e: React.DragEvent) => {
+    e.preventDefault();
     setDropTargetId(null);
     setDropPosition(null);
+    setDraggedNodeId(null);
 
     try {
       const dataStr = e.dataTransfer.getData('application/json');
@@ -148,6 +185,14 @@ export const Canvas: React.FC<CanvasProps> = ({
 
       if (data.sourceType === 'catalog') {
         onDropAsset(data.componentType, null, 'after');
+      } else if (data.sourceType === 'canvas' && data.nodeId) {
+        // Move to root level (end of root tree)
+        if (tree.length > 0) {
+          const lastNode = tree[tree.length - 1];
+          if (lastNode.id !== data.nodeId) {
+            onReorderNode(data.nodeId, lastNode.id, 'after');
+          }
+        }
       }
     } catch {
       // Fallback
@@ -214,6 +259,13 @@ export const Canvas: React.FC<CanvasProps> = ({
                     isPreviewMode={isPreviewMode}
                     dropTargetId={dropTargetId}
                     dropPosition={dropPosition}
+                    draggedNodeId={draggedNodeId}
+                    onDragStartNode={setDraggedNodeId}
+                    onDragEndNode={() => {
+                      setDraggedNodeId(null);
+                      setDropTargetId(null);
+                      setDropPosition(null);
+                    }}
                     onDragOverNode={handleDragOverNode}
                     onDropNode={handleDropNode}
                   />
@@ -230,33 +282,35 @@ export const Canvas: React.FC<CanvasProps> = ({
               </span>
               <button
                 onClick={() => onDuplicateNode(selectedId)}
-                title="Duplicate (Ctrl+D)"
+                title="Duplicar (Ctrl+D)"
                 className="hover:text-white p-1 hover:bg-[#323232] rounded flex items-center gap-1"
               >
                 <Copy className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Duplicate</span>
+                <span className="hidden sm:inline">Duplicar</span>
               </button>
               <button
                 onClick={() => onMoveSibling(selectedId, 'up')}
-                title="Move Sibling Up"
-                className="hover:text-white p-1 hover:bg-[#323232] rounded"
+                title="Mover arriba (Alt+↑)"
+                className="hover:text-white p-1 hover:bg-[#323232] rounded flex items-center gap-1"
               >
                 <ArrowUp className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline text-[11px]">Subir</span>
               </button>
               <button
                 onClick={() => onMoveSibling(selectedId, 'down')}
-                title="Move Sibling Down"
-                className="hover:text-white p-1 hover:bg-[#323232] rounded"
+                title="Mover abajo (Alt+↓)"
+                className="hover:text-white p-1 hover:bg-[#323232] rounded flex items-center gap-1"
               >
                 <ArrowDown className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline text-[11px]">Bajar</span>
               </button>
               <button
                 onClick={() => onDeleteNode(selectedId)}
-                title="Delete (Delete / Backspace)"
+                title="Eliminar (Supr / Delete)"
                 className="text-red-400 hover:text-red-300 p-1 hover:bg-red-500/20 rounded flex items-center gap-1"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Delete</span>
+                <span className="hidden sm:inline">Eliminar</span>
               </button>
             </div>
           )}

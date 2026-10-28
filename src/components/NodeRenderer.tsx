@@ -11,6 +11,7 @@ import {
   ExternalLink,
   Eye,
   EyeOff,
+  GripVertical,
   Heart,
   HelpCircle,
   Key,
@@ -37,6 +38,9 @@ interface NodeRendererProps {
   isPreviewMode: boolean;
   dropTargetId: string | null;
   dropPosition: DropPosition | null;
+  draggedNodeId?: string | null;
+  onDragStartNode?: (id: string) => void;
+  onDragEndNode?: () => void;
   onDragOverNode: (e: React.DragEvent, id: string) => void;
   onDropNode: (e: React.DragEvent, id: string) => void;
 }
@@ -49,13 +53,16 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
   isPreviewMode,
   dropTargetId,
   dropPosition,
+  draggedNodeId,
+  onDragStartNode,
+  onDragEndNode,
   onDragOverNode,
   onDropNode,
 }) => {
   if (node.hidden) return null;
 
   const isSelected = selectedId === node.id && !isPreviewMode;
-  const isDropTarget = dropTargetId === node.id && !isPreviewMode;
+  const isDropTarget = dropTargetId === node.id && !isPreviewMode && draggedNodeId !== node.id;
 
   const style = node.style || {};
   const props = node.props || {};
@@ -73,11 +80,41 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
   const [collapsibleOpen, setCollapsibleOpen] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [countVal, setCountVal] = useState(props.value ?? props.count ?? 5);
+  const [isSelfDragging, setIsSelfDragging] = useState(false);
 
   const handleClick = (e: React.MouseEvent) => {
     if (!isPreviewMode) {
       e.stopPropagation();
       onSelectNode(node.id, e);
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent) => {
+    if (isPreviewMode || node.locked) {
+      e.preventDefault();
+      return;
+    }
+    e.stopPropagation();
+    setIsSelfDragging(true);
+    if (onDragStartNode) {
+      onDragStartNode(node.id);
+    }
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData(
+      'application/json',
+      JSON.stringify({
+        sourceType: 'canvas',
+        nodeId: node.id,
+      })
+    );
+    e.dataTransfer.setData('text/plain', node.id);
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    e.stopPropagation();
+    setIsSelfDragging(false);
+    if (onDragEndNode) {
+      onDragEndNode();
     }
   };
 
@@ -97,23 +134,18 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
     }
   };
 
-  const selectionClasses = isSelected
-    ? 'ring-2 ring-[#0d99ff] ring-offset-1 ring-offset-[#1e1e1e] relative'
-    : '';
-
-  const dropClasses = isDropTarget
-    ? dropPosition === 'inside'
-      ? 'ring-2 ring-violet-500 bg-violet-500/10'
-      : dropPosition === 'before'
-      ? 'border-t-2 border-t-pink-500'
-      : 'border-b-2 border-b-pink-500'
-    : '';
+  const selectionClasses = isSelected ? 'relative' : '';
+  const dropClasses = '';
 
   const renderChildren = () => {
     if (!node.children || node.children.length === 0) {
       if (node.isContainer && !isPreviewMode) {
         return (
-          <div className="w-full py-4 border border-dashed border-zinc-700 rounded-md flex items-center justify-center text-zinc-500 text-xs select-none">
+          <div
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+            className="w-full py-4 border border-dashed border-zinc-700/80 hover:border-violet-500/80 rounded-md flex items-center justify-center text-zinc-500 hover:text-violet-400 text-xs select-none transition-colors"
+          >
             Arrastra componentes aquí
           </div>
         );
@@ -131,6 +163,9 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
         isPreviewMode={isPreviewMode}
         dropTargetId={dropTargetId}
         dropPosition={dropPosition}
+        draggedNodeId={draggedNodeId}
+        onDragStartNode={onDragStartNode}
+        onDragEndNode={onDragEndNode}
         onDragOverNode={onDragOverNode}
         onDropNode={onDropNode}
       />
@@ -1078,5 +1113,91 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
     }
   };
 
-  return renderComponentBody();
+  if (isPreviewMode) {
+    return renderComponentBody();
+  }
+
+  const isInline =
+    node.style?.display === 'inline-flex' ||
+    node.style?.display === 'inline-block' ||
+    node.type === 'button' ||
+    node.type === 'badge' ||
+    node.type === 'svg_icon' ||
+    node.type === 'fontawesome_icon' ||
+    node.type === 'link' ||
+    node.type === 'kbd' ||
+    node.type === 'legend_indicator';
+
+  return (
+    <div
+      data-canvas-node-id={node.id}
+      data-is-container={node.isContainer ? 'true' : 'false'}
+      draggable={!node.locked}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      onClick={handleClick}
+      style={{
+        ...(node.style?.width && node.style.width !== '100%' ? { width: node.style.width } : {}),
+        ...(node.style?.maxWidth ? { maxWidth: node.style.maxWidth } : {}),
+        ...(node.style?.flex ? { flex: node.style.flex } : {}),
+      }}
+      className={`relative group/node transition-all duration-75 ${
+        isSelfDragging ? 'opacity-30 scale-[0.98]' : ''
+      } ${
+        !node.locked ? 'cursor-grab active:cursor-grabbing' : ''
+      } ${
+        isInline ? 'inline-block align-top' : 'w-full'
+      } ${
+        isSelected
+          ? 'ring-2 ring-[#0d99ff] ring-offset-1 ring-offset-[#1e1e1e] z-30'
+          : 'hover:ring-1 hover:ring-[#0d99ff]/50'
+      }`}
+    >
+      {/* Top Figma Pill with Move Handle & Element Name */}
+      {isSelected && (
+        <div
+          draggable={!node.locked}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          onClick={(e) => e.stopPropagation()}
+          className="absolute -top-6 left-0 z-50 flex items-center gap-1.5 px-2 py-0.5 bg-[#0d99ff] text-white text-[10px] font-medium rounded-t-sm shadow-md cursor-grab active:cursor-grabbing select-none whitespace-nowrap"
+          title="Arrastra para mover este componente dentro del lienzo"
+        >
+          <GripVertical className="w-3 h-3 text-white/90" />
+          <span className="font-sans font-semibold tracking-wide max-w-[160px] truncate">
+            {node.name || node.type}
+          </span>
+        </div>
+      )}
+
+      {/* Before Drop Guideline Indicator (Magenta Neon Line with Circular End Knobs) */}
+      {isDropTarget && dropPosition === 'before' && (
+        <div className="absolute -top-1.5 left-0 right-0 h-1 bg-[#d946ef] z-50 rounded-full shadow-[0_0_10px_#d946ef] pointer-events-none flex items-center justify-between">
+          <span className="size-2.5 rounded-full bg-[#d946ef] -ml-1 border-2 border-[#1e1e1e]" />
+          <span className="size-2.5 rounded-full bg-[#d946ef] -mr-1 border-2 border-[#1e1e1e]" />
+        </div>
+      )}
+
+      {/* After Drop Guideline Indicator (Magenta Neon Line with Circular End Knobs) */}
+      {isDropTarget && dropPosition === 'after' && (
+        <div className="absolute -bottom-1.5 left-0 right-0 h-1 bg-[#d946ef] z-50 rounded-full shadow-[0_0_10px_#d946ef] pointer-events-none flex items-center justify-between">
+          <span className="size-2.5 rounded-full bg-[#d946ef] -ml-1 border-2 border-[#1e1e1e]" />
+          <span className="size-2.5 rounded-full bg-[#d946ef] -mr-1 border-2 border-[#1e1e1e]" />
+        </div>
+      )}
+
+      {/* Inside Container Drop Indicator */}
+      {isDropTarget && dropPosition === 'inside' && (
+        <div className="absolute inset-0 ring-2 ring-violet-500 bg-violet-500/15 rounded-lg pointer-events-none z-30 flex items-center justify-center">
+          <span className="bg-violet-600 text-white text-[10px] font-semibold px-2 py-0.5 rounded shadow-md border border-violet-400/40">
+            Soltar dentro de {node.name || node.type}
+          </span>
+        </div>
+      )}
+
+      {renderComponentBody()}
+    </div>
+  );
 };

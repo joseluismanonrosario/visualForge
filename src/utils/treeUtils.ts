@@ -114,10 +114,12 @@ export function insertNodeRelative(
   // Target is nested inside children
   return tree.map((node) => {
     if (node.id === targetId && position === 'inside') {
-      return {
-        ...node,
-        children: [...node.children, nodeToInsert],
-      };
+      if (node.isContainer) {
+        return {
+          ...node,
+          children: [...node.children, nodeToInsert],
+        };
+      }
     }
 
     if (node.children && node.children.length > 0) {

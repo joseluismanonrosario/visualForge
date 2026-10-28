@@ -262,6 +262,14 @@ export function App() {
         handleDeleteNode(selectedId);
       }
 
+      // Move Sibling: Alt+ArrowUp or Alt+ArrowDown
+      if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+        if (!isInput && selectedId) {
+          e.preventDefault();
+          handleMoveSibling(selectedId, e.key === 'ArrowUp' ? 'up' : 'down');
+        }
+      }
+
       // Tool switching: V (Select), H (Hand)
       if (!isInput && !e.ctrlKey && !e.metaKey) {
         if (e.key.toLowerCase() === 'v') setToolMode('select');
@@ -278,7 +286,7 @@ export function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleUndo, handleRedo, selectedId, handleDeleteNode, handleDuplicateNode]);
+  }, [handleUndo, handleRedo, selectedId, handleDeleteNode, handleDuplicateNode, handleMoveSibling]);
 
   const handleCreateProject = useCallback(
     (name: string, type: ProjectType, iconLibrary: string, template: 'iot' | 'saas' | 'blank') => {
