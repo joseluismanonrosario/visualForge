@@ -8,7 +8,7 @@ import {
   ProjectType,
 } from './types';
 import { INITIAL_CANVAS_TREE, ESP32_CANVAS_TREE } from './data/initialTemplate';
-import { COMPONENT_CATALOG } from './data/componentCatalog';
+import { COMPONENT_CATALOG, getCatalogForProject } from './data/componentCatalog';
 import {
   findNodeInTree,
   mutateNodeInTree,
@@ -82,14 +82,15 @@ export function App() {
   const handleInsertComponent = useCallback(
     (compDef: ComponentDefinition, targetId?: string | null, position: DropPosition = 'inside') => {
       const newId = `${compDef.type}_${Math.random().toString(36).substring(2, 9)}`;
+      const isFramework = projectType === 'react' || projectType === 'framework';
       const newNode: CanvasNode = {
         id: newId,
         name: compDef.name,
         type: compDef.type,
-        library: compDef.library,
+        library: compDef.library || (isFramework ? 'shadcn' : 'bootstrap'),
         isContainer: compDef.isContainer,
         style: { ...compDef.defaultStyle },
-        props: { ...compDef.defaultProps },
+        props: { ...compDef.defaultProps, catalog: compDef.catalog || (isFramework ? 'shadcn' : 'preline') },
         children: compDef.defaultChildren || [],
       };
 
@@ -111,7 +112,7 @@ export function App() {
       updateTreeWithHistory(newTree);
       setSelectedId(newId);
     },
-    [tree, selectedId, updateTreeWithHistory]
+    [tree, selectedId, updateTreeWithHistory, projectType]
   );
 
   // Update Style of Selected Node
@@ -208,12 +209,15 @@ export function App() {
   // Drop catalog asset onto canvas
   const handleDropAsset = useCallback(
     (componentType: string, targetId: string | null, position: DropPosition) => {
-      const compDef = COMPONENT_CATALOG.find((c) => c.type === componentType);
+      const activeCatalog = getCatalogForProject(projectType);
+      const compDef =
+        activeCatalog.find((c) => c.type === componentType) ||
+        COMPONENT_CATALOG.find((c) => c.type === componentType);
       if (compDef) {
         handleInsertComponent(compDef, targetId, position);
       }
     },
-    [handleInsertComponent]
+    [handleInsertComponent, projectType]
   );
 
   // Global Keyboard Shortcuts
@@ -322,6 +326,7 @@ export function App() {
       <div className="flex-1 flex overflow-hidden relative">
         <LeftSidebar
           tree={tree}
+          projectType={projectType}
           selectedId={selectedId}
           onSelectNode={setSelectedId}
           onDeleteNode={handleDeleteNode}
@@ -334,6 +339,7 @@ export function App() {
 
         <Canvas
           tree={tree}
+          projectType={projectType}
           selectedId={selectedId}
           onSelectNode={setSelectedId}
           viewportMode={viewportMode}

@@ -43,8 +43,9 @@ export interface DragState {
 export interface ComponentDefinition {
   type: string;
   name: string;
-  category: 'Layout & Frames' | 'Navigation' | 'Forms & Inputs' | 'Feedback & Overlays' | 'Data Display' | 'Media & Vectors';
-  library: ComponentLibrary;
+  category: string;
+  catalog?: 'shadcn' | 'preline' | 'both';
+  library?: ComponentLibrary;
   icon: string;
   isContainer: boolean;
   defaultStyle: Record<string, any>;

@@ -24,7 +24,7 @@ export const EXPORT_FORMATS: ExportFormatItem[] = [
   {
     id: 'esp32_html',
     label: 'ESP32 WebUI (index.html)',
-    desc: 'HTML optimizado con SVGs inline y funciones fetch() asíncronas para ESP32',
+    desc: 'HTML Preline UI con SVGs inline puros y fetch() asíncrono para ESP32',
     icon: 'fas fa-microchip',
     projectTypes: ['esp32'],
   },
@@ -44,17 +44,17 @@ export const EXPORT_FORMATS: ExportFormatItem[] = [
   },
   {
     id: 'html_css',
-    label: 'HTML5 Puro (Inline SVG)',
-    desc: 'HTML semántico con SVGs en línea directos, sin CDNs ni fuentes externas',
+    label: 'HTML5 + Preline UI / Tailwind (Inline SVG)',
+    desc: 'HTML semántico con clases Preline UI / Tailwind y SVGs inline directos sin CDNs',
     icon: 'fab fa-html5',
     projectTypes: ['html_css', 'esp32'],
   },
   {
     id: 'react_shadcn',
-    label: 'React 19 + Components JSX',
-    desc: 'JSX con Tailwind CSS v4 y componentes SVG puros sin dependencias',
+    label: 'React 19 + Shadcn/ui TSX',
+    desc: 'JSX/TSX modular con componentes oficiales Shadcn/ui y SVGs limpios',
     icon: 'fab fa-react',
-    projectTypes: ['react'],
+    projectTypes: ['react', 'framework'],
   },
   {
     id: 'html_bootstrap',
@@ -87,8 +87,8 @@ export function getExportFormatsForProject(projectType?: ProjectType): ExportFor
   if (projectType === 'html_css') {
     return EXPORT_FORMATS.filter((f) => !f.projectTypes || f.projectTypes.includes('html_css'));
   }
-  if (projectType === 'react') {
-    return EXPORT_FORMATS.filter((f) => !f.projectTypes || f.projectTypes.includes('react'));
+  if (projectType === 'react' || projectType === 'framework') {
+    return EXPORT_FORMATS.filter((f) => !f.projectTypes || f.projectTypes.includes('react') || f.projectTypes.includes('framework'));
   }
   return EXPORT_FORMATS;
 }
@@ -96,7 +96,7 @@ export function getExportFormatsForProject(projectType?: ProjectType): ExportFor
 export function getDefaultFormatForProject(projectType?: ProjectType): ExportFormat {
   if (projectType === 'esp32') return 'esp32_html';
   if (projectType === 'html_css') return 'html_css';
-  if (projectType === 'react') return 'react_shadcn';
+  if (projectType === 'react' || projectType === 'framework') return 'react_shadcn';
   return 'react_shadcn';
 }
 
@@ -409,37 +409,121 @@ function generateReactShadcn(nodes: CanvasNode[], usedSvgs: Map<string, any>, in
           : '';
 
       switch (node.type) {
+        // Layout & Structure (Catálogo A: Shadcn)
         case 'container':
-          return `${indent}<div className="vf-container" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
+          return `${indent}<div className="vf-container max-w-5xl w-full mx-auto" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
+        case 'aspect_ratio':
+          return `${indent}<AspectRatio ratio={16 / 9} className="bg-zinc-900 rounded-lg overflow-hidden" id="${node.id}"${styleAttr}>\n${indent}  <div className="flex items-center justify-center h-full w-full">${childrenCode || 'Aspect Ratio 16:9'}</div>\n${indent}</AspectRatio>`;
+        case 'collapsible':
+          return `${indent}<Collapsible id="${node.id}"${styleAttr}>\n${indent}  <CollapsibleTrigger asChild><Button variant="outline">${node.props.label || 'Toggle Collapsible'}</Button></CollapsibleTrigger>\n${indent}  <CollapsibleContent className="space-y-2 mt-2">${childrenCode}</CollapsibleContent>\n${indent}</Collapsible>`;
+        case 'resizable':
+          return `${indent}<ResizablePanelGroup direction="horizontal" className="min-h-[140px] rounded-lg border border-zinc-800" id="${node.id}"${styleAttr}>\n${indent}  <ResizablePanel defaultSize={50} className="p-4 flex items-center justify-center">Panel A</ResizablePanel>\n${indent}  <ResizableHandle />\n${indent}  <ResizablePanel defaultSize={50} className="p-4 flex items-center justify-center">Panel B</ResizablePanel>\n${indent}</ResizablePanelGroup>`;
+        case 'scroll_area':
+          return `${indent}<ScrollArea className="h-44 w-full rounded-md border border-zinc-800 p-4" id="${node.id}"${styleAttr}>${childrenCode || 'Scrollable content...'}</ScrollArea>`;
+        case 'separator':
+          return `${indent}<Separator className="my-4" id="${node.id}"${styleAttr} />`;
+        case 'skeleton':
+          return `${indent}<Skeleton className="w-full h-12 rounded-lg" id="${node.id}"${styleAttr} />`;
+
+        // Forms & Inputs (Catálogo A: Shadcn)
+        case 'button':
+          return `${indent}<Button variant="${node.props.variant || 'default'}" id="${node.id}"${styleAttr}>${node.props.label || 'Button'}</Button>`;
+        case 'checkbox':
+          return `${indent}<div className="flex items-center space-x-2" id="${node.id}"${styleAttr}>\n${indent}  <Checkbox id="${node.id}_cb" defaultChecked={${node.props.checked ? 'true' : 'false'}} />\n${indent}  <Label htmlFor="${node.id}_cb">${node.props.label || 'Checkbox option'}</Label>\n${indent}</div>`;
+        case 'form':
+          return `${indent}<form className="space-y-4 w-full" id="${node.id}"${styleAttr}>${childrenCode}</form>`;
+        case 'input':
+          return `${indent}<div className="w-full space-y-1.5" id="${node.id}">\n${indent}  <Label htmlFor="${node.id}_input">${node.props.label || 'Input Label'}</Label>\n${indent}  <Input id="${node.id}_input" placeholder="${node.props.placeholder || 'Type here...'}"${styleAttr} />\n${indent}</div>`;
+        case 'input_otp':
+        case 'otp_input':
+          return `${indent}<InputOTP maxLength={6} id="${node.id}">\n${indent}  <InputOTPGroup>\n${indent}    <InputOTPSlot index={0} />\n${indent}    <InputOTPSlot index={1} />\n${indent}    <InputOTPSlot index={2} />\n${indent}    <InputOTPSeparator />\n${indent}    <InputOTPSlot index={3} />\n${indent}    <InputOTPSlot index={4} />\n${indent}    <InputOTPSlot index={5} />\n${indent}  </InputOTPGroup>\n${indent}</InputOTP>`;
+        case 'label':
+          return `${indent}<Label htmlFor="${node.id}"${styleAttr}>${node.props.label || node.props.text || 'Label'}</Label>`;
+        case 'radio_group':
+          return `${indent}<RadioGroup defaultValue="opt1" id="${node.id}" className="space-y-2">\n${indent}  <div className="flex items-center space-x-2"><RadioGroupItem value="opt1" id="${node.id}_1" /><Label htmlFor="${node.id}_1">Option 1</Label></div>\n${indent}  <div className="flex items-center space-x-2"><RadioGroupItem value="opt2" id="${node.id}_2" /><Label htmlFor="${node.id}_2">Option 2</Label></div>\n${indent}</RadioGroup>`;
+        case 'select':
+          return `${indent}<Select id="${node.id}">\n${indent}  <SelectTrigger className="w-full"><SelectValue placeholder="${node.props.placeholder || 'Select an option'}" /></SelectTrigger>\n${indent}  <SelectContent>\n${indent}    <SelectItem value="opt1">Option 1</SelectItem>\n${indent}    <SelectItem value="opt2">Option 2</SelectItem>\n${indent}  </SelectContent>\n${indent}</Select>`;
+        case 'slider':
+          return `${indent}<Slider defaultValue={[${node.props.value ?? 50}]} max={${node.props.max ?? 100}} step={1} id="${node.id}"${styleAttr} />`;
+        case 'switch':
+          return `${indent}<div className="flex items-center space-x-2" id="${node.id}">\n${indent}  <Switch id="${node.id}_sw" defaultChecked={${node.props.checked ? 'true' : 'false'}} />\n${indent}  <Label htmlFor="${node.id}_sw">${node.props.label || 'Toggle'}</Label>\n${indent}</div>`;
+        case 'textarea':
+          return `${indent}<Textarea placeholder="${node.props.placeholder || 'Type your message here.'}" id="${node.id}"${styleAttr} />`;
+        case 'toggle':
+        case 'toggle_group':
+          return `${indent}<Toggle id="${node.id}" aria-label="Toggle">${node.props.label || 'Toggle'}</Toggle>`;
+
+        // Data Display (Catálogo A: Shadcn)
+        case 'avatar':
+          return `${indent}<Avatar id="${node.id}"${styleAttr}>\n${indent}  <AvatarImage src="${node.props.src || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'}" alt="${node.props.label || 'Avatar'}" />\n${indent}  <AvatarFallback>${node.props.fallback || 'VF'}</AvatarFallback>\n${indent}</Avatar>`;
+        case 'badge':
+          return `${indent}<Badge variant="${node.props.variant || 'default'}" id="${node.id}"${styleAttr}>${node.props.label || 'Badge'}</Badge>`;
+        case 'calendar':
+          return `${indent}<Calendar mode="single" className="rounded-md border border-zinc-800" id="${node.id}"${styleAttr} />`;
+        case 'card':
+          return `${indent}<Card id="${node.id}"${styleAttr}>\n${indent}  <CardHeader>\n${indent}    <CardTitle>${node.props.title || 'Card Title'}</CardTitle>\n${indent}    <CardDescription>${node.props.subtitle || ''}</CardDescription>\n${indent}  </CardHeader>\n${indent}  <CardContent className="space-y-3">${childrenCode}</CardContent>\n${indent}</Card>`;
+        case 'carousel':
+          return `${indent}<Carousel className="w-full max-w-sm" id="${node.id}">\n${indent}  <CarouselContent>\n${indent}    <CarouselItem><div className="p-1"><Card><CardContent className="flex aspect-video items-center justify-center p-6"><span className="text-2xl font-semibold">Slide 1</span></CardContent></Card></div></CarouselItem>\n${indent}    <CarouselItem><div className="p-1"><Card><CardContent className="flex aspect-video items-center justify-center p-6"><span className="text-2xl font-semibold">Slide 2</span></CardContent></Card></div></CarouselItem>\n${indent}  </CarouselContent>\n${indent}  <CarouselPrevious />\n${indent}  <CarouselNext />\n${indent}</Carousel>`;
+        case 'chart':
+          return `${indent}<div className="w-full h-48 rounded-lg border border-zinc-800 bg-zinc-900/50 p-4 flex items-center justify-center" id="${node.id}"><span className="text-xs text-zinc-400">Chart Visualization Component</span></div>`;
+        case 'data_table':
+        case 'table':
+          return `${indent}<Table id="${node.id}"${styleAttr}>\n${indent}  <TableHeader>\n${indent}    <TableRow><TableHead>Name</TableHead><TableHead>Status</TableHead><TableHead>Amount</TableHead></TableRow>\n${indent}  </TableHeader>\n${indent}  <TableBody>\n${indent}    <TableRow><TableCell className="font-medium">Invoice #001</TableCell><TableCell>Paid</TableCell><TableCell>$250.00</TableCell></TableRow>\n${indent}    <TableRow><TableCell className="font-medium">Invoice #002</TableCell><TableCell>Pending</TableCell><TableCell>$150.00</TableCell></TableRow>\n${indent}  </TableBody>\n${indent}</Table>`;
+
+        // Feedback (Catálogo A: Shadcn)
+        case 'alert':
+          return `${indent}<Alert id="${node.id}"${styleAttr}>\n${indent}  <AlertTitle>${node.props.title || 'Attention'}</AlertTitle>\n${indent}  <AlertDescription>${node.props.text || node.props.description || 'Important notification message.'}</AlertDescription>\n${indent}</Alert>`;
+        case 'progress':
+          return `${indent}<Progress value={${node.props.value || 50}} id="${node.id}"${styleAttr} />`;
+        case 'sonner':
+        case 'toast':
+          return `${indent}<Button variant="outline" id="${node.id}" onClick={() => toast("${node.props.label || 'Notification sent'}")}>${node.props.label || 'Show Notification'}</Button>`;
+
+        // Overlays & Navigation (Catálogo A: Shadcn)
+        case 'accordion':
+          return `${indent}<Accordion type="single" collapsible className="w-full" id="${node.id}">\n${indent}  <AccordionItem value="item-1">\n${indent}    <AccordionTrigger>${node.props.title || 'Is it accessible?'}</AccordionTrigger>\n${indent}    <AccordionContent>${node.props.content || 'Yes. It adheres to the WAI-ARIA design pattern.'}</AccordionContent>\n${indent}  </AccordionItem>\n${indent}</Accordion>`;
+        case 'alert_dialog':
+          return `${indent}<AlertDialog id="${node.id}">\n${indent}  <AlertDialogTrigger asChild><Button variant="outline">${node.props.label || 'Open Dialog'}</Button></AlertDialogTrigger>\n${indent}  <AlertDialogContent>\n${indent}    <AlertDialogHeader><AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle><AlertDialogDescription>This action cannot be undone.</AlertDialogDescription></AlertDialogHeader>\n${indent}    <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction>Continue</AlertDialogAction></AlertDialogFooter>\n${indent}  </AlertDialogContent>\n${indent}</AlertDialog>`;
+        case 'command':
+          return `${indent}<Command className="rounded-lg border border-zinc-800 shadow-md" id="${node.id}">\n${indent}  <CommandInput placeholder="Type a command or search..." />\n${indent}  <CommandList>\n${indent}    <CommandEmpty>No results found.</CommandEmpty>\n${indent}    <CommandGroup heading="Suggestions">\n${indent}      <CommandItem>Calendar</CommandItem>\n${indent}      <CommandItem>Search Emoji</CommandItem>\n${indent}    </CommandGroup>\n${indent}  </CommandList>\n${indent}</Command>`;
+        case 'context_menu':
+          return `${indent}<ContextMenu id="${node.id}">\n${indent}  <ContextMenuTrigger className="flex h-[100px] w-full items-center justify-center rounded-md border border-dashed border-zinc-700 text-sm">Right click here</ContextMenuTrigger>\n${indent}  <ContextMenuContent>\n${indent}    <ContextMenuItem>Back</ContextMenuItem>\n${indent}    <ContextMenuItem>Forward</ContextMenuItem>\n${indent}    <ContextMenuItem>Reload</ContextMenuItem>\n${indent}  </ContextMenuContent>\n${indent}</ContextMenu>`;
+        case 'dialog':
+          return `${indent}<Dialog id="${node.id}">\n${indent}  <DialogTrigger asChild><Button variant="outline">${node.props.label || 'Open Dialog'}</Button></DialogTrigger>\n${indent}  <DialogContent>\n${indent}    <DialogHeader><DialogTitle>${node.props.title || 'Dialog Title'}</DialogTitle><DialogDescription>${node.props.subtitle || 'Dialog details and information.'}</DialogDescription></DialogHeader>\n${indent}    <div className="py-2">${childrenCode}</div>\n${indent}  </DialogContent>\n${indent}</Dialog>`;
+        case 'drawer':
+          return `${indent}<Drawer id="${node.id}">\n${indent}  <DrawerTrigger asChild><Button variant="outline">${node.props.label || 'Open Drawer'}</Button></DrawerTrigger>\n${indent}  <DrawerContent>\n${indent}    <DrawerHeader><DrawerTitle>${node.props.title || 'Drawer Title'}</DrawerTitle><DrawerDescription>Drawer subtitle</DrawerDescription></DrawerHeader>\n${indent}    <div className="p-4">${childrenCode}</div>\n${indent}  </DrawerContent>\n${indent}</Drawer>`;
+        case 'dropdown_menu':
+          return `${indent}<DropdownMenu id="${node.id}">\n${indent}  <DropdownMenuTrigger asChild><Button variant="outline">${node.props.label || 'Options'}</Button></DropdownMenuTrigger>\n${indent}  <DropdownMenuContent>\n${indent}    <DropdownMenuItem>Profile</DropdownMenuItem>\n${indent}    <DropdownMenuItem>Billing</DropdownMenuItem>\n${indent}    <DropdownMenuItem>Settings</DropdownMenuItem>\n${indent}  </DropdownMenuContent>\n${indent}</DropdownMenu>`;
+        case 'hover_card':
+          return `${indent}<HoverCard id="${node.id}">\n${indent}  <HoverCardTrigger asChild><Button variant="link">${node.props.label || '@hover'}</Button></HoverCardTrigger>\n${indent}  <HoverCardContent className="w-80">\n${indent}    <div className="space-y-1"><h4 className="text-sm font-semibold">${node.props.label || '@hover'}</h4><p className="text-sm text-muted-foreground">Hover card popover description.</p></div>\n${indent}  </HoverCardContent>\n${indent}</HoverCard>`;
+        case 'menubar':
+          return `${indent}<Menubar id="${node.id}">\n${indent}  <MenubarMenu><MenubarTrigger>File</MenubarTrigger><MenubarContent><MenubarItem>New Tab</MenubarItem><MenubarItem>Share</MenubarItem></MenubarContent></MenubarMenu>\n${indent}  <MenubarMenu><MenubarTrigger>Edit</MenubarTrigger><MenubarContent><MenubarItem>Undo</MenubarItem><MenubarItem>Redo</MenubarItem></MenubarContent></MenubarMenu>\n${indent}</Menubar>`;
+        case 'navigation_menu':
+          return `${indent}<NavigationMenu id="${node.id}">\n${indent}  <NavigationMenuList>\n${indent}    <NavigationMenuItem><NavigationMenuLink className="px-4 py-2 hover:underline">Home</NavigationMenuLink></NavigationMenuItem>\n${indent}    <NavigationMenuItem><NavigationMenuLink className="px-4 py-2 hover:underline">Features</NavigationMenuLink></NavigationMenuItem>\n${indent}  </NavigationMenuList>\n${indent}</NavigationMenu>`;
+        case 'popover':
+          return `${indent}<Popover id="${node.id}">\n${indent}  <PopoverTrigger asChild><Button variant="outline">${node.props.label || 'Open Popover'}</Button></PopoverTrigger>\n${indent}  <PopoverContent className="w-80"><div className="grid gap-2"><h4 className="font-medium leading-none">Popover</h4><p className="text-sm text-muted-foreground">Popover details content.</p></div></PopoverContent>\n${indent}</Popover>`;
+        case 'sheet':
+          return `${indent}<Sheet id="${node.id}">\n${indent}  <SheetTrigger asChild><Button variant="outline">${node.props.label || 'Open Sheet'}</Button></SheetTrigger>\n${indent}  <SheetContent><SheetHeader><SheetTitle>${node.props.title || 'Sheet Title'}</SheetTitle><SheetDescription>Side sheet panel</SheetDescription></SheetHeader><div className="py-4">${childrenCode}</div></SheetContent>\n${indent}</Sheet>`;
+        case 'sidebar':
+          return `${indent}<aside className="w-64 border-r border-zinc-800 bg-zinc-950 p-4 min-h-screen" id="${node.id}">${childrenCode}</aside>`;
+        case 'tabs':
+          return `${indent}<Tabs defaultValue="tab1" className="w-full" id="${node.id}">\n${indent}  <TabsList className="grid w-full grid-cols-2"><TabsTrigger value="tab1">Tab 1</TabsTrigger><TabsTrigger value="tab2">Tab 2</TabsTrigger></TabsList>\n${indent}  <TabsContent value="tab1" className="p-4">${childrenCode || 'Tab 1 Content'}</TabsContent>\n${indent}  <TabsContent value="tab2" className="p-4">Tab 2 Content</TabsContent>\n${indent}</Tabs>`;
+        case 'tooltip':
+          return `${indent}<TooltipProvider id="${node.id}">\n${indent}  <Tooltip><TooltipTrigger asChild><Button variant="outline">${node.props.label || 'Hover me'}</Button></TooltipTrigger><TooltipContent><p>${node.props.text || 'Tooltip message'}</p></TooltipContent></Tooltip>\n${indent}</TooltipProvider>`;
+
+        // Common Media & Frames
         case 'grid':
           return `${indent}<div className="grid grid-cols-${node.props.columns || 2} gap-4" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
         case 'stack':
           return `${indent}<div className="flex flex-row items-center gap-3" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
         case 'navbar':
-          return `${indent}<header className="w-full flex items-center justify-between" id="${node.id}"${styleAttr}>
+          return `${indent}<header className="w-full flex items-center justify-between py-4 border-b border-zinc-800" id="${node.id}"${styleAttr}>
 ${indent}  <div className="font-bold text-lg">${node.props.brand || 'Logo'}</div>
 ${indent}  <nav className="flex items-center gap-4 text-sm font-medium">
 ${(node.props.links || []).map((l: any) => `${indent}    <a href="${l.href}" className="hover:underline">${l.label}</a>`).join('\n')}
 ${indent}  </nav>
 ${indent}  <div className="flex items-center gap-2">${childrenCode}</div>
 ${indent}</header>`;
-        case 'button':
-          return `${indent}<Button variant="${node.props.variant || 'default'}" id="${node.id}"${styleAttr}>${node.props.label || 'Button'}</Button>`;
-        case 'input':
-          return `${indent}<div className="w-full space-y-1">
-${indent}  <Label htmlFor="${node.id}">${node.props.label || 'Input'}</Label>
-${indent}  <Input id="${node.id}" placeholder="${node.props.placeholder || ''}"${styleAttr} />
-${indent}</div>`;
-        case 'badge':
-          return `${indent}<Badge variant="${node.props.variant || 'default'}" id="${node.id}"${styleAttr}>${node.props.label || 'Badge'}</Badge>`;
-        case 'card':
-          return `${indent}<Card id="${node.id}"${styleAttr}>
-${indent}  <CardHeader>
-${indent}    <CardTitle>${node.props.title || 'Card Title'}</CardTitle>
-${indent}    <CardDescription>${node.props.subtitle || ''}</CardDescription>
-${indent}  </CardHeader>
-${indent}  <CardContent className="space-y-3">${childrenCode}</CardContent>
-${indent}</Card>`;
         case 'typography':
           const Tag = node.props.as || 'p';
           return `${indent}<${Tag} id="${node.id}"${styleAttr}>${node.props.text || ''}</${Tag}>`;
@@ -453,13 +537,7 @@ ${indent}</Card>`;
         }
         case 'image':
           return `${indent}<img src="${node.props.src}" alt="${node.props.alt || ''}" id="${node.id}" className="rounded-lg object-cover"${styleAttr} />`;
-        case 'switch':
-          return `${indent}<div className="flex items-center space-x-2">
-${indent}  <Switch id="${node.id}" defaultChecked={${node.props.checked ? 'true' : 'false'}} />
-${indent}  <Label htmlFor="${node.id}">${node.props.label || 'Toggle'}</Label>
-${indent}</div>`;
-        case 'progress':
-          return `${indent}<Progress value={${node.props.value || 50}} id="${node.id}"${styleAttr} />`;
+
         default:
           return `${indent}<div id="${node.id}"${styleAttr}>${childrenCode || node.props.label || node.type}</div>`;
       }
@@ -467,7 +545,7 @@ ${indent}</div>`;
     .join('\n');
 }
 
-// Generate Clean Semantic HTML with INLINE SVGs (Zero CDNs, Zero .woff)
+// Generate Clean Semantic HTML with INLINE SVGs & Preline UI Tailwind Classes (Zero CDNs, Zero .woff)
 function generateHtmlInlineSvg(nodes: CanvasNode[], indent = '      ', isEsp32 = false): string {
   return nodes
     .map((node) => {
@@ -479,20 +557,43 @@ function generateHtmlInlineSvg(nodes: CanvasNode[], indent = '      ', isEsp32 =
           : '';
 
       switch (node.type) {
+        // Layout & Content (Catálogo B: Preline UI)
         case 'container':
-          return `${indent}<div class="vf-container" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
+          return `${indent}<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
+        case 'columns':
+          return `${indent}<div class="grid grid-cols-1 md:grid-cols-${node.props.columns || 2} gap-4" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
         case 'grid':
-          return `${indent}<div class="vf-grid" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
-        case 'stack':
-          return `${indent}<div class="vf-stack" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
-        case 'navbar':
-          return `${indent}<header class="vf-navbar" id="${node.id}"${styleAttr}>
-${indent}  <div class="vf-brand">${node.props.brand || 'VisualForge'}</div>
-${indent}  <nav class="vf-nav-links">
-${(node.props.links || []).map((l: any) => `${indent}    <a href="${l.href}">${l.label}</a>`).join('\n')}
-${indent}  </nav>
-${indent}  <div class="vf-nav-actions">${childrenCode}</div>
-${indent}</header>`;
+          return `${indent}<div class="grid grid-cols-${node.props.columns || 2} gap-4" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
+        case 'layout_splitter':
+          return `${indent}<div class="flex flex-col md:flex-row gap-4 border border-zinc-800 rounded-xl p-4 bg-zinc-900/40" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
+        case 'typography': {
+          const Tag = node.props.as || 'p';
+          return `${indent}<${Tag} class="text-zinc-200" id="${node.id}"${styleAttr}>${node.props.text || ''}</${Tag}>`;
+        }
+        case 'image':
+          return `${indent}<img src="${node.props.src}" alt="${node.props.alt || ''}" class="rounded-xl object-cover max-w-full" id="${node.id}"${styleAttr}>`;
+        case 'link':
+          return `${indent}<a href="${node.props.href || '#'}" class="text-blue-500 hover:text-blue-400 underline inline-flex items-center gap-1.5" id="${node.id}"${styleAttr}>${node.props.label || 'Enlace'}</a>`;
+        case 'divider':
+          return `${indent}<hr class="border-zinc-800 my-4" id="${node.id}"${styleAttr}>`;
+        case 'kbd':
+          return `${indent}<kbd class="px-2 py-1 text-xs font-semibold text-zinc-200 bg-zinc-800 border border-zinc-700 rounded-md" id="${node.id}"${styleAttr}>${node.props.label || 'Ctrl + K'}</kbd>`;
+        case 'custom_scrollbar':
+          return `${indent}<div class="overflow-y-auto max-h-48 p-4 border border-zinc-800 rounded-lg" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
+
+        // Base Components (Catálogo B: Preline UI)
+        case 'accordion':
+          return `${indent}<div class="space-y-2" id="${node.id}"${styleAttr}>\n${indent}  <div class="border border-zinc-800 rounded-lg p-3 bg-zinc-900/60">\n${indent}    <button class="font-medium text-sm text-zinc-200 w-full flex justify-between items-center" type="button"><span>${node.props.title || 'Accordion Title'}</span><span>↓</span></button>\n${indent}    <div class="pt-2 text-xs text-zinc-400">${node.props.content || 'Contenido del acordeón.'}</div>\n${indent}  </div>\n${indent}</div>`;
+        case 'alert':
+          return `${indent}<div class="p-4 rounded-lg bg-blue-950/40 border border-blue-800 text-blue-200 text-sm flex items-center justify-between" id="${node.id}"${styleAttr}><span>${node.props.text || 'Alerta informativa Preline UI'}</span></div>`;
+        case 'avatar':
+          return `${indent}<img class="inline-block size-10 rounded-full ring-2 ring-zinc-800 object-cover" src="${node.props.src || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'}" alt="${node.props.label || 'Avatar'}" id="${node.id}"${styleAttr}>`;
+        case 'avatar_group':
+          return `${indent}<div class="flex -space-x-2" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
+        case 'badge':
+          return `${indent}<span class="inline-flex items-center gap-x-1.5 py-1 px-2.5 rounded-full text-xs font-medium bg-blue-900/50 text-blue-300 border border-blue-700" id="${node.id}"${styleAttr}>${node.props.label || 'Badge'}</span>`;
+        case 'blockquote':
+          return `${indent}<blockquote class="border-l-4 border-blue-500 pl-4 py-1 italic text-zinc-300 text-sm" id="${node.id}"${styleAttr}>"${node.props.text || 'Cita destacada'}"</blockquote>`;
         case 'button': {
           const gpio = isEsp32 && node.props?.gpio?.enabled ? node.props.gpio : null;
           let clickAttr = '';
@@ -503,55 +604,143 @@ ${indent}</header>`;
               clickAttr = ` onclick="updateGPIO(${gpio.pin}, '${gpio.action}')"`;
             }
           }
-          return `${indent}<button type="button" class="vf-button" id="${node.id}"${clickAttr}${styleAttr}>${node.props.label || 'Button'}</button>`;
+          return `${indent}<button type="button" class="py-2.5 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50" id="${node.id}"${clickAttr}${styleAttr}>${node.props.label || 'Button'}</button>`;
         }
+        case 'button_group':
+          return `${indent}<div class="inline-flex rounded-lg shadow-sm" role="group" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
+        case 'card':
+          return `${indent}<div class="flex flex-col bg-zinc-900 border border-zinc-800 shadow-sm rounded-xl p-4 md:p-5" id="${node.id}"${styleAttr}>\n${indent}  <h3 class="text-base font-bold text-white mb-1">${node.props.title || 'Card Title'}</h3>\n${indent}  <p class="text-xs text-zinc-400 mb-3">${node.props.subtitle || ''}</p>\n${indent}  <div class="space-y-2">${childrenCode}</div>\n${indent}</div>`;
+        case 'chat_bubble':
+          return `${indent}<div class="flex gap-2.5 max-w-md p-3 rounded-2xl bg-zinc-800 text-zinc-100 text-sm" id="${node.id}"${styleAttr}>${node.props.text || 'Mensaje de chat'}</div>`;
+        case 'carousel':
+          return `${indent}<div class="relative overflow-hidden rounded-xl border border-zinc-800 p-6 bg-zinc-900 flex items-center justify-center text-zinc-300" id="${node.id}"${styleAttr}>Carrusel Preline UI</div>`;
+        case 'collapse':
+          return `${indent}<div class="p-4 border border-zinc-800 rounded-lg bg-zinc-900/50" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
+        case 'datepicker':
+          return `${indent}<input type="date" class="py-2 px-3 block w-full bg-zinc-900 border border-zinc-700 rounded-lg text-sm text-zinc-200" id="${node.id}"${styleAttr}>`;
+        case 'device_mockup':
+          return `${indent}<div class="relative mx-auto border-zinc-800 bg-zinc-800 border-[10px] rounded-[2.5rem] h-[340px] w-[190px] shadow-xl flex items-center justify-center text-xs text-zinc-400" id="${node.id}">Mockup Device</div>`;
+        case 'list':
+        case 'list_group':
+          return `${indent}<ul class="divide-y divide-zinc-800 border border-zinc-800 rounded-lg overflow-hidden bg-zinc-900/50" id="${node.id}"${styleAttr}>\n${indent}  <li class="px-4 py-3 text-sm text-zinc-200">Elemento de lista 1</li>\n${indent}  <li class="px-4 py-3 text-sm text-zinc-200">Elemento de lista 2</li>\n${indent}</ul>`;
+        case 'legend_indicator':
+          return `${indent}<span class="inline-flex items-center gap-x-1.5 py-1 px-2.5 rounded-full text-xs font-medium bg-emerald-950 text-emerald-400 border border-emerald-800" id="${node.id}"><span class="size-1.5 inline-block rounded-full bg-emerald-400"></span>${node.props.label || 'Online'}</span>`;
+        case 'progress':
+        case 'file_upload_progress':
+          return `${indent}<div class="w-full bg-zinc-800 rounded-full h-2.5 overflow-hidden" id="${node.id}"${styleAttr}>\n${indent}  <div class="bg-blue-600 h-2.5 rounded-full transition-all" style="width: ${node.props.value || 45}%;"></div>\n${indent}</div>`;
+        case 'rating':
+          return `${indent}<div class="flex items-center text-amber-400 text-sm" id="${node.id}">★★★★★</div>`;
+        case 'skeleton':
+          return `${indent}<div class="animate-pulse bg-zinc-800 rounded-lg h-10 w-full" id="${node.id}"${styleAttr}></div>`;
+        case 'spinner':
+          return `${indent}<div class="animate-spin inline-block size-6 border-[3px] border-current border-t-transparent text-blue-600 rounded-full" role="status" id="${node.id}"><span class="sr-only">Cargando...</span></div>`;
+        case 'styled_icon':
+          return `${indent}<div class="inline-flex items-center justify-center size-10 rounded-lg bg-blue-600/10 text-blue-500 border border-blue-500/20" id="${node.id}"${styleAttr}>${childrenCode || '★'}</div>`;
+        case 'toast':
+          return `${indent}<div class="p-3 bg-zinc-900 border border-zinc-800 rounded-lg shadow-lg text-sm text-zinc-200" id="${node.id}"${styleAttr}>${node.props.label || 'Notificación Toast'}</div>`;
+        case 'timeline':
+          return `${indent}<div class="border-l-2 border-zinc-800 pl-4 space-y-4 text-xs" id="${node.id}">\n${indent}  <div class="relative"><div class="absolute -left-[21px] top-1 size-2 rounded-full bg-blue-500"></div><p class="font-medium text-zinc-200">Paso 1</p><p class="text-zinc-500">Completado</p></div>\n${indent}</div>`;
+        case 'tree_view':
+          return `${indent}<div class="text-xs space-y-1 font-mono text-zinc-300" id="${node.id}"><div>📁 Proyecto</div><div class="pl-4">📄 index.html</div></div>`;
+        case 'marquee':
+          return `${indent}<div class="overflow-hidden whitespace-nowrap border-y border-zinc-800 py-2 text-xs font-mono text-zinc-400" id="${node.id}">${node.props.text || 'Texto marquesina Preline UI'}</div>`;
+
+        // Navigations (Catálogo B: Preline UI)
+        case 'navbar':
+          return `${indent}<header class="flex flex-wrap sm:justify-start sm:flex-nowrap z-50 w-full bg-zinc-900 border-b border-zinc-800 text-sm py-3 px-4" id="${node.id}"${styleAttr}>
+${indent}  <nav class="max-w-7xl w-full mx-auto flex items-center justify-between">
+${indent}    <a class="font-bold text-lg text-white" href="#">${node.props.brand || 'VisualForge'}</a>
+${indent}    <div class="flex items-center gap-4">
+${(node.props.links || []).map((l: any) => `${indent}      <a class="text-zinc-400 hover:text-zinc-200" href="${l.href}">${l.label}</a>`).join('\n')}
+${indent}    </div>
+${indent}    <div class="flex items-center gap-2">${childrenCode}</div>
+${indent}  </nav>
+${indent}</header>`;
+        case 'mega_menu':
+          return `${indent}<div class="w-full bg-zinc-900 border border-zinc-800 p-4 rounded-xl" id="${node.id}">${childrenCode}</div>`;
+        case 'navs':
+        case 'tabs':
+          return `${indent}<div class="border-b border-zinc-800 flex gap-4 text-sm font-medium" id="${node.id}">\n${indent}  <button class="py-2 border-b-2 border-blue-500 text-blue-500">General</button>\n${indent}  <button class="py-2 text-zinc-400 hover:text-zinc-200">Ajustes</button>\n${indent}</div>`;
+        case 'sidebar':
+          return `${indent}<aside class="w-64 bg-zinc-900 border-r border-zinc-800 p-4 min-h-screen" id="${node.id}"${styleAttr}>${childrenCode}</aside>`;
+        case 'scrollspy':
+          return `${indent}<div class="relative max-h-48 overflow-y-auto p-4 border border-zinc-800 rounded-lg" id="${node.id}">${childrenCode}</div>`;
+        case 'breadcrumb':
+          return `${indent}<nav class="flex text-xs text-zinc-400 gap-2" id="${node.id}"><a href="#">Inicio</a><span>/</span><span class="text-zinc-200">Sección</span></nav>`;
+        case 'pagination':
+          return `${indent}<div class="inline-flex gap-1" id="${node.id}"><button class="px-3 py-1 bg-zinc-800 text-zinc-200 text-xs rounded">1</button><button class="px-3 py-1 bg-zinc-900 text-zinc-400 text-xs rounded hover:bg-zinc-800">2</button></div>`;
+        case 'stepper':
+          return `${indent}<div class="flex items-center gap-2 text-xs font-medium" id="${node.id}"><span class="size-6 rounded-full bg-blue-600 text-white flex items-center justify-center">1</span><span class="text-zinc-300">Paso 1</span><div class="h-0.5 w-8 bg-zinc-800"></div><span class="size-6 rounded-full bg-zinc-800 text-zinc-400 flex items-center justify-center">2</span></div>`;
+
+        // Basic Forms (Catálogo B: Preline UI)
+        case 'input':
+          return `${indent}<div class="space-y-1 w-full" id="${node.id}">\n${indent}  <label class="block text-xs font-medium text-zinc-400">${node.props.label || 'Input'}</label>\n${indent}  <input type="text" class="py-2 px-3 block w-full bg-zinc-900 border border-zinc-700 rounded-lg text-sm text-zinc-200 placeholder:text-zinc-500" placeholder="${node.props.placeholder || ''}"${styleAttr}>\n${indent}</div>`;
+        case 'input_group':
+          return `${indent}<div class="flex rounded-lg shadow-sm" id="${node.id}">\n${indent}  <span class="px-3 inline-flex items-center min-w-fit rounded-s-md border border-e-0 border-zinc-700 bg-zinc-800 text-xs text-zinc-400">https://</span>\n${indent}  <input type="text" class="py-2 px-3 block w-full border-zinc-700 rounded-e-lg text-sm bg-zinc-900 text-zinc-200" placeholder="dominio.com">\n${indent}</div>`;
+        case 'textarea':
+          return `${indent}<textarea class="py-2 px-3 block w-full bg-zinc-900 border border-zinc-700 rounded-lg text-sm text-zinc-200 placeholder:text-zinc-500" rows="3" placeholder="${node.props.placeholder || 'Escribe tu mensaje...'}" id="${node.id}"${styleAttr}></textarea>`;
+        case 'file_input':
+          return `${indent}<input type="file" class="block w-full text-xs text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-zinc-800 file:text-zinc-200 hover:file:bg-zinc-700" id="${node.id}">`;
+        case 'checkbox': {
+          const gpio = isEsp32 && node.props?.gpio?.enabled ? node.props.gpio : null;
+          const eventAttr = gpio ? ` onchange="updateGPIO(${gpio.pin}, this.checked ? 'SET_HIGH' : 'SET_LOW')"` : '';
+          return `${indent}<label class="inline-flex items-center gap-2 cursor-pointer select-none" id="${node.id}"${styleAttr}>\n${indent}  <input type="checkbox" class="shrink-0 size-4 border-zinc-700 rounded text-blue-600 focus:ring-blue-500 bg-zinc-900"${node.props.checked ? ' checked' : ''}${eventAttr}>\n${indent}  <span class="text-sm text-zinc-300">${node.props.label || 'Checkbox'}</span>\n${indent}</label>`;
+        }
+        case 'radio':
+          return `${indent}<div class="flex items-center gap-2" id="${node.id}"><input type="radio" class="shrink-0 border-zinc-700 rounded-full text-blue-600 focus:ring-blue-500 bg-zinc-900" id="${node.id}_r"><label for="${node.id}_r" class="text-sm text-zinc-300">${node.props.label || 'Opción de radio'}</label></div>`;
         case 'switch': {
           const gpio = isEsp32 && node.props?.gpio?.enabled ? node.props.gpio : null;
           const eventAttr = gpio ? ` onchange="updateGPIO(${gpio.pin}, this.checked ? 'SET_HIGH' : 'SET_LOW')"` : '';
-          return `${indent}<label class="vf-switch" id="${node.id}"${styleAttr}>
-${indent}  <input type="checkbox"${node.props.checked ? ' checked' : ''}${eventAttr}>
-${indent}  <span class="vf-switch-label">${node.props.label || 'Switch'}</span>
-${indent}</label>`;
+          return `${indent}<label class="inline-flex items-center gap-3 cursor-pointer select-none" id="${node.id}"${styleAttr}>\n${indent}  <input type="checkbox" class="sr-only peer"${node.props.checked ? ' checked' : ''}${eventAttr}>\n${indent}  <div class="relative w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>\n${indent}  <span class="text-sm font-medium text-zinc-300">${node.props.label || 'Switch'}</span>\n${indent}</label>`;
         }
-        case 'slider': {
+        case 'select':
+          return `${indent}<select class="py-2 px-3 pe-9 block w-full bg-zinc-900 border border-zinc-700 rounded-lg text-sm text-zinc-200 focus:border-blue-500" id="${node.id}"${styleAttr}><option selected>Opción 1</option><option>Opción 2</option></select>`;
+        case 'slider':
+        case 'range_slider': {
           const gpio = isEsp32 && node.props?.gpio?.enabled ? node.props.gpio : null;
           const eventAttr = gpio
             ? ` oninput="const v=document.getElementById('${node.id}_val'); if(v) v.textContent=this.value; updateGPIO(${gpio.pin}, 'PWM', this.value)"`
             : ` oninput="const v=document.getElementById('${node.id}_val'); if(v) v.textContent=this.value;"`;
-          return `${indent}<div class="vf-slider-group" id="${node.id}"${styleAttr}>
-${indent}  <div class="vf-slider-header">
-${indent}    <span>${node.props.label || 'Slider'}</span>
-${indent}    <span id="${node.id}_val" class="vf-slider-val">${node.props.value ?? 128}</span>
-${indent}  </div>
-${indent}  <input type="range" min="${node.props.min ?? 0}" max="${node.props.max ?? 255}" value="${node.props.value ?? 128}" class="vf-range"${eventAttr}>
-${indent}</div>`;
+          return `${indent}<div class="space-y-1.5 w-full" id="${node.id}"${styleAttr}>\n${indent}  <div class="flex justify-between text-xs text-zinc-400"><span>${node.props.label || 'Rango'}</span><span id="${node.id}_val" class="font-mono text-blue-400 font-bold">${node.props.value ?? 128}</span></div>\n${indent}  <input type="range" min="${node.props.min ?? 0}" max="${node.props.max ?? 255}" value="${node.props.value ?? 128}" class="w-full accent-blue-500 cursor-pointer"${eventAttr}>\n${indent}</div>`;
         }
-        case 'checkbox': {
-          const gpio = isEsp32 && node.props?.gpio?.enabled ? node.props.gpio : null;
-          const eventAttr = gpio ? ` onchange="updateGPIO(${gpio.pin}, this.checked ? 'SET_HIGH' : 'SET_LOW')"` : '';
-          return `${indent}<label class="vf-checkbox" id="${node.id}"${styleAttr}>
-${indent}  <input type="checkbox"${node.props.checked ? ' checked' : ''}${eventAttr}>
-${indent}  <span>${node.props.label || 'Checkbox'}</span>
-${indent}</label>`;
-        }
-        case 'input':
-          return `${indent}<div class="vf-form-group">
-${indent}  <label for="${node.id}">${node.props.label || 'Input'}</label>
-${indent}  <input type="text" id="${node.id}" placeholder="${node.props.placeholder || ''}"${styleAttr}>
-${indent}</div>`;
-        case 'badge':
-          return `${indent}<span class="vf-badge" id="${node.id}"${styleAttr}>${node.props.label || 'Badge'}</span>`;
-        case 'card':
-          return `${indent}<div class="vf-card" id="${node.id}"${styleAttr}>
-${indent}  <div class="vf-card-header">
-${indent}    <h3>${node.props.title || 'Card Title'}</h3>
-${indent}    <p>${node.props.subtitle || ''}</p>
-${indent}  </div>
-${indent}  <div class="vf-card-body">${childrenCode}</div>
-${indent}</div>`;
-        case 'typography':
-          const Tag = node.props.as || 'p';
-          return `${indent}<${Tag} id="${node.id}"${styleAttr}>${node.props.text || ''}</${Tag}>`;
+        case 'color_picker':
+          return `${indent}<div class="flex items-center gap-2" id="${node.id}"><input type="color" class="p-1 h-10 w-14 block bg-zinc-900 border border-zinc-700 cursor-pointer rounded-lg" value="#0d99ff"><span class="text-xs text-zinc-400">${node.props.label || 'Color'}</span></div>`;
+        case 'timepicker':
+          return `${indent}<input type="time" class="py-2 px-3 block w-full bg-zinc-900 border border-zinc-700 rounded-lg text-sm text-zinc-200" id="${node.id}">`;
+
+        // Advanced Forms (Catálogo B: Preline UI)
+        case 'advanced_select':
+        case 'combobox':
+          return `${indent}<div class="relative" id="${node.id}"><input type="text" class="py-2 px-3 block w-full bg-zinc-900 border border-zinc-700 rounded-lg text-sm text-zinc-200" placeholder="Buscar o seleccionar..."><span class="absolute inset-y-0 end-0 flex items-center pe-3 pointer-events-none text-zinc-500">▼</span></div>`;
+        case 'searchbox':
+          return `${indent}<div class="relative" id="${node.id}"><input type="text" class="py-2 px-3 ps-9 block w-full bg-zinc-900 border border-zinc-700 rounded-lg text-sm text-zinc-200 placeholder:text-zinc-500" placeholder="${node.props.placeholder || 'Buscar...'}"><div class="absolute inset-y-0 start-0 flex items-center pointer-events-none ps-3 text-zinc-500">🔍</div></div>`;
+        case 'input_number':
+          return `${indent}<div class="flex items-center border border-zinc-700 rounded-lg overflow-hidden bg-zinc-900" id="${node.id}"><button type="button" class="px-3 py-2 bg-zinc-800 text-zinc-300 hover:bg-zinc-700">-</button><input type="number" value="1" class="w-16 text-center bg-transparent text-zinc-100 text-sm border-0 focus:ring-0"><button type="button" class="px-3 py-2 bg-zinc-800 text-zinc-300 hover:bg-zinc-700">+</button></div>`;
+        case 'strong_password':
+        case 'toggle_password':
+          return `${indent}<div class="relative" id="${node.id}"><input type="password" class="py-2 px-3 pe-10 block w-full bg-zinc-900 border border-zinc-700 rounded-lg text-sm text-zinc-200" placeholder="Contraseña"><button type="button" class="absolute inset-y-0 end-0 flex items-center pe-3 text-zinc-500 hover:text-zinc-300">👁</button></div>`;
+        case 'toggle_count':
+          return `${indent}<div class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-medium bg-zinc-800 text-zinc-300 border border-zinc-700" id="${node.id}"><span>Votos</span><span class="bg-blue-600 text-white rounded-full px-1.5 py-0.2">42</span></div>`;
+        case 'copy_markup':
+          return `${indent}<div class="flex items-center justify-between p-3 bg-zinc-900 border border-zinc-700 rounded-lg text-xs font-mono text-zinc-300" id="${node.id}"><code>npm i preline</code><button type="button" class="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded">Copiar</button></div>`;
+        case 'pin_input':
+          return `${indent}<div class="flex gap-2" id="${node.id}"><input type="text" maxlength="1" class="w-10 h-10 text-center bg-zinc-900 border border-zinc-700 rounded-lg text-sm text-zinc-100 font-bold"><input type="text" maxlength="1" class="w-10 h-10 text-center bg-zinc-900 border border-zinc-700 rounded-lg text-sm text-zinc-100 font-bold"><input type="text" maxlength="1" class="w-10 h-10 text-center bg-zinc-900 border border-zinc-700 rounded-lg text-sm text-zinc-100 font-bold"><input type="text" maxlength="1" class="w-10 h-10 text-center bg-zinc-900 border border-zinc-700 rounded-lg text-sm text-zinc-100 font-bold"></div>`;
+
+        // Overlays & Tables (Catálogo B: Preline UI)
+        case 'dropdown':
+          return `${indent}<div class="relative inline-block" id="${node.id}"><button type="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-zinc-700 bg-zinc-800 text-white shadow-sm hover:bg-zinc-700">${node.props.label || 'Opciones'} ▼</button></div>`;
+        case 'modal':
+          return `${indent}<div class="p-5 bg-zinc-900 border border-zinc-800 rounded-xl max-w-lg shadow-xl" id="${node.id}"><h3 class="font-bold text-lg text-white mb-2">${node.props.title || 'Modal Preline'}</h3><div class="text-sm text-zinc-400 mb-4">${childrenCode || 'Contenido del modal.'}</div><div class="flex justify-end gap-2"><button type="button" class="py-1.5 px-3 bg-zinc-800 rounded-lg text-xs text-white">Cerrar</button><button type="button" class="py-1.5 px-3 bg-blue-600 rounded-lg text-xs text-white">Aceptar</button></div></div>`;
+        case 'drawer':
+          return `${indent}<div class="w-80 bg-zinc-900 border-l border-zinc-800 p-4 shadow-xl" id="${node.id}"><h3 class="font-bold text-white mb-2">${node.props.title || 'Offcanvas Drawer'}</h3>${childrenCode}</div>`;
+        case 'popover':
+          return `${indent}<div class="p-3 bg-zinc-800 border border-zinc-700 rounded-lg shadow-md text-xs text-zinc-300 max-w-xs" id="${node.id}">${node.props.label || 'Contenido emergente Popover'}</div>`;
+        case 'tooltip':
+          return `${indent}<span class="relative group cursor-pointer inline-flex items-center text-xs text-blue-400 underline" id="${node.id}">${node.props.label || 'Pasa el ratón'}</span>`;
+        case 'table':
+          return `${indent}<table class="min-w-full divide-y divide-zinc-800 border border-zinc-800 rounded-lg overflow-hidden text-sm" id="${node.id}">\n${indent}  <thead class="bg-zinc-900"><tr class="text-zinc-400 text-left"><th class="px-4 py-3">Nombre</th><th class="px-4 py-3">Estado</th><th class="px-4 py-3">Acción</th></tr></thead>\n${indent}  <tbody class="divide-y divide-zinc-800 bg-zinc-950 text-zinc-300"><tr><td class="px-4 py-3 font-medium">Elemento 1</td><td class="px-4 py-3 text-emerald-400">Activo</td><td class="px-4 py-3"><button class="text-blue-400 hover:underline">Editar</button></td></tr></tbody>\n${indent}</table>`;
+
+        // Vectors & Icons (Pure Inline SVGs)
         case 'svg_icon':
         case 'fontawesome_icon': {
           const iconKey = node.props.svgId || node.props.iconName || 'lucide:rocket';
@@ -564,12 +753,11 @@ ${indent}</div>`;
             (item ? customizeSvg(item.svgContent, { width: size, height: size, stroke, fill, className: 'vf-icon-svg' }) : '');
 
           if (inlineSvg) {
-            return `${indent}<span id="${node.id}" class="vf-icon-wrapper"${styleAttr}>${inlineSvg}</span>`;
+            return `${indent}<span id="${node.id}" class="inline-flex items-center justify-center align-middle"${styleAttr}>${inlineSvg}</span>`;
           }
-          return `${indent}<span id="${node.id}" class="vf-icon-wrapper"${styleAttr}>[Icon: ${iconKey}]</span>`;
+          return `${indent}<span id="${node.id}" class="inline-flex items-center justify-center align-middle"${styleAttr}>[Icon: ${iconKey}]</span>`;
         }
-        case 'image':
-          return `${indent}<img src="${node.props.src}" alt="${node.props.alt || ''}" class="vf-image" id="${node.id}"${styleAttr}>`;
+
         default:
           return `${indent}<div id="${node.id}"${styleAttr}>${childrenCode || node.props.label || node.type}</div>`;
       }
@@ -698,6 +886,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Slider } from '@/components/ui/slider';
+import { Textarea } from '@/components/ui/textarea';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 // --- Pure React SVG Icon Components (Only Extracted Used Icons) ---
 ${jsxComponentDefs ? jsxComponentDefs + '\n' : '// (No direct SVG icons used)\n'}
@@ -716,10 +913,11 @@ ${generateReactShadcn(tree, usedSvgs)}
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VisualForge Export - Clean Semantic HTML & Pure Inline SVGs</title>
+  <title>VisualForge Export - HTML5 + Preline UI / Tailwind (Inline SVG)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     /* 100% Self-Contained Styles (Zero External CDNs, Zero .woff Fonts) */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: #09090b;
@@ -728,21 +926,10 @@ ${generateReactShadcn(tree, usedSvgs)}
       padding: 24px;
     }
     a { color: inherit; text-decoration: none; }
-    .vf-container { width: 100%; max-width: 1200px; margin: 0 auto; }
-    .vf-icon-wrapper { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; }
-    .vf-icon-svg { display: block; }
-    .vf-button {
-      display: inline-flex; align-items: center; justify-content: center;
-      padding: 8px 16px; border-radius: 6px; font-weight: 500;
-      background: #0d99ff; color: #fff; border: none; cursor: pointer;
-    }
-    .vf-switch { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
-    .vf-switch input { width: 38px; height: 20px; accent-color: #10b981; cursor: pointer; }
-    .vf-range { width: 100%; accent-color: #0d99ff; cursor: pointer; }
   </style>
 </head>
-<body>
-${generateHtmlInlineSvg(tree, '      ', false)}
+<body class="bg-zinc-950 text-zinc-100 min-h-screen">
+${generateHtmlInlineSvg(tree, '  ', false)}
 </body>
 </html>`;
     }
@@ -754,9 +941,10 @@ ${generateHtmlInlineSvg(tree, '      ', false)}
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ESP32 WebUI - VisualForge Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     /* 100% Autónomo: SVGs Inline, Cero CDNs, Cero Fuentes Externas */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: #09090b;
@@ -764,33 +952,6 @@ ${generateHtmlInlineSvg(tree, '      ', false)}
       line-height: 1.5;
       padding: 24px;
     }
-    a { color: #38bdf8; text-decoration: none; }
-    .vf-container { width: 100%; max-width: 1200px; margin: 0 auto; }
-    .vf-grid { display: grid; gap: 16px; }
-    .vf-stack { display: flex; align-items: center; gap: 12px; }
-    .vf-card {
-      background: #18181b; border: 1px solid #27272a; border-radius: 12px;
-      padding: 20px; display: flex; flex-direction: column; gap: 12px;
-    }
-    .vf-card-header h3 { font-size: 16px; font-weight: 600; color: #fff; }
-    .vf-card-header p { font-size: 13px; color: #a1a1aa; }
-    .vf-card-body { display: flex; flex-direction: column; gap: 12px; }
-    .vf-icon-wrapper { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; }
-    .vf-icon-svg { display: block; }
-    .vf-button {
-      display: inline-flex; align-items: center; justify-content: center;
-      padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 13px;
-      background: #0d99ff; color: #fff; border: none; cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
-    }
-    .vf-button:active { transform: scale(0.98); }
-    .vf-switch { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
-    .vf-switch input { width: 44px; height: 24px; accent-color: #10b981; cursor: pointer; }
-    .vf-switch-label { font-size: 13px; color: #e4e4e7; font-weight: 500; }
-    .vf-slider-group { display: flex; flex-direction: column; gap: 6px; width: 100%; }
-    .vf-slider-header { display: flex; justify-content: space-between; font-size: 12px; color: #a1a1aa; }
-    .vf-slider-val { font-family: monospace; color: #38bdf8; font-weight: 600; }
-    .vf-range { width: 100%; accent-color: #0d99ff; cursor: pointer; height: 6px; }
     #vf-esp32-status {
       position: fixed; bottom: 20px; right: 20px;
       background: #18181b; color: #10b981; border: 1px solid #27272a;
@@ -800,7 +961,7 @@ ${generateHtmlInlineSvg(tree, '      ', false)}
     }
   </style>
 </head>
-<body>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen">
 ${generateHtmlInlineSvg(tree, '  ', true)}
 
   <!-- Notificación Flotante de Estado GPIO -->
@@ -914,21 +1075,14 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ESP32 Web Server</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; }
     body { font-family: -apple-system, sans-serif; background: #09090b; color: #f4f4f5; padding: 20px; line-height: 1.5; }
-    a { color: #38bdf8; text-decoration: none; }
-    .vf-container { width: 100%; max-width: 1200px; margin: 0 auto; }
-    .vf-grid { display: grid; gap: 16px; }
-    .vf-card { background: #18181b; border: 1px solid #27272a; border-radius: 12px; padding: 20px; }
-    .vf-icon-wrapper { display: inline-flex; align-items: center; justify-content: center; }
-    .vf-button { background: #0d99ff; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
-    .vf-switch { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; }
-    .vf-range { width: 100%; accent-color: #0d99ff; cursor: pointer; }
     #vf-esp32-status { position: fixed; bottom: 20px; right: 20px; background: #18181b; color: #10b981; border: 1px solid #27272a; padding: 10px 18px; border-radius: 8px; font-family: monospace; font-size: 12px; opacity: 0; transition: opacity 0.3s; }
   </style>
 </head>
-<body>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen">
 ${htmlBody}
 
   <div id="vf-esp32-status"></div>

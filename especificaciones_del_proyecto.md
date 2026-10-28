@@ -56,70 +56,183 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
 
 ---
 
-## 2. CATÁLOGO COMPLETO DE COMPONENTES (SHADCN/UI & BOOTSTRAP 5 + V6)
+## 2. CATÁLOGOS DINÁMICOS DE COMPONENTES UI (CATÁLOGO A: SHADCN/UI & CATÁLOGO B: PRELINE UI)
 
-Organizado como librería de Assets de Figma por categorías oficiales, con búsqueda instantánea y filtros por librería:
+El panel lateral de componentes (`LeftSidebar`) se adapta dinámicamente según el tipo de proyecto activo (`projectType`), cargando estrictamente el catálogo correspondiente:
 
-### Categorías de Assets:
-1. **Layout & Frames**:
-   - `container` (Flexbox / Auto-layout Frame)
-   - `grid` (CSS Grid con columnas configurables)
-   - `columns` (Columns & Gutters de Bootstrap)
-   - `stack` (HStack / VStack con gap configurable)
-   - `aspect_ratio` (Frame 16:9, 4:3, 1:1)
-   - `scroll_area` (Área de scroll estilizada)
-   - `resizable` (Paneles divisores ajustables)
-   - `separator` (Divisor / Línea horizontal o vertical)
+### Catálogo A: Para Frameworks (React / Vue - Basado en Shadcn/ui)
+Si el proyecto es de tipo Framework (`projectType === 'react' | 'framework'`), se cargan **únicamente** los siguientes componentes agrupados en sus 5 categorías oficiales:
 
-2. **Navigation**:
-   - `navbar` (Navbar responsivo con slots para logo, enlaces y botones de acción)
-   - `navigation_menu` (Menú de navegación avanzado shadcn)
-   - `menubar` (Menubar estilo aplicación desktop)
-   - `nav_tabs` (Pestañas de navegación con switch de pestaña activa)
-   - `breadcrumb` (Migas de pan con separadores configurables)
-   - `pagination` (Controles de paginación)
+1. **Layout & Structure**:
+   - `Aspect Ratio`: Frame de proporción fija (16:9, 4:3, 1:1)
+   - `Collapsible`: Panel colapsable/expandible interactivo
+   - `Resizable`: Grupo de paneles divisores ajustables con manejador
+   - `Scroll Area`: Contenedor con barra de desplazamiento estilizada nativa
+   - `Separator`: Divisor horizontal o vertical de sección
+   - `Skeleton`: Marcador de posición animado para estados de carga
 
-3. **Forms & Inputs**:
-   - `button` (Botón con variantes Primary, Secondary, Outline, Ghost, Link)
-   - `button_group` (Grupo de botones contiguos de Bootstrap)
-   - `input` (Campo de texto con placeholder y label flotante)
-   - `input_group` (Input con prefijos/sufijos)
-   - `combobox` (Selector desplegable con buscador)
-   - `textarea` (Área de texto multilinea)
-   - `switch` (Interruptor toggle interactivo)
-   - `checkbox` (Casilla de verificación interactiva)
-   - `radio_group` (Grupo de opciones de radio)
-   - `slider` (Control deslizante de rango)
-   - `otp_input` (Input para código PIN / OTP de 6 dígitos)
-   - `chips` (Chips / Tags estilo Bootstrap v6)
-   - `datepicker` (Selector de fecha con disparador de calendario)
-   - `toggle` y `toggle_group` (Botones de estado activo/inactivo)
+2. **Forms & Inputs**:
+   - `Button`: Botón con variantes Shadcn (default, outline, ghost, secondary, destructive, link)
+   - `Checkbox`: Casilla de verificación con estado booleano
+   - `Form`: Estructura contenedora de formulario con espaciado uniforme
+   - `Input`: Campo de entrada de texto con etiqueta vinculada
+   - `Input OTP`: Entrada especializada para códigos numéricos / OTP de 6 dígitos con separador
+   - `Label`: Etiqueta tipográfica accesible para formularios
+   - `Radio Group`: Conjunto de opciones de selección única
+   - `Select`: Menú desplegable selector de opciones
+   - `Slider`: Control deslizante de rango numérico
+   - `Switch`: Interruptor basculante interactivo on/off
+   - `Textarea`: Área de texto multilinea para mensajes largos
+   - `Toggle / Toggle Group`: Botones de pulsación de estado persistente
 
-4. **Feedback & Overlays**:
-   - `alert` (Banner de alerta informativa, éxito, advertencia o error)
-   - `dialog` (Modal emergente con título, descripción y acciones)
-   - `sheet` (Drawer lateral deslizable tipo Offcanvas)
-   - `badge` (Píldora / Etiqueta de estado)
-   - `progress` (Barra de progreso con porcentaje interactivo)
-   - `spinner` (Indicador de carga animado)
-   - `skeleton` (Marcador de posición de carga)
-   - `popover` (Ventana emergente contextual / Tooltip)
-   - `toast` (Notificación flotante)
+3. **Data Display**:
+   - `Avatar`: Imagen de perfil de usuario con fallback tipográfico
+   - `Badge`: Píldora de estado o etiqueta contextual
+   - `Calendar`: Vista de selector de calendario mensual
+   - `Card`: Tarjeta con CardHeader, CardTitle, CardDescription y CardContent
+   - `Carousel`: Carrusel de diapositivas con botones de navegación previa/siguiente
+   - `Chart`: Vista de contenedor para gráficos y visualización de datos
+   - `Data Table`: Tabla de datos estructurada con paginación y cabeceras
+   - `Table`: Tabla semántica con TableHeader, TableRow, TableHead y TableCell
 
-5. **Data Display**:
-   - `card` (Tarjeta estructurada con cabecera, contenido y footer)
-   - `accordion` (Acordeón interactivo expandible)
-   - `table` (Tabla de datos responsiva con columnas y filas editables)
-   - `avatar` (Avatar de usuario con soporte de imagen o iniciales)
-   - `carousel` (Diapositivas de carrusel interactivo)
-   - `list_group` (Lista agrupada estilo Bootstrap)
-   - `kbd` (Atajo de teclado formateado)
-   - `stepper` (Paso a paso guiado estilo Bootstrap v6)
+4. **Feedback**:
+   - `Alert`: Notificación contextual con AlertTitle y AlertDescription
+   - `Progress`: Barra de progreso de porcentaje con valor dinámico
+   - `Sonner / Toast`: Disparador de notificaciones toast flotantes
+   - `Skeleton`: Esqueleto de carga para bloques de contenido
 
-6. **Media & Vectors**:
-   - `fontawesome_icon` (Vector FontAwesome 5 editable con prefijos fas/far/fab)
-   - `image` (Imagen con URL, modo fit `cover`/`contain`/`fill` y ratio)
-   - `typography` (Encabezados H1-H6 y textos enriquecidos)
+5. **Overlays & Navigation**:
+   - `Accordion`: Lista colapsable con AccordionTrigger y AccordionContent
+   - `Alert Dialog`: Modal de confirmación crítica no descartable accidentalmente
+   - `Command`: Paleta de comandos y buscador rápido con atajos
+   - `Context Menu`: Menú flotante al hacer clic derecho
+   - `Dialog (Modal)`: Ventana modal emergente con diálogo interactivo
+   - `Drawer`: Panel deslizante inferior o lateral para dispositivos
+   - `Dropdown Menu`: Menú desplegable anclado a un botón disparador
+   - `Hover Card`: Tarjeta emergente que aparece al pasar el cursor
+   - `Menubar`: Barra de menús superior estilo aplicación de escritorio
+   - `Navigation Menu`: Menú de navegación principal con enlaces multinivel
+   - `Popover`: Contenedor emergente de información enriquecida
+   - `Sheet`: Panel deslizable lateral tipo offcanvas
+   - `Sidebar`: Barra lateral de navegación fija o colapsable
+   - `Tabs`: Pestañas de navegación de contenido con switch de tab activo
+   - `Tooltip`: Mensaje flotante breve de asistencia contextual
+
+---
+
+### Catálogo B: Para HTML / ESP32 (HTML Plano con Clases de Tailwind CSS - Basado en Preline UI)
+Si el proyecto es de tipo HTML o ESP32 (`projectType === 'html_css' | 'esp32'`), se cargan **únicamente** los siguientes componentes agrupados en sus 7 categorías oficiales:
+
+1. **Layout & Content**:
+   - `Container`: Contenedor responsivo centrado (`max-w-7xl mx-auto px-4`)
+   - `Columns`: Disposición en columnas responsivas (`grid grid-cols-1 md:grid-cols-X`)
+   - `Grid`: Cuadrícula con espaciado configurable
+   - `Layout Splitter`: Divisor de diseño horizontal/vertical con bordes sutiles
+   - `Typography`: Encabezados H1-H6 y párrafos con clases de texto de Tailwind
+   - `Images`: Imágenes responsivas con bordes redondeados y modo fit
+   - `Links`: Enlaces estilizados con transiciones y colores de acento
+   - `Dividers and <hr>`: Separadores horizontales con estilo sutil Preline
+   - `KBD`: Elementos de teclado formateados (`kbd`) para atajos
+   - `Custom Scrollbar`: Contenedor con barra de scroll personalizada
+
+2. **Base Components**:
+   - `Accordion`: Acordeones expandibles Preline (`hs-accordion`)
+   - `Alerts`: Alertas con bordes y fondos translúcidos
+   - `Avatar`: Avatares circulares o cuadrados con aro de contraste
+   - `Avatar Group`: Conjunto apilado de avatares con superposición negativa
+   - `Badge`: Etiquetas redondeadas de estado Preline
+   - `Blockquote`: Citas destacadas con barra lateral azul
+   - `Buttons`: Botones con variantes sólida, outline, ghost y soft
+   - `Button Group`: Grupo de botones agrupados contiguos
+   - `Cards`: Tarjetas Preline con borde, sombra y contenedor de contenido
+   - `Chat Bubbles`: Globos de conversación de mensajería
+   - `Carousel`: Carrusel Preline para banners y medios
+   - `Collapse`: Secciones desplegables simples
+   - `Datepicker`: Selector de fecha estilizado con Tailwind
+   - `Devices`: Mockup de dispositivo móvil para previsualización
+   - `Lists`: Listas de viñetas simples o con iconos
+   - `List Group`: Listas agrupadas con divisores sutiles
+   - `Legend Indicator`: Indicador circular de estado (ej. Online/Offline)
+   - `Progress`: Barra de progreso continua
+   - `File Uploading Progress`: Barra de progreso para transferencias y archivos
+   - `Ratings`: Puntuación de estrellas interactiva
+   - `Skeleton`: Bloque de pulsación para carga en Preline
+   - `Spinners`: Indicador giratorio de espera
+   - `Styled Icons`: Contenedores decorativos para vectores SVG
+   - `Toasts`: Notificación emergente estilo Preline
+   - `Timeline`: Línea de tiempo cronológica con nodos y conectores
+   - `Tree View`: Vista en árbol jerárquico de carpetas o recursos
+   - `Marquee`: Texto continuo o marquesina deslizante
+
+3. **Navigations**:
+   - `Navbar`: Barra de navegación adaptable con branding y enlaces
+   - `Mega Menu`: Menú desplegable amplio para múltiples columnas de navegación
+   - `Navs`: Enlaces de navegación tipo pastilla o subrayado
+   - `Tabs`: Pestañas interactivas de cambio de vista
+   - `Sidebar`: Barra lateral de aplicación con navegación vertical
+   - `Scrollspy`: Navegación vinculada al scroll de secciones
+   - `Breadcrumb`: Miga de pan con separadores
+   - `Pagination`: Paginador con botones numéricos y anterior/siguiente
+   - `Stepper`: Indicador visual de progreso paso a paso
+
+4. **Basic Forms**:
+   - `Input`: Entrada de texto con borde Preline y foco interactivo
+   - `Input Group`: Input con prefijo o sufijo (ej. URLs, dominios, monedas)
+   - `Textarea`: Área de texto multilínea
+   - `File Input`: Selector de archivos con botón estilizado de Tailwind
+   - `Checkbox`: Casilla de verificación accesible
+   - `Radio`: Botón de opción circular
+   - `Switch`: Interruptor tipo toggle con animación suave
+   - `Select`: Menú de selección nativo estilizado
+   - `Range Slider`: Deslizador de rango compatible con control GPIO
+   - `Color Picker`: Selector de paleta cromática nativo integrado
+   - `TimePicker`: Selector de hora horaria
+
+5. **Advanced Forms**:
+   - `Advanced Select`: Selector avanzado con soporte de filtrado
+   - `ComboBox`: Entrada combinada de búsqueda y selección
+   - `SearchBox`: Campo de búsqueda con icono de lupa integrado
+   - `Input Number`: Control numérico con botones más/menos contiguos
+   - `Strong Password`: Campo de contraseña con indicador de fortaleza
+   - `Toggle Password`: Campo de contraseña con botón mostrar/ocultar
+   - `Toggle Count`: Contador interactivo de votos o clics
+   - `Copy Markup`: Bloque de código con botón copiar al portapapeles
+   - `PIN Input`: Casillas separadas para ingreso de código o token
+
+6. **Overlays**:
+   - `Dropdown`: Menú contextual desplegable Preline
+   - `Context Menu`: Menú activado por clic derecho
+   - `Modal`: Ventana emergente con fondo oscurecido y pie de acciones
+   - `Offcanvas (Drawer)`: Panel lateral retráctil
+   - `Popover`: Ventana emergente de información contextual
+   - `Tooltip`: Ayuda flotante para elementos
+
+7. **Tables**:
+   - `Tables`: Tablas semánticas con estilos modernos de Tailwind y divisores sutiles
+
+---
+
+### 3. MOTOR DE RENDERIZADO Y EXPORTACIÓN ADAPTATIVA
+
+El sistema garantiza coherencia total entre el lienzo de edición y el código exportado:
+
+1. **Lienzo Central (Canvas & NodeRenderer)**:
+   - Renderiza fielmente los componentes según el catálogo activo (`shadcn` vs `preline`).
+   - Soporta interactividad en modo Preview (tabs, sliders, toggles, acordeones, modales).
+   - Inyecta metadatos del catálogo en cada nodo para garantizar su correcta exportación.
+
+2. **Pipeline de Exportación Multi-Target**:
+   - **Para React / Framework (`react_shadcn`)**:
+     - Genera código JSX/TSX limpio, modular y desacoplado.
+     - Utiliza importaciones directas de componentes oficiales de Shadcn (`@/components/ui/...`).
+     - Transforma los SVGs utilizados en funciones de componentes de React nativas (`convertSvgToJsx`).
+   - **Para HTML / Tailwind (`html_css`)**:
+     - Genera HTML5 semántico utilizando clases oficiales de Tailwind CSS basadas en la arquitectura de Preline UI.
+     - Inserta los iconos como **SVGs Inline directos**, sin dependencias de fuentes externas ni hojas de estilo CDN pesadas.
+   - **Para ESP32 / IoT (`esp32_html`, `esp32_main_cpp`, `esp32_embedded`)**:
+     - **`index.html`**: Totalmente autónomo y optimizado para microcontroladores con recursos limitados. Emplea SVGs inline puros (0 fuentes `.woff`), estilos mínimos y un script asíncrono no bloqueante (`updateGPIO(pin, action, val)`).
+     - **`main.cpp`**: Genera firmware C++ listo para compilar con `ESPAsyncWebServer`, configurando automáticamente en `setup()` el `pinMode()` (OUTPUT, INPUT o PWM con `ledcAttach`) de todos los pines utilizados en el diseño y los endpoints de control REST.
+     - **`esp32_webserver.h`**: Cabecera C++ todo en uno con el HTML/SVG guardado en memoria flash `PROGMEM` (`R"rawliteral(...)rawliteral"`).
 
 ---
 

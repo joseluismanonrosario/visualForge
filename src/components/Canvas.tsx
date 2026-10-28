@@ -5,6 +5,7 @@ import {
   ToolMode,
   DropPosition,
   DragState,
+  ProjectType,
 } from '../types';
 import { NodeRenderer } from './NodeRenderer';
 import { COMPONENT_CATALOG } from '../data/componentCatalog';
@@ -12,6 +13,7 @@ import { Copy, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 
 interface CanvasProps {
   tree: CanvasNode[];
+  projectType?: ProjectType;
   selectedId: string | null;
   onSelectNode: (id: string | null, e?: React.MouseEvent) => void;
   viewportMode: ViewportMode;
@@ -27,6 +29,7 @@ interface CanvasProps {
 
 export const Canvas: React.FC<CanvasProps> = ({
   tree,
+  projectType,
   selectedId,
   onSelectNode,
   viewportMode,
@@ -205,6 +208,7 @@ export const Canvas: React.FC<CanvasProps> = ({
                   <NodeRenderer
                     key={node.id}
                     node={node}
+                    projectType={projectType}
                     selectedId={selectedId}
                     onSelectNode={onSelectNode}
                     isPreviewMode={isPreviewMode}
