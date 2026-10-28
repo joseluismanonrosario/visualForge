@@ -218,6 +218,47 @@ El estudio incorpora un sistema universal de iconos clasificado según el entorn
 
 ---
 
+## 5.1 ARQUITECTURA DE ICONOS SVG, CATÁLOGO LOCAL Y EXPORTACIÓN INLINE / JSX
+
+El sistema cuenta con una arquitectura de iconos moderna, minimalista y basada en archivos vectoriales SVG limpios con licencia abierta (`lucide-static`):
+
+### 1. Banco de Archivos SVG y Catálogo Local Indexado
+- **Script Generador Autónomo (`scripts/build-icon-catalog.js`)**:
+  - Script independiente en Node.js (ejecutable mediante `npm run build:icons` o `node scripts/build-icon-catalog.js`).
+  - Procesa los archivos SVG de la librería instalada, normaliza y limpia el código vectorial (omitiendo atributos innecesarios o redundantes), preservando `viewBox="0 0 24 24"`, trazos limpios `fill="none"` y `stroke="currentColor"`.
+  - Genera el catálogo indexado `src/data/icon-catalog.json` con más de 2.190 iconos indexados con la siguiente estructura estricta:
+    ```json
+    {
+      "id": "rocket",
+      "name": "Rocket",
+      "category": "Development",
+      "svgContent": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z\"/><path d=\"m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z\"/></svg>"
+    }
+    ```
+
+### 2. Módulo de Renderizado para el Editor / Canvas (`src/utils/svgIconRenderer.tsx`)
+- **Búsqueda y Acceso Rápido O(1)**:
+  - `findCatalogIcon(idOrName)`: Localiza cualquier icono del catálogo por identificador, nombre o variantes de prefijos (`lucide-`, `fa-`, etc.).
+  - `searchCatalogIcons(query, category)`: Permite filtrado reactivo por término y categoría temática.
+  - `getCatalogCategories()`: Extrae dinámicamente las categorías disponibles en el catálogo.
+- **Personalización Dinámica de Atributos Vectoriales (`customizeSvg`)**:
+  - Inyecta de forma segura dimensiones (`width`, `height`, `size`), color de trazo (`stroke`), color de relleno (`fill`), y clases CSS sin alterar la geometría de las rutas.
+- **Componente Dinámico `<SvgIconRenderer />`**:
+  - Componente React reactivo que se integra en el lienzo (`NodeRenderer.tsx`), el visor del inspector y el modal explorador (`RightSidebar.tsx`), respondiendo instantáneamente a los controles de tamaño, color/stroke y relleno (fill).
+
+### 3. Motor de Exportación Multi-Destino con SVGs Puros (`src/utils/exportEngine.ts`)
+- **Extracción Estricta de SVGs Utilizados (`extractUsedCatalogSvgs`)**:
+  - Recorre el árbol jerárquico del diseño y extrae **únicamente** los iconos SVG efectivamente empleados por el usuario, evitando sobrecargar el paquete final.
+- **Exportación HTML/CSS Puro y ESP32 Embebido**:
+  - Inyecta el código SVG en línea (*inline SVG*) de forma directa en el HTML resultante.
+  - No depende de CDNs externos, conexiones a internet ni archivos de fuentes tipográficas (`.woff` / `.woff2` / `.ttf`).
+  - Para ESP32 (`esp32_embedded`), el HTML con SVGs inline se empaqueta como cadena C++ en memoria flash `PROGMEM` (`const char INDEX_HTML[] PROGMEM = R"rawliteral(...)rawliteral";`), garantizando funcionamiento autónomo offline para microcontroladores.
+- **Exportación a React Moderno (JSX)**:
+  - La función `convertSvgToJsx(rawSvg, componentName)` convierte el marcado SVG en componentes JSX limpios y funcionales (transformando atributos SVG a camelCase como `strokeWidth`, `strokeLinecap`, `fillRule`, etc. y propagando `{...props}`).
+  - Cada icono utilizado se declara como componente JSX tipado dentro del mismo archivo de exportación React.
+
+---
+
 ## 6. INSPECTOR DE DISEÑO ESTILO FIGMA (DESIGN PANEL)
 
 Organizado en secciones limpias y compactas con inputs estilizados de Figma (etiquetas `X`, `Y`, `W`, `H`, iconos de ajuste y preview de color):

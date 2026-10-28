@@ -1,41 +1,49 @@
 import { CanvasNode } from '../types';
+import { findCatalogIcon, customizeSvg } from './svgIconRenderer';
 
 export type ExportFormat =
   | 'react_shadcn'
   | 'html_bootstrap'
   | 'react_bootstrap'
   | 'html_css'
+  | 'esp32_embedded'
   | 'react_native_tailwind';
 
 export const EXPORT_FORMATS: { id: ExportFormat; label: string; desc: string; icon: string }[] = [
   {
     id: 'react_shadcn',
-    label: 'React 19 + shadcn/ui',
-    desc: 'TypeScript JSX with Tailwind CSS v4 and shadcn components',
+    label: 'React 19 + Components JSX',
+    desc: 'JSX con Tailwind CSS v4 y componentes SVG puros sin dependencias',
     icon: 'fab fa-react',
+  },
+  {
+    id: 'html_css',
+    label: 'HTML5 Puro (Inline SVG)',
+    desc: 'HTML semántico con SVGs en línea directos, sin CDNs ni fuentes externas',
+    icon: 'fab fa-html5',
+  },
+  {
+    id: 'esp32_embedded',
+    label: 'ESP32 Web Server (C++ PROGMEM)',
+    desc: 'C++ Raw Literal con HTML/SVG autónomo para SPIFFS/LittleFS en ESP32',
+    icon: 'fas fa-microchip',
   },
   {
     id: 'html_bootstrap',
     label: 'HTML5 + Bootstrap 5.3',
-    desc: 'Ready-to-run semantic HTML with Bootstrap CDN and FontAwesome 5',
+    desc: 'Markup semántico listo para ejecutar con Bootstrap 5.3 y SVGs',
     icon: 'fab fa-bootstrap',
   },
   {
     id: 'react_bootstrap',
     label: 'React + react-bootstrap',
-    desc: 'Component-based React code using react-bootstrap library',
+    desc: 'Código React basado en react-bootstrap y SVGs optimizados',
     icon: 'fas fa-code',
-  },
-  {
-    id: 'html_css',
-    label: 'Semantic HTML5 + Pure CSS',
-    desc: 'Clean markup with embedded external CSS styles',
-    icon: 'fab fa-html5',
   },
   {
     id: 'react_native_tailwind',
     label: 'React Native + NativeWind',
-    desc: 'Mobile-ready View and Text elements styled with Tailwind',
+    desc: 'Componentes View y Text listos para móvil estilizados con Tailwind',
     icon: 'fas fa-mobile-alt',
   },
 ];
@@ -51,16 +59,76 @@ function styleToInlineCss(style: Record<string, any>): string {
     .join('; ');
 }
 
-// Generate React + shadcn/ui Code
-function generateReactShadcn(nodes: CanvasNode[], indent = '      '): string {
+// Convert kebab-case icon id to PascalCase component name
+function toComponentName(id: string): string {
+  return (
+    id
+      .split(/[-_]/)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join('') + 'Icon'
+  );
+}
+
+// Extract ONLY used SVGs from the canvas tree
+export function extractUsedCatalogSvgs(nodes: CanvasNode[]): Map<string, { id: string; name: string; componentName: string; rawSvg: string }> {
+  const map = new Map<string, { id: string; name: string; componentName: string; rawSvg: string }>();
+
+  function traverse(list: CanvasNode[]) {
+    for (const node of list) {
+      if (node.type === 'fontawesome_icon' || node.type === 'svg_icon') {
+        const iconKey = node.props.svgId || node.props.iconName || 'rocket';
+        const catalogItem = findCatalogIcon(iconKey);
+        if (catalogItem && !map.has(catalogItem.id)) {
+          map.set(catalogItem.id, {
+            id: catalogItem.id,
+            name: catalogItem.name,
+            componentName: toComponentName(catalogItem.id),
+            rawSvg: catalogItem.svgContent,
+          });
+        }
+      }
+      if (node.children && node.children.length > 0) {
+        traverse(node.children);
+      }
+    }
+  }
+
+  traverse(nodes);
+  return map;
+}
+
+// Convert raw SVG string to clean React JSX component code
+export function convertSvgToJsx(rawSvg: string, componentName: string): string {
+  let jsxSvg = rawSvg
+    .replace(/stroke-width=/g, 'strokeWidth=')
+    .replace(/stroke-linecap=/g, 'strokeLinecap=')
+    .replace(/stroke-linejoin=/g, 'strokeLinejoin=')
+    .replace(/stroke-miterlimit=/g, 'strokeMiterlimit=')
+    .replace(/fill-rule=/g, 'fillRule=')
+    .replace(/clip-rule=/g, 'clipRule=')
+    .replace(/xmlns:xlink=/g, 'xmlnsXlink=')
+    .replace(/class=/g, 'className=')
+    .replace(/<svg\s+/i, '<svg {...props} ');
+
+  return `function ${componentName}(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    ${jsxSvg}
+  );
+}`;
+}
+
+// Generate React + shadcn/ui Code with Clean JSX SVGs
+function generateReactShadcn(nodes: CanvasNode[], usedSvgs: Map<string, any>, indent = '      '): string {
   return nodes
     .map((node) => {
-      const styleAttr = node.style && Object.keys(node.style).length > 0
-        ? ` style={${JSON.stringify(node.style)}}`
-        : '';
-      const childrenCode = node.children && node.children.length > 0
-        ? `\n${generateReactShadcn(node.children, indent + '  ')}\n${indent}`
-        : '';
+      const styleAttr =
+        node.style && Object.keys(node.style).length > 0
+          ? ` style={${JSON.stringify(node.style)}}`
+          : '';
+      const childrenCode =
+        node.children && node.children.length > 0
+          ? `\n${generateReactShadcn(node.children, usedSvgs, indent + '  ')}\n${indent}`
+          : '';
 
       switch (node.type) {
         case 'container':
@@ -97,11 +165,21 @@ ${indent}</Card>`;
         case 'typography':
           const Tag = node.props.as || 'p';
           return `${indent}<${Tag} id="${node.id}"${styleAttr}>${node.props.text || ''}</${Tag}>`;
-        case 'fontawesome_icon':
+        case 'svg_icon':
+        case 'fontawesome_icon': {
+          const iconKey = node.props.svgId || node.props.iconName || 'rocket';
+          const item = findCatalogIcon(iconKey);
+          if (item) {
+            const compName = toComponentName(item.id);
+            const size = node.props.size || node.style?.fontSize || 24;
+            const sizeVal = typeof size === 'number' ? size : parseInt(size) || 24;
+            return `${indent}<${compName} width={${sizeVal}} height={${sizeVal}} id="${node.id}"${styleAttr} />`;
+          }
           if (node.props.library === 'material_symbols') {
             return `${indent}<span className="${node.props.prefix || 'material-icons-outlined'}" id="${node.id}"${styleAttr}>${node.props.iconName || 'star'}</span>`;
           }
           return `${indent}<i className="${node.props.prefix || 'fas'} ${node.props.iconName || 'fa-star'}" id="${node.id}"${styleAttr} />`;
+        }
         case 'image':
           return `${indent}<img src="${node.props.src}" alt="${node.props.alt || ''}" id="${node.id}" className="rounded-lg object-cover"${styleAttr} />`;
         case 'switch':
@@ -118,15 +196,87 @@ ${indent}</div>`;
     .join('\n');
 }
 
+// Generate Clean Semantic HTML with INLINE SVGs (Zero CDNs, Zero .woff)
+function generateHtmlInlineSvg(nodes: CanvasNode[], indent = '      '): string {
+  return nodes
+    .map((node) => {
+      const inlineCss = styleToInlineCss(node.style);
+      const styleAttr = inlineCss ? ` style="${inlineCss}"` : '';
+      const childrenCode =
+        node.children && node.children.length > 0
+          ? `\n${generateHtmlInlineSvg(node.children, indent + '  ')}\n${indent}`
+          : '';
+
+      switch (node.type) {
+        case 'container':
+          return `${indent}<div class="vf-container" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
+        case 'grid':
+          return `${indent}<div class="vf-grid" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
+        case 'stack':
+          return `${indent}<div class="vf-stack" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
+        case 'navbar':
+          return `${indent}<header class="vf-navbar" id="${node.id}"${styleAttr}>
+${indent}  <div class="vf-brand">${node.props.brand || 'VisualForge'}</div>
+${indent}  <nav class="vf-nav-links">
+${(node.props.links || []).map((l: any) => `${indent}    <a href="${l.href}">${l.label}</a>`).join('\n')}
+${indent}  </nav>
+${indent}  <div class="vf-nav-actions">${childrenCode}</div>
+${indent}</header>`;
+        case 'button':
+          return `${indent}<button type="button" class="vf-button" id="${node.id}"${styleAttr}>${node.props.label || 'Button'}</button>`;
+        case 'input':
+          return `${indent}<div class="vf-form-group">
+${indent}  <label for="${node.id}">${node.props.label || 'Input'}</label>
+${indent}  <input type="text" id="${node.id}" placeholder="${node.props.placeholder || ''}"${styleAttr}>
+${indent}</div>`;
+        case 'badge':
+          return `${indent}<span class="vf-badge" id="${node.id}"${styleAttr}>${node.props.label || 'Badge'}</span>`;
+        case 'card':
+          return `${indent}<div class="vf-card" id="${node.id}"${styleAttr}>
+${indent}  <div class="vf-card-header">
+${indent}    <h3>${node.props.title || 'Card Title'}</h3>
+${indent}    <p>${node.props.subtitle || ''}</p>
+${indent}  </div>
+${indent}  <div class="vf-card-body">${childrenCode}</div>
+${indent}</div>`;
+        case 'typography':
+          const Tag = node.props.as || 'p';
+          return `${indent}<${Tag} id="${node.id}"${styleAttr}>${node.props.text || ''}</${Tag}>`;
+        case 'svg_icon':
+        case 'fontawesome_icon': {
+          const iconKey = node.props.svgId || node.props.iconName || 'rocket';
+          const item = findCatalogIcon(iconKey);
+          if (item) {
+            const size = node.props.size || node.style?.fontSize || 24;
+            const inlineSvg = customizeSvg(item.svgContent, {
+              width: size,
+              height: size,
+              stroke: node.style?.color || 'currentColor',
+              className: 'vf-icon-svg',
+            });
+            return `${indent}<span id="${node.id}" class="vf-icon-wrapper"${styleAttr}>${inlineSvg}</span>`;
+          }
+          return `${indent}<span id="${node.id}" class="vf-icon-wrapper"${styleAttr}>[Icon: ${iconKey}]</span>`;
+        }
+        case 'image':
+          return `${indent}<img src="${node.props.src}" alt="${node.props.alt || ''}" class="vf-image" id="${node.id}"${styleAttr}>`;
+        default:
+          return `${indent}<div id="${node.id}"${styleAttr}>${childrenCode || node.props.label || node.type}</div>`;
+      }
+    })
+    .join('\n');
+}
+
 // Generate Semantic HTML + Bootstrap 5.3 CDN
 function generateHtmlBootstrap(nodes: CanvasNode[], indent = '      '): string {
   return nodes
     .map((node) => {
       const inlineCss = styleToInlineCss(node.style);
       const styleAttr = inlineCss ? ` style="${inlineCss}"` : '';
-      const childrenCode = node.children && node.children.length > 0
-        ? `\n${generateHtmlBootstrap(node.children, indent + '  ')}\n${indent}`
-        : '';
+      const childrenCode =
+        node.children && node.children.length > 0
+          ? `\n${generateHtmlBootstrap(node.children, indent + '  ')}\n${indent}`
+          : '';
 
       switch (node.type) {
         case 'container':
@@ -165,11 +315,19 @@ ${indent}</div>`;
         case 'typography':
           const Tag = node.props.as || 'p';
           return `${indent}<${Tag} id="${node.id}"${styleAttr}>${node.props.text || ''}</${Tag}>`;
-        case 'fontawesome_icon':
+        case 'svg_icon':
+        case 'fontawesome_icon': {
+          const iconKey = node.props.svgId || node.props.iconName || 'rocket';
+          const item = findCatalogIcon(iconKey);
+          if (item) {
+            const size = node.props.size || node.style?.fontSize || 24;
+            return `${indent}<span class="d-inline-flex align-items-center" id="${node.id}"${styleAttr}>${customizeSvg(item.svgContent, { width: size, height: size, stroke: node.style?.color || 'currentColor' })}</span>`;
+          }
           if (node.props.library === 'material_symbols') {
             return `${indent}<span class="${node.props.prefix || 'material-icons-outlined'}" id="${node.id}"${styleAttr}>${node.props.iconName || 'star'}</span>`;
           }
           return `${indent}<i class="${node.props.prefix || 'fas'} ${node.props.iconName || 'fa-star'}" id="${node.id}"${styleAttr}></i>`;
+        }
         case 'image':
           return `${indent}<img src="${node.props.src}" alt="${node.props.alt || ''}" class="img-fluid rounded" id="${node.id}"${styleAttr}>`;
         default:
@@ -183,9 +341,10 @@ ${indent}</div>`;
 function generateReactNative(nodes: CanvasNode[], indent = '      '): string {
   return nodes
     .map((node) => {
-      const childrenCode = node.children && node.children.length > 0
-        ? `\n${generateReactNative(node.children, indent + '  ')}\n${indent}`
-        : '';
+      const childrenCode =
+        node.children && node.children.length > 0
+          ? `\n${generateReactNative(node.children, indent + '  ')}\n${indent}`
+          : '';
 
       switch (node.type) {
         case 'container':
@@ -208,8 +367,16 @@ ${indent}</TouchableOpacity>`;
 
 // Master Export Formatter
 export function generateCode(format: ExportFormat, tree: CanvasNode[]): string {
+  // Extract ONLY used SVGs from the canvas
+  const usedSvgs = extractUsedCatalogSvgs(tree);
+
   switch (format) {
-    case 'react_shadcn':
+    case 'react_shadcn': {
+      // Generate clean JSX component functions ONLY for used SVGs
+      const jsxComponentDefs = Array.from(usedSvgs.values())
+        .map((item) => convertSvgToJsx(item.rawSvg, item.componentName))
+        .join('\n\n');
+
       return `import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -219,13 +386,115 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
 
+// --- Pure React SVG Icon Components (Only Extracted Used Icons) ---
+${jsxComponentDefs ? jsxComponentDefs + '\n' : '// (No direct SVG icons used)\n'}
 export default function VisualForgeExport() {
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-100 p-6 flex flex-col items-center">
-${generateReactShadcn(tree)}
+${generateReactShadcn(tree, usedSvgs)}
     </main>
   );
 }`;
+    }
+
+    case 'html_css': {
+      return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VisualForge Export - Clean Semantic HTML & Pure Inline SVGs</title>
+  <style>
+    /* 100% Self-Contained Styles (Zero External CDNs, Zero .woff Fonts) */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #09090b;
+      color: #fafafa;
+      line-height: 1.5;
+      padding: 24px;
+    }
+    a { color: inherit; text-decoration: none; }
+    .vf-container { width: 100%; max-width: 1200px; margin: 0 auto; }
+    .vf-icon-wrapper { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; }
+    .vf-icon-svg { display: block; }
+    .vf-button {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 8px 16px; border-radius: 6px; font-weight: 500;
+      background: #0d99ff; color: #fff; border: none; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+${generateHtmlInlineSvg(tree)}
+</body>
+</html>`;
+    }
+
+    case 'esp32_embedded': {
+      const htmlBody = generateHtmlInlineSvg(tree, '  ');
+      return `// ====================================================================
+// VisualForge Studio - ESP32 / Arduino / PlatformIO Embedded Web Server
+// Totalmente autónomo: SVGs inline, cero CDNs, cero fuentes .woff externas
+// Compatible con ESP32 AsyncWebServer, WebServer.h, SPIFFS y LittleFS
+// ====================================================================
+
+#pragma once
+#include <pgmspace.h>
+
+const char INDEX_HTML[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESP32 Web Server</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, sans-serif;
+      background: #121214;
+      color: #f4f4f5;
+      padding: 16px;
+      line-height: 1.5;
+    }
+    a { color: #38bdf8; text-decoration: none; }
+    .vf-icon-wrapper { display: inline-flex; align-items: center; justify-content: center; }
+    .vf-button {
+      background: #0d99ff; color: white; border: none;
+      padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+${htmlBody}
+</body>
+</html>
+)rawliteral";
+
+/*
+  // Ejemplo de uso en ESP32 con ESPAsyncWebServer:
+  #include <WiFi.h>
+  #include <ESPAsyncWebServer.h>
+
+  AsyncWebServer server(80);
+
+  void setup() {
+    Serial.begin(115200);
+    WiFi.begin("TU_SSID", "TU_PASSWORD");
+    while (WiFi.status() != WL_CONNECTED) delay(500);
+
+    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+      request->send_P(200, "text/html", INDEX_HTML);
+    });
+    server.begin();
+    Serial.println(WiFi.localIP());
+  }
+
+  void loop() {}
+*/
+`;
+    }
 
     case 'html_bootstrap':
       return `<!DOCTYPE html>
@@ -260,25 +529,6 @@ ${generateHtmlBootstrap(tree)}
     </Container>
   );
 }`;
-
-    case 'html_css':
-      return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VisualForge Export</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #09090b; color: #fafafa; padding: 24px; }
-    a { color: inherit; text-decoration: none; }
-  </style>
-</head>
-<body>
-${generateHtmlBootstrap(tree)}
-</body>
-</html>`;
 
     case 'react_native_tailwind':
       return `import React from 'react';

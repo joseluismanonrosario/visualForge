@@ -40,6 +40,9 @@ export const ExportModal: React.FC<ExportModalProps> = ({ tree, isOpen, onClose 
     } else if (activeFormat === 'html_bootstrap' || activeFormat === 'html_css') {
       filename += '.html';
       mimeType = 'text/html';
+    } else if (activeFormat === 'esp32_embedded') {
+      filename = 'esp32_webserver.h';
+      mimeType = 'text/x-chdr';
     } else if (activeFormat === 'react_native_tailwind') {
       filename += '.tsx';
       mimeType = 'text/typescript';

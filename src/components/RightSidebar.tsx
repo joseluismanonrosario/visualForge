@@ -32,6 +32,7 @@ import {
   getLibraryById,
 } from '../data/iconLibraries';
 import { copyToClipboardSafe } from '../utils/exportEngine';
+import { SvgIconRenderer, findCatalogIcon } from '../utils/svgIconRenderer';
 
 interface RightSidebarProps {
   selectedNode: CanvasNode | null;
@@ -539,13 +540,20 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
             )}
 
             {/* If Vector Icon Component (Multi-Library Support) */}
-            {selectedNode.type === 'fontawesome_icon' && (
+            {(selectedNode.type === 'fontawesome_icon' || selectedNode.type === 'svg_icon') && (
               <div className="space-y-3 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
                 {/* 1. Header with Live Icon Preview and Change Button */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <div className="w-9 h-9 rounded bg-[#252526] border border-[#383838] flex items-center justify-center">
-                      {currentLib.id === 'material_symbols' ? (
+                      {currentLib.id === 'lucide' || currentLib.id === 'svg_catalog' || findCatalogIcon(props.iconName) ? (
+                        <SvgIconRenderer
+                          iconId={props.iconName || 'rocket'}
+                          size={20}
+                          stroke={style.color || '#0d99ff'}
+                          fill={style.fill || 'none'}
+                        />
+                      ) : currentLib.id === 'material_symbols' ? (
                         <span
                           className={props.prefix || 'material-icons-outlined'}
                           style={{ color: style.color || '#0d99ff', fontSize: '20px' }}
@@ -635,10 +643,10 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                   )}
                 </div>
 
-                {/* 4. Dedicated Icon Color Control */}
+                {/* 4. Dedicated Icon Color & Stroke Control */}
                 <div className="space-y-1.5 pt-1 border-t border-[#383838]">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-zinc-400">Color del Icono</span>
+                    <span className="text-[10px] text-zinc-400">Color / Trazo (Stroke)</span>
                     <span className="text-[10px] text-zinc-500 font-mono">
                       {style.color || '#0d99ff'}
                     </span>
@@ -689,6 +697,37 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                         }`}
                       />
                     ))}
+                  </div>
+
+                  {/* Relleno (Fill SVG) */}
+                  <div className="pt-2">
+                    <div className="flex items-center justify-between pb-1">
+                      <span className="text-[10px] text-zinc-400">Relleno SVG (Fill)</span>
+                      <span className="text-[10px] text-zinc-500 font-mono">
+                        {style.fill || 'none'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-[#252526] border border-[#383838] rounded-md p-1.5">
+                      <input
+                        type="color"
+                        value={style.fill && style.fill !== 'none' && style.fill.startsWith('#') ? style.fill : '#0d99ff'}
+                        onChange={(e) => onUpdateStyle({ fill: e.target.value })}
+                        className="w-6 h-6 rounded cursor-pointer border border-[#383838] bg-transparent"
+                      />
+                      <input
+                        type="text"
+                        value={style.fill || 'none'}
+                        onChange={(e) => onUpdateStyle({ fill: e.target.value })}
+                        className="flex-1 bg-transparent text-white focus:outline-none text-xs font-mono"
+                      />
+                      <button
+                        onClick={() => onUpdateStyle({ fill: 'none' })}
+                        className="px-2 py-0.5 text-[10px] rounded bg-zinc-800 text-zinc-400 hover:text-white"
+                        title="Quitar relleno"
+                      >
+                        None
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -883,7 +922,15 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                     className="group flex flex-col items-center justify-center p-3 bg-[#1e1e1e] hover:bg-[#0d99ff]/15 border border-[#383838] hover:border-[#0d99ff] rounded-lg transition-all text-center"
                     title={`${prefixToUse} ${icon.class}`}
                   >
-                    {currentLib.id === 'material_symbols' ? (
+                    {currentLib.id === 'lucide' || currentLib.id === 'svg_catalog' || findCatalogIcon(icon.class) ? (
+                      <SvgIconRenderer
+                        iconId={icon.class}
+                        size={22}
+                        stroke="currentColor"
+                        fill="none"
+                        className="mb-2 text-zinc-300 group-hover:text-[#0d99ff] transition-transform group-hover:scale-110"
+                      />
+                    ) : currentLib.id === 'material_symbols' ? (
                       <span className={`${prefixToUse} text-2xl mb-2 text-zinc-300 group-hover:text-[#0d99ff] transition-transform group-hover:scale-110`}>
                         {icon.class}
                       </span>
