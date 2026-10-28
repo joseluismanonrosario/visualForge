@@ -1027,11 +1027,11 @@ export const COMPONENT_CATALOG: ComponentDefinition[] = [
 
   // --- 6. MEDIA & VECTORS ---
   {
-    type: 'fontawesome_icon',
-    name: 'FontAwesome 5 Icon',
+    type: 'svg_icon',
+    name: 'Iconify Vector Icon',
     category: 'Media & Vectors',
     library: 'both',
-    icon: 'Star',
+    icon: 'Sparkles',
     isContainer: false,
     defaultStyle: {
       fontSize: '28px',
@@ -1040,8 +1040,8 @@ export const COMPONENT_CATALOG: ComponentDefinition[] = [
       transform: 'rotate(0deg)',
     },
     defaultProps: {
-      iconName: 'fa-rocket',
-      prefix: 'fas',
+      iconName: 'lucide:rocket',
+      prefix: 'lucide',
       size: 28,
       rotation: 0,
     },

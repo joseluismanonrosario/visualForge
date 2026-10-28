@@ -1,5 +1,6 @@
 import { CanvasNode } from '../types';
 import { findCatalogIcon, customizeSvg } from './svgIconRenderer';
+import { getIconSvgSync } from './iconifyManager';
 
 export type ExportFormat =
   | 'react_shadcn'
@@ -76,15 +77,25 @@ export function extractUsedCatalogSvgs(nodes: CanvasNode[]): Map<string, { id: s
   function traverse(list: CanvasNode[]) {
     for (const node of list) {
       if (node.type === 'fontawesome_icon' || node.type === 'svg_icon') {
-        const iconKey = node.props.svgId || node.props.iconName || 'rocket';
-        const catalogItem = findCatalogIcon(iconKey);
-        if (catalogItem && !map.has(catalogItem.id)) {
-          map.set(catalogItem.id, {
-            id: catalogItem.id,
-            name: catalogItem.name,
-            componentName: toComponentName(catalogItem.id),
-            rawSvg: catalogItem.svgContent,
+        const iconKey = node.props.svgId || node.props.iconName || 'lucide:rocket';
+        const syncSvg = getIconSvgSync(iconKey) || node.props.svgContent;
+        if (syncSvg && !map.has(iconKey)) {
+          map.set(iconKey, {
+            id: iconKey,
+            name: iconKey,
+            componentName: toComponentName(iconKey.replace(/[: -]/g, '_')),
+            rawSvg: syncSvg,
           });
+        } else {
+          const catalogItem = findCatalogIcon(iconKey);
+          if (catalogItem && !map.has(catalogItem.id)) {
+            map.set(catalogItem.id, {
+              id: catalogItem.id,
+              name: catalogItem.name,
+              componentName: toComponentName(catalogItem.id),
+              rawSvg: catalogItem.svgContent,
+            });
+          }
         }
       }
       if (node.children && node.children.length > 0) {
@@ -167,18 +178,11 @@ ${indent}</Card>`;
           return `${indent}<${Tag} id="${node.id}"${styleAttr}>${node.props.text || ''}</${Tag}>`;
         case 'svg_icon':
         case 'fontawesome_icon': {
-          const iconKey = node.props.svgId || node.props.iconName || 'rocket';
-          const item = findCatalogIcon(iconKey);
-          if (item) {
-            const compName = toComponentName(item.id);
-            const size = node.props.size || node.style?.fontSize || 24;
-            const sizeVal = typeof size === 'number' ? size : parseInt(size) || 24;
-            return `${indent}<${compName} width={${sizeVal}} height={${sizeVal}} id="${node.id}"${styleAttr} />`;
-          }
-          if (node.props.library === 'material_symbols') {
-            return `${indent}<span className="${node.props.prefix || 'material-icons-outlined'}" id="${node.id}"${styleAttr}>${node.props.iconName || 'star'}</span>`;
-          }
-          return `${indent}<i className="${node.props.prefix || 'fas'} ${node.props.iconName || 'fa-star'}" id="${node.id}"${styleAttr} />`;
+          const iconKey = node.props.svgId || node.props.iconName || 'lucide:rocket';
+          const size = node.props.size || node.style?.fontSize || 24;
+          const sizeVal = typeof size === 'number' ? size : parseInt(size) || 24;
+          const compName = toComponentName(iconKey.replace(/[: -]/g, '_'));
+          return `${indent}<${compName} width={${sizeVal}} height={${sizeVal}} id="${node.id}"${styleAttr} />`;
         }
         case 'image':
           return `${indent}<img src="${node.props.src}" alt="${node.props.alt || ''}" id="${node.id}" className="rounded-lg object-cover"${styleAttr} />`;
@@ -244,16 +248,16 @@ ${indent}</div>`;
           return `${indent}<${Tag} id="${node.id}"${styleAttr}>${node.props.text || ''}</${Tag}>`;
         case 'svg_icon':
         case 'fontawesome_icon': {
-          const iconKey = node.props.svgId || node.props.iconName || 'rocket';
+          const iconKey = node.props.svgId || node.props.iconName || 'lucide:rocket';
+          const size = node.props.size || node.style?.fontSize || 24;
+          const stroke = node.style?.color || 'currentColor';
+          const fill = node.style?.fill || 'none';
           const item = findCatalogIcon(iconKey);
-          if (item) {
-            const size = node.props.size || node.style?.fontSize || 24;
-            const inlineSvg = customizeSvg(item.svgContent, {
-              width: size,
-              height: size,
-              stroke: node.style?.color || 'currentColor',
-              className: 'vf-icon-svg',
-            });
+          const inlineSvg =
+            getIconSvgSync(iconKey, { width: size, height: size, stroke, fill }) ||
+            (item ? customizeSvg(item.svgContent, { width: size, height: size, stroke, fill, className: 'vf-icon-svg' }) : '');
+
+          if (inlineSvg) {
             return `${indent}<span id="${node.id}" class="vf-icon-wrapper"${styleAttr}>${inlineSvg}</span>`;
           }
           return `${indent}<span id="${node.id}" class="vf-icon-wrapper"${styleAttr}>[Icon: ${iconKey}]</span>`;
@@ -317,16 +321,19 @@ ${indent}</div>`;
           return `${indent}<${Tag} id="${node.id}"${styleAttr}>${node.props.text || ''}</${Tag}>`;
         case 'svg_icon':
         case 'fontawesome_icon': {
-          const iconKey = node.props.svgId || node.props.iconName || 'rocket';
+          const iconKey = node.props.svgId || node.props.iconName || 'lucide:rocket';
+          const size = node.props.size || node.style?.fontSize || 24;
+          const stroke = node.style?.color || 'currentColor';
+          const fill = node.style?.fill || 'none';
           const item = findCatalogIcon(iconKey);
-          if (item) {
-            const size = node.props.size || node.style?.fontSize || 24;
-            return `${indent}<span class="d-inline-flex align-items-center" id="${node.id}"${styleAttr}>${customizeSvg(item.svgContent, { width: size, height: size, stroke: node.style?.color || 'currentColor' })}</span>`;
+          const inlineSvg =
+            getIconSvgSync(iconKey, { width: size, height: size, stroke, fill }) ||
+            (item ? customizeSvg(item.svgContent, { width: size, height: size, stroke, fill }) : '');
+
+          if (inlineSvg) {
+            return `${indent}<span class="d-inline-flex align-items-center" id="${node.id}"${styleAttr}>${inlineSvg}</span>`;
           }
-          if (node.props.library === 'material_symbols') {
-            return `${indent}<span class="${node.props.prefix || 'material-icons-outlined'}" id="${node.id}"${styleAttr}>${node.props.iconName || 'star'}</span>`;
-          }
-          return `${indent}<i class="${node.props.prefix || 'fas'} ${node.props.iconName || 'fa-star'}" id="${node.id}"${styleAttr}></i>`;
+          return `${indent}<span id="${node.id}" class="d-inline-flex align-items-center"${styleAttr}>[Icon: ${iconKey}]</span>`;
         }
         case 'image':
           return `${indent}<img src="${node.props.src}" alt="${node.props.alt || ''}" class="img-fluid rounded" id="${node.id}"${styleAttr}>`;

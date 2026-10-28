@@ -1,5 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import iconCatalog from '../data/icon-catalog.json';
+import {
+  getIconSvgSync,
+  getIconSvgAsync,
+  renderIconifySvg,
+  getLoadedCollection,
+  loadCollection,
+  parseIconIdentifier,
+} from './iconifyManager';
 
 export interface CatalogIconItem {
   id: string;
@@ -75,6 +83,7 @@ export function customizeSvg(
   // Apply stroke color if specified
   if (options.stroke) {
     svg = svg.replace(/stroke="currentColor"/gi, `stroke="${options.stroke}"`);
+    svg = svg.replace(/fill="currentColor"/gi, `fill="${options.stroke}"`);
   }
 
   // Apply fill color if specified
@@ -91,7 +100,8 @@ export function customizeSvg(
 }
 
 /**
- * Dynamic SVG Icon Component for Canvas and Editor UI
+ * Universal Dynamic SVG Icon Component for Canvas and Editor UI
+ * Supports 100% of Iconify 250k+ icons locally & offline
  */
 export interface SvgIconRendererProps {
   iconId?: string;
@@ -116,38 +126,106 @@ export const SvgIconRenderer: React.FC<SvgIconRendererProps> = ({
   className = '',
   style = {},
 }) => {
-  let content = rawSvg;
-
-  if (!content && iconId) {
-    const item = findCatalogIcon(iconId);
-    if (item) {
-      content = item.svgContent;
-    }
-  }
-
-  if (!content) {
-    // Fallback icon placeholder
-    return (
-      <span
-        style={{ width: size || width || 24, height: size || height || 24, ...style }}
-        className={`inline-flex items-center justify-center text-xs opacity-50 ${className}`}
-      >
-        ❖
-      </span>
-    );
-  }
-
   const effectiveWidth = size || width || style.width || style.fontSize || 24;
   const effectiveHeight = size || height || style.height || style.fontSize || 24;
   const effectiveStroke = stroke || (style.color as string) || 'currentColor';
-  const effectiveFill = fill || 'none';
+  const effectiveFill = fill || (style.fill as string) || 'none';
 
-  const finalSvg = customizeSvg(content, {
+  // 1. If rawSvg was provided directly
+  if (rawSvg) {
+    const finalSvg = customizeSvg(rawSvg, {
+      width: effectiveWidth,
+      height: effectiveHeight,
+      stroke: effectiveStroke,
+      fill: effectiveFill,
+    });
+    return (
+      <span
+        className={`inline-flex items-center justify-center flex-shrink-0 ${className}`}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: typeof effectiveWidth === 'number' ? `${effectiveWidth}px` : effectiveWidth,
+          height: typeof effectiveHeight === 'number' ? `${effectiveHeight}px` : effectiveHeight,
+          ...style,
+        }}
+        dangerouslySetInnerHTML={{ __html: finalSvg }}
+      />
+    );
+  }
+
+  // 2. Synchronous resolution via IconifyManager or Catalog
+  const targetId = iconId || 'lucide:rocket';
+  const syncSvg = getIconSvgSync(targetId, {
     width: effectiveWidth,
     height: effectiveHeight,
     stroke: effectiveStroke,
     fill: effectiveFill,
   });
+
+  const [asyncSvg, setAsyncSvg] = useState<string | null>(syncSvg);
+
+  useEffect(() => {
+    let active = true;
+
+    // Check synchronous first
+    const immediate = getIconSvgSync(targetId, {
+      width: effectiveWidth,
+      height: effectiveHeight,
+      stroke: effectiveStroke,
+      fill: effectiveFill,
+    });
+
+    if (immediate) {
+      setAsyncSvg(immediate);
+      return;
+    }
+
+    // Try fallback catalog
+    const catalogItem = findCatalogIcon(targetId);
+    if (catalogItem) {
+      setAsyncSvg(
+        customizeSvg(catalogItem.svgContent, {
+          width: effectiveWidth,
+          height: effectiveHeight,
+          stroke: effectiveStroke,
+          fill: effectiveFill,
+        })
+      );
+      return;
+    }
+
+    // Load asynchronously from local Iconify collection
+    getIconSvgAsync(targetId, {
+      width: effectiveWidth,
+      height: effectiveHeight,
+      stroke: effectiveStroke,
+      fill: effectiveFill,
+    }).then((svg) => {
+      if (active && svg) {
+        setAsyncSvg(svg);
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [targetId, effectiveWidth, effectiveHeight, effectiveStroke, effectiveFill]);
+
+  const finalMarkup = syncSvg || asyncSvg;
+
+  if (!finalMarkup) {
+    // Fallback icon placeholder
+    return (
+      <span
+        style={{ width: effectiveWidth, height: effectiveHeight, ...style }}
+        className={`inline-flex items-center justify-center text-xs opacity-40 ${className}`}
+      >
+        ❖
+      </span>
+    );
+  }
 
   return (
     <span
@@ -160,7 +238,7 @@ export const SvgIconRenderer: React.FC<SvgIconRendererProps> = ({
         height: typeof effectiveHeight === 'number' ? `${effectiveHeight}px` : effectiveHeight,
         ...style,
       }}
-      dangerouslySetInnerHTML={{ __html: finalSvg }}
+      dangerouslySetInnerHTML={{ __html: finalMarkup }}
     />
   );
 };

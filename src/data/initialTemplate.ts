@@ -292,8 +292,8 @@ export const INITIAL_CANVAS_TREE: CanvasNode[] = [
               color: '#0d99ff',
             },
             props: {
-              iconName: 'fa-rocket',
-              prefix: 'fas',
+              iconName: 'lucide:rocket',
+              prefix: 'lucide',
             },
             children: [],
           },
@@ -352,8 +352,8 @@ export const INITIAL_CANVAS_TREE: CanvasNode[] = [
               color: '#a855f7',
             },
             props: {
-              iconName: 'fa-pen-nib',
-              prefix: 'fas',
+              iconName: 'lucide:pen-tool',
+              prefix: 'lucide',
             },
             children: [],
           },
@@ -412,8 +412,8 @@ export const INITIAL_CANVAS_TREE: CanvasNode[] = [
               color: '#10b981',
             },
             props: {
-              iconName: 'fa-code',
-              prefix: 'fas',
+              iconName: 'lucide:code-2',
+              prefix: 'lucide',
             },
             children: [],
           },

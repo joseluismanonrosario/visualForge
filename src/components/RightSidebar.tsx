@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AlignLeft,
   AlignCenter,
@@ -33,6 +33,17 @@ import {
 } from '../data/iconLibraries';
 import { copyToClipboardSafe } from '../utils/exportEngine';
 import { SvgIconRenderer, findCatalogIcon } from '../utils/svgIconRenderer';
+import {
+  getIconifyCategories,
+  getCollectionsByCategory,
+  getCollectionMeta,
+  loadCollection,
+  getLoadedCollection,
+  getIconsInCollection,
+  getCollectionSubcategories,
+  filterIconsInCollection,
+  parseIconIdentifier,
+} from '../utils/iconifyManager';
 
 interface RightSidebarProps {
   selectedNode: CanvasNode | null;
@@ -72,6 +83,68 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   const [modalStylePrefix, setModalStylePrefix] = useState<string>(
     currentLib.styles[0]?.prefix || 'fas'
   );
+
+  // Iconify Local Engine State
+  const iconCategories = getIconifyCategories();
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+
+  const currentIconId = selectedNode?.props?.iconName || 'lucide:rocket';
+  const parsedCurrent = parseIconIdentifier(currentIconId);
+  const [selectedCollection, setSelectedCollection] = useState<string>(
+    selectedNode?.props?.prefix || parsedCurrent.prefix || 'lucide'
+  );
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('All');
+  const [iconPage, setIconPage] = useState(1);
+  const [collectionData, setCollectionData] = useState<any>(() =>
+    getLoadedCollection(selectedCollection)
+  );
+  const [isLoadingCollection, setIsLoadingCollection] = useState(false);
+
+  // Keep collection in sync with selected node if it changes
+  useEffect(() => {
+    if (selectedNode?.props?.prefix) {
+      setSelectedCollection(selectedNode.props.prefix);
+    } else if (selectedNode?.props?.iconName) {
+      const p = parseIconIdentifier(selectedNode.props.iconName);
+      if (p.prefix) setSelectedCollection(p.prefix);
+    }
+  }, [selectedNode?.id, selectedNode?.props?.iconName, selectedNode?.props?.prefix]);
+
+  // Load collection on demand from local disk via Vite middleware
+  useEffect(() => {
+    let active = true;
+    const cached = getLoadedCollection(selectedCollection);
+    if (cached) {
+      setCollectionData(cached);
+      setSelectedSubcategory('All');
+      setIconPage(1);
+      return;
+    }
+
+    setIsLoadingCollection(true);
+    loadCollection(selectedCollection).then((data) => {
+      if (active) {
+        setCollectionData(data);
+        setSelectedSubcategory('All');
+        setIconPage(1);
+        setIsLoadingCollection(false);
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [selectedCollection]);
+
+  const availableCollections = getCollectionsByCategory(selectedCategory);
+  const currentCollectionMeta = getCollectionMeta(selectedCollection);
+  const subcategories = collectionData ? getCollectionSubcategories(collectionData) : ['All'];
+  const filteredIcons = collectionData
+    ? filterIconsInCollection(collectionData, iconSearch, selectedSubcategory)
+    : [];
+  const pageSize = 120;
+  const totalPages = Math.max(1, Math.ceil(filteredIcons.length / pageSize));
+  const pageIcons = filteredIcons.slice((iconPage - 1) * pageSize, iconPage * pageSize);
 
   const handleLibraryChange = (newLibId: string) => {
     const newLib = getLibraryById(newLibId);
@@ -159,17 +232,6 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
         break;
     }
   };
-
-  // Filter icons for active library in modal
-  const filteredModalIcons = currentLib.icons.filter((item) => {
-    const q = iconSearch.toLowerCase();
-    const matchesSearch =
-      !q ||
-      item.name.toLowerCase().includes(q) ||
-      item.class.toLowerCase().includes(q) ||
-      item.tags?.some((t) => t.toLowerCase().includes(q));
-    return matchesSearch;
-  });
 
   return (
     <aside className="w-80 bg-[#252526] border-l border-[#383838] flex flex-col h-[calc(100vh-44px)] select-none z-20 flex-shrink-0 text-xs text-zinc-300">
@@ -539,47 +601,33 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
               </div>
             )}
 
-            {/* If Vector Icon Component (Multi-Library Support) */}
+            {/* If Vector Icon Component (Iconify Universal Offline) */}
             {(selectedNode.type === 'fontawesome_icon' || selectedNode.type === 'svg_icon') && (
               <div className="space-y-3 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
-                {/* 1. Header with Live Icon Preview and Change Button */}
+                {/* 1. Header with Live Icon Preview and Explorar Button */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <div className="w-9 h-9 rounded bg-[#252526] border border-[#383838] flex items-center justify-center">
-                      {currentLib.id === 'lucide' || currentLib.id === 'svg_catalog' || findCatalogIcon(props.iconName) ? (
-                        <SvgIconRenderer
-                          iconId={props.iconName || 'rocket'}
-                          size={20}
-                          stroke={style.color || '#0d99ff'}
-                          fill={style.fill || 'none'}
-                        />
-                      ) : currentLib.id === 'material_symbols' ? (
-                        <span
-                          className={props.prefix || 'material-icons-outlined'}
-                          style={{ color: style.color || '#0d99ff', fontSize: '20px' }}
-                        >
-                          {props.iconName || 'star'}
-                        </span>
-                      ) : (
-                        <i
-                          className={`${props.prefix || ''} ${props.iconName || 'fa-star'} text-xl`}
-                          style={{ color: style.color || '#0d99ff' }}
-                        />
-                      )}
+                      <SvgIconRenderer
+                        iconId={props.iconName || 'lucide:rocket'}
+                        size={22}
+                        stroke={style.color || '#0d99ff'}
+                        fill={style.fill || 'none'}
+                      />
                     </div>
                     <div>
                       <span className="font-mono text-zinc-200 block text-xs truncate max-w-[130px]">
-                        {props.iconName || 'fa-rocket'}
+                        {props.iconName || 'lucide:rocket'}
                       </span>
                       <span className="text-[10px] text-zinc-500 font-sans">
-                        {currentLib.name}
+                        {currentCollectionMeta?.name || 'Iconify Set'}
                       </span>
                     </div>
                   </div>
                   <button
                     onClick={() => {
-                      setModalLibId(currentLib.id);
-                      setModalStylePrefix(props.prefix || currentLib.styles[0]?.prefix || '');
+                      setIconSearch('');
+                      setIconPage(1);
                       setShowIconModal(true);
                     }}
                     className="px-2.5 py-1 rounded bg-[#0d99ff] text-white font-medium hover:bg-[#0082df] text-[11px] shadow-xs"
@@ -588,60 +636,70 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                   </button>
                 </div>
 
-                {/* 2. Combobox to select active Icon Library */}
+                {/* 2. Combobox: Categoría Temática de Iconify */}
                 <div className="space-y-1">
-                  <label className="text-[10px] text-zinc-400 font-medium">Librería de Iconos</label>
+                  <label className="text-[10px] text-zinc-400 font-medium">Categoría de Iconos</label>
                   <select
-                    value={currentLib.id}
-                    onChange={(e) => handleLibraryChange(e.target.value)}
+                    value={selectedCategory}
+                    onChange={(e) => {
+                      const newCat = e.target.value;
+                      setSelectedCategory(newCat);
+                      const sets = getCollectionsByCategory(newCat);
+                      if (sets.length > 0 && !sets.some((s) => s.prefix === selectedCollection)) {
+                        setSelectedCollection(sets[0].prefix);
+                      }
+                    }}
                     className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1.5 text-white text-xs focus:outline-none focus:border-[#0d99ff]"
                   >
-                    {availableLibraries.map((lib) => (
-                      <option key={lib.id} value={lib.id} className="bg-[#1e1e1e]">
-                        {lib.name} ({lib.badge})
+                    {iconCategories.map((cat) => (
+                      <option key={cat.id} value={cat.id} className="bg-[#1e1e1e]">
+                        {cat.label}
                       </option>
                     ))}
                   </select>
                 </div>
 
-                {/* 3. Dynamic Styles: ONLY styles that this specific library can change */}
+                {/* 3. Combobox: Colección / Set de Iconify (244 sets disponibles localmente) */}
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-[10px] text-zinc-400">
-                    <span>Estilos Soportados ({currentLib.name})</span>
+                    <span>Colección Iconify (Offline)</span>
                     <span className="text-zinc-500 font-mono">
-                      {props.prefix || currentLib.styles[0]?.prefix}
+                      {currentCollectionMeta?.total.toLocaleString() || 0} iconos
                     </span>
                   </div>
-
-                  {currentLib.styles.length > 1 ? (
-                    <div className="flex flex-wrap gap-1 bg-[#252526] p-1 rounded-md border border-[#383838]">
-                      {currentLib.styles.map((st) => {
-                        const isActive =
-                          (props.prefix || currentLib.styles[0]?.prefix) === st.prefix;
-                        return (
-                          <button
-                            key={st.id}
-                            onClick={() => onUpdateProps({ prefix: st.prefix })}
-                            className={`flex-1 min-w-[70px] py-1 px-1.5 text-[10px] rounded font-medium transition-colors text-center truncate ${
-                              isActive
-                                ? 'bg-[#0d99ff] text-white shadow-xs'
-                                : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
-                            }`}
-                          >
-                            {st.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between text-[10px] bg-[#252526] px-2 py-1 rounded border border-[#383838]">
-                      <span className="text-zinc-400">Estilo Único:</span>
-                      <span className="text-zinc-200 font-medium">
-                        {currentLib.styles[0]?.label || 'Estándar'}
-                      </span>
-                    </div>
-                  )}
+                  <select
+                    value={selectedCollection}
+                    onChange={(e) => setSelectedCollection(e.target.value)}
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1.5 text-white text-xs focus:outline-none focus:border-[#0d99ff]"
+                  >
+                    {availableCollections.map((col) => (
+                      <option key={col.prefix} value={col.prefix} className="bg-[#1e1e1e]">
+                        {col.name} ({col.total.toLocaleString()} iconos)
+                      </option>
+                    ))}
+                  </select>
                 </div>
+
+                {/* 4. Subcategoría interna si la colección lo soporta */}
+                {subcategories.length > 1 && (
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-zinc-400 font-medium">Subcategoría Interna</label>
+                    <select
+                      value={selectedSubcategory}
+                      onChange={(e) => {
+                        setSelectedSubcategory(e.target.value);
+                        setIconPage(1);
+                      }}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                    >
+                      {subcategories.map((sub) => (
+                        <option key={sub} value={sub} className="bg-[#1e1e1e]">
+                          {sub === 'All' ? 'Todas las Subcategorías' : sub}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 {/* 4. Dedicated Icon Color & Stroke Control */}
                 <div className="space-y-1.5 pt-1 border-t border-[#383838]">
@@ -805,18 +863,18 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
         </div>
       )}
 
-      {/* Multi-Library Icon Picker Modal */}
+      {/* Iconify Universal Offline Picker Modal */}
       {showIconModal && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#252526] border border-[#383838] rounded-xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+          <div className="bg-[#252526] border border-[#383838] rounded-xl w-full max-w-4xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
             {/* Modal Header */}
             <div className="p-4 border-b border-[#383838] flex items-center justify-between bg-[#2c2c2c] rounded-t-xl">
               <div className="flex items-center gap-2.5">
                 <Star className="w-4 h-4 text-amber-400" />
                 <div>
-                  <h3 className="font-semibold text-white text-sm">Explorador de Iconos Universal</h3>
+                  <h3 className="font-semibold text-white text-sm">Explorador de Iconos Universal Iconify (Offline)</h3>
                   <p className="text-[10px] text-zinc-400">
-                    {currentLib.name} • {currentLib.badge}
+                    {currentCollectionMeta?.name} • {currentCollectionMeta?.total.toLocaleString()} iconos disponibles localmente
                   </p>
                 </div>
               </div>
@@ -828,24 +886,91 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
               </button>
             </div>
 
-            {/* Modal Search & Library Combobox */}
+            {/* Modal Filters: Categoría, Colección, Subcategoría y Buscador */}
             <div className="p-3 border-b border-[#383838] space-y-2.5 bg-[#202021]">
-              <div className="flex items-center gap-2">
-                {/* Search box with Clear 'X' Button */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {/* Combobox Categoría */}
+                <div>
+                  <label className="text-[10px] text-zinc-400 block mb-1">Categoría Temática</label>
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => {
+                      const newCat = e.target.value;
+                      setSelectedCategory(newCat);
+                      const sets = getCollectionsByCategory(newCat);
+                      if (sets.length > 0 && !sets.some((s) => s.prefix === selectedCollection)) {
+                        setSelectedCollection(sets[0].prefix);
+                      }
+                    }}
+                    className="w-full bg-[#18181b] border border-[#383838] text-zinc-200 text-xs rounded-md px-2.5 py-1.5 focus:outline-none focus:border-[#0d99ff]"
+                  >
+                    {iconCategories.map((cat) => (
+                      <option key={cat.id} value={cat.id} className="bg-[#18181b]">
+                        {cat.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Combobox Colección */}
+                <div>
+                  <label className="text-[10px] text-zinc-400 block mb-1">Colección ({availableCollections.length} sets)</label>
+                  <select
+                    value={selectedCollection}
+                    onChange={(e) => setSelectedCollection(e.target.value)}
+                    className="w-full bg-[#18181b] border border-[#383838] text-zinc-200 text-xs rounded-md px-2.5 py-1.5 focus:outline-none focus:border-[#0d99ff]"
+                  >
+                    {availableCollections.map((col) => (
+                      <option key={col.prefix} value={col.prefix} className="bg-[#18181b]">
+                        {col.name} ({col.total.toLocaleString()})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Subcategoría si existe */}
+                <div>
+                  <label className="text-[10px] text-zinc-400 block mb-1">Subcategoría Interna</label>
+                  <select
+                    value={selectedSubcategory}
+                    onChange={(e) => {
+                      setSelectedSubcategory(e.target.value);
+                      setIconPage(1);
+                    }}
+                    disabled={subcategories.length <= 1}
+                    className="w-full bg-[#18181b] border border-[#383838] text-zinc-200 text-xs rounded-md px-2.5 py-1.5 focus:outline-none focus:border-[#0d99ff] disabled:opacity-50"
+                  >
+                    {subcategories.map((sub) => (
+                      <option key={sub} value={sub} className="bg-[#18181b]">
+                        {sub === 'All' ? 'Todas las Subcategorías' : sub}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Search box with Clear 'X' Button & Pagination Header */}
+              <div className="flex items-center gap-3 pt-1">
                 <div className="relative flex-1">
-                  <Search className="w-4 h-4 absolute left-3 top-2.5 text-zinc-400" />
+                  <Search className="w-4 h-4 absolute left-3 top-2 text-zinc-400" />
                   <input
                     type="text"
-                    placeholder={`Buscar en ${currentLib.name} (nombre, tag)...`}
+                    placeholder={`Buscar en ${currentCollectionMeta?.name || 'colección'}...`}
                     value={iconSearch}
-                    onChange={(e) => setIconSearch(e.target.value)}
+                    onChange={(e) => {
+                      setIconSearch(e.target.value);
+                      setIconPage(1);
+                    }}
                     className="w-full bg-[#18181b] border border-[#383838] rounded-md pl-9 pr-8 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#0d99ff]"
                     autoFocus
                   />
                   {iconSearch && (
                     <button
                       type="button"
-                      onClick={() => setIconSearch('')}
+                      onClick={() => {
+                        setIconSearch('');
+                        setIconPage(1);
+                      }}
                       className="absolute right-2.5 top-2 p-0.5 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-700 transition-colors"
                       title="Limpiar búsqueda"
                     >
@@ -854,100 +979,77 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                   )}
                 </div>
 
-                {/* Library Combobox in Modal */}
-                <select
-                  value={currentLib.id}
-                  onChange={(e) => {
-                    const newLib = getLibraryById(e.target.value);
-                    setModalLibId(newLib.id);
-                    setModalStylePrefix(newLib.styles[0]?.prefix || '');
-                  }}
-                  className="bg-[#18181b] border border-[#383838] text-zinc-200 text-xs rounded-md px-3 py-1.5 focus:outline-none focus:border-[#0d99ff] max-w-[220px]"
-                >
-                  {availableLibraries.map((lib) => (
-                    <option key={lib.id} value={lib.id} className="bg-[#18181b]">
-                      {lib.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Dynamic Styles: ONLY styles that the selected library supports! */}
-              <div className="flex items-center justify-between pt-0.5">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] text-zinc-400 mr-1">Estilos:</span>
-                  {currentLib.styles.map((st) => (
-                    <button
-                      key={st.id}
-                      onClick={() => setModalStylePrefix(st.prefix)}
-                      className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${
-                        modalStylePrefix === st.prefix
-                          ? 'bg-[#0d99ff] text-white shadow-xs'
-                          : 'bg-[#2c2c2c] text-zinc-400 hover:text-white'
-                      }`}
-                    >
-                      {st.label}
-                    </button>
-                  ))}
+                {/* Pagination Controls */}
+                <div className="flex items-center gap-1.5 text-xs">
+                  <span className="text-[11px] text-zinc-400 mr-2 font-mono">
+                    {filteredIcons.length.toLocaleString()} encontrados • Pág. {iconPage}/{totalPages}
+                  </span>
+                  <button
+                    onClick={() => setIconPage((p) => Math.max(1, p - 1))}
+                    disabled={iconPage <= 1}
+                    className="px-2.5 py-1 rounded bg-[#2c2c2c] hover:bg-[#383838] disabled:opacity-40 disabled:cursor-not-allowed text-zinc-200 text-xs"
+                  >
+                    ◀ Prev
+                  </button>
+                  <button
+                    onClick={() => setIconPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={iconPage >= totalPages}
+                    className="px-2.5 py-1 rounded bg-[#2c2c2c] hover:bg-[#383838] disabled:opacity-40 disabled:cursor-not-allowed text-zinc-200 text-xs"
+                  >
+                    Next ▶
+                  </button>
                 </div>
-                <span className="text-[10px] text-zinc-500 font-mono">
-                  {filteredModalIcons.length} iconos disponibles
-                </span>
               </div>
             </div>
 
             {/* Icon Grid */}
-            <div className="flex-1 overflow-y-auto p-4 grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
-              {filteredModalIcons.map((icon) => {
-                const prefixToUse =
-                  currentLib.id === 'fontawesome'
-                    ? icon.styles?.includes('brands')
-                      ? 'fab'
-                      : modalStylePrefix === 'far' && icon.styles?.includes('regular')
-                      ? 'far'
-                      : 'fas'
-                    : modalStylePrefix || currentLib.styles[0]?.prefix || '';
+            <div className="flex-1 overflow-y-auto p-4 grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2">
+              {isLoadingCollection ? (
+                <div className="col-span-full py-16 flex flex-col items-center justify-center text-zinc-400">
+                  <div className="w-6 h-6 border-2 border-[#0d99ff] border-t-transparent rounded-full animate-spin mb-2" />
+                  <span className="text-xs">Cargando colección local {selectedCollection}...</span>
+                </div>
+              ) : pageIcons.length === 0 ? (
+                <div className="col-span-full py-16 text-center text-zinc-500 text-xs">
+                  No se encontraron iconos que coincidan con "{iconSearch}"
+                </div>
+              ) : (
+                pageIcons.map((name) => {
+                  const fullId = `${selectedCollection}:${name}`;
+                  const isCurrent = props.iconName === fullId;
 
-                return (
-                  <button
-                    key={`${currentLib.id}_${icon.class}`}
-                    onClick={() => {
-                      onUpdateProps({
-                        library: currentLib.id,
-                        iconName: icon.class,
-                        prefix: prefixToUse,
-                      });
-                      setShowIconModal(false);
-                    }}
-                    className="group flex flex-col items-center justify-center p-3 bg-[#1e1e1e] hover:bg-[#0d99ff]/15 border border-[#383838] hover:border-[#0d99ff] rounded-lg transition-all text-center"
-                    title={`${prefixToUse} ${icon.class}`}
-                  >
-                    {currentLib.id === 'lucide' || currentLib.id === 'svg_catalog' || findCatalogIcon(icon.class) ? (
+                  return (
+                    <button
+                      key={fullId}
+                      onClick={() => {
+                        onUpdateProps({
+                          library: 'iconify',
+                          prefix: selectedCollection,
+                          iconName: fullId,
+                        });
+                        setShowIconModal(false);
+                      }}
+                      className={`group flex flex-col items-center justify-center p-2.5 bg-[#1e1e1e] hover:bg-[#0d99ff]/15 border ${
+                        isCurrent
+                          ? 'border-[#0d99ff] bg-[#0d99ff]/10 ring-1 ring-[#0d99ff]'
+                          : 'border-[#383838] hover:border-[#0d99ff]'
+                      } rounded-lg transition-all text-center`}
+                      title={fullId}
+                    >
                       <SvgIconRenderer
-                        iconId={icon.class}
-                        size={22}
+                        iconId={fullId}
+                        size={24}
                         stroke="currentColor"
                         fill="none"
-                        className="mb-2 text-zinc-300 group-hover:text-[#0d99ff] transition-transform group-hover:scale-110"
+                        className="mb-1.5 text-zinc-300 group-hover:text-[#0d99ff] transition-transform group-hover:scale-110"
                       />
-                    ) : currentLib.id === 'material_symbols' ? (
-                      <span className={`${prefixToUse} text-2xl mb-2 text-zinc-300 group-hover:text-[#0d99ff] transition-transform group-hover:scale-110`}>
-                        {icon.class}
+                      <span className="text-[9px] text-zinc-400 group-hover:text-white truncate w-full font-mono">
+                        {name}
                       </span>
-                    ) : (
-                      <i
-                        className={`${prefixToUse} ${icon.class} text-xl mb-2 text-zinc-300 group-hover:text-[#0d99ff] group-hover:scale-110 transition-transform`}
-                      />
-                    )}
-                    <span className="text-[10px] text-zinc-400 group-hover:text-white truncate w-full">
-                      {icon.name}
-                    </span>
-                    <span className="text-[9px] text-zinc-600 font-mono">
-                      {prefixToUse || currentLib.name}
-                    </span>
-                  </button>
-                );
-              })}
+                    </button>
+                  );
+                })
+              )}
             </div>
           </div>
         </div>

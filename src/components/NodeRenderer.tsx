@@ -445,31 +445,8 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
       // 5. MEDIA & VECTORS
       case 'svg_icon':
       case 'fontawesome_icon': {
-        const isSvgCatalog =
-          node.type === 'svg_icon' ||
-          props.library === 'lucide' ||
-          props.library === 'svg_catalog';
-        const catalogItem = findCatalogIcon(props.svgId || props.iconId || props.iconName);
-
-        if (isSvgCatalog || (catalogItem && props.library !== 'material_symbols' && props.library !== 'line_awesome' && props.library !== 'devicon')) {
-          const effectiveSize = props.size || style.fontSize || style.width || 24;
-          return (
-            <div
-              id={node.id}
-              onClick={handleClick}
-              className={`${selectionClasses} inline-flex items-center justify-center`}
-              style={style}
-            >
-              <SvgIconRenderer
-                iconId={props.svgId || props.iconId || props.iconName || 'rocket'}
-                rawSvg={props.svgContent}
-                size={effectiveSize}
-                stroke={style.color || style.stroke || '#0d99ff'}
-                fill={style.fill || 'none'}
-              />
-            </div>
-          );
-        }
+        const effectiveSize = props.size || style.fontSize || style.width || 24;
+        const iconIdentifier = props.iconName || props.svgId || props.iconId || 'lucide:rocket';
 
         return (
           <div
@@ -478,19 +455,13 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
             className={`${selectionClasses} inline-flex items-center justify-center`}
             style={style}
           >
-            {props.library === 'material_symbols' ? (
-              <span
-                className={props.prefix || 'material-icons-outlined'}
-                style={{ color: style.color || '#0d99ff', fontSize: props.size || style.fontSize || '24px' }}
-              >
-                {props.iconName || 'star'}
-              </span>
-            ) : (
-              <i
-                className={`${props.prefix || ''} ${props.iconName || 'fa-star'}`}
-                style={{ color: style.color || '#0d99ff', fontSize: props.size || style.fontSize || '24px' }}
-              ></i>
-            )}
+            <SvgIconRenderer
+              iconId={iconIdentifier}
+              rawSvg={props.svgContent}
+              size={effectiveSize}
+              stroke={style.color || style.stroke || '#0d99ff'}
+              fill={style.fill || 'none'}
+            />
           </div>
         );
       }

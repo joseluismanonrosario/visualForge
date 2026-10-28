@@ -165,56 +165,47 @@ En lugar de selectores genéricos, el panel de propiedades cuenta con un control
 
 ---
 
-## 5. SISTEMA MULTI-LIBRERÍA DE ICONOS POR TIPO DE PROYECTO
+## 5. SISTEMA EXCLUSIVO DE ICONOS ICONIFY (OFFLINE LOCAL - 244 SETS Y +418.000 ICONOS)
 
-El estudio incorpora un sistema universal de iconos clasificado según el entorno de trabajo seleccionado al crear o configurar el proyecto (`NewProjectModal`):
+El proyecto utiliza **exclusivamente Iconify** como fuente universal de iconografía, funcionando **100% en local y sin conexión a internet** (basado en el repositorio oficial [Iconify](https://github.com/iconify) y los paquetes `@iconify/json`, `@iconify/utils`, `@iconify/react`):
 
-### Clasificación por Tipo de Proyecto y Flujo de Trabajo:
-1. **Nativas HTML / CSS Puro (CDN o archivos .css y etiquetas `<i>`)**:
-   - `Line Awesome`: Sustituto moderno de trazo lineal basado en la cuadrícula de Font Awesome.
-   - `Iconmonstr`: Iconos geométricos minimalistas sin dependencias pesadas.
-   - `IcoMoon Free`: Iconografía de píxel perfecto para HTML semántico y CSS.
-   - `Fontisto`: Conjunto vectorial ligero para páginas clásicas.
-   - `Devicon`: Especializada en logotipos oficiales de lenguajes, frameworks y herramientas tecnológicas.
+### 1. Disponibilidad Completa y Rendimiento Offline
+- **Acceso Completo Out-of-the-Box**: Incluye las 244 colecciones oficiales de Iconify y más de 418.000 iconos vectoriales disponibles en local.
+- **Carga Local Asíncrona sin Sobrecarga de Memoria**:
+  - Middleware local en Vite (`vite.config.ts`) que sirve bajo demanda los archivos JSON locales de `node_modules/@iconify/json/json/${prefix}.json` vía endpoints locales `/@iconify/json/*` en 2-5 ms.
+  - Colección base pre-cargada en memoria (`lucide` con 1.999 iconos) para renderizado síncrono inmediato (latencia 0 ms).
+  - Cache en memoria (`COLLECTION_CACHE`) para almacenar cualquier set de iconos que el usuario explore o utilice, evitando lecturas duplicadas de disco.
 
-2. **Diseñadas para Frameworks (React, Vue, Svelte, Angular via NPM)**:
-   - `Lucide Icons`: Estándar oficial moderno de componentes para React y shadcn/ui.
-   - `Heroicons`: Iconos oficiales de Tailwind CSS creados por el equipo de Tailwind Labs.
-   - `Iconoir`: Biblioteca libre con diseño limpio, moderno y consistente.
-   - `Radix Icons`: Iconos de precisión 15x15 diseñados por WorkOS para Radix UI.
-   - `Unicons (by Iconscout)`: Más de 1.000 iconos vectoriales en estilos de línea y monocromo.
+### 2. Categorías Temáticas en Combobox
+Para facilitar la navegación entre cientos de librerías, el sistema organiza las colecciones en categorías agrupadas mediante un Combobox principal:
+1. **Todas las Colecciones**: Catálogo global de 244 sets y +418.000 iconos.
+2. **UI 24px**: Lucide, Tabler Icons, Remix Icon, Feather, Solar, Octicons, Iconoir, etc. (66 sets, +153.000 iconos).
+3. **Material Design**: Google Material Symbols, Google Material Icons, Material Design Icons (MDI), MDI Light (6 sets, +51.000 iconos).
+4. **Clásicas y Cuadrícula Mixta**: Font Awesome 6 (Solid, Regular, Brands), Boxicons, Line Awesome, Unicons, etc. (35 sets, +68.000 iconos).
+5. **Logos y Marcas**: Simple Icons, Devicon, Brandico, Entypo Social, etc. (18 sets, +48.000 iconos).
+6. **UI 16px / 32px (Micro & Compactas)**: Radix Icons, Carbon, Clarity, Fluent, Teenyicons, etc. (18 sets, +13.000 iconos).
+7. **Programación y Código**: Devicon, Codicons, VS Code Icons, Skill Icons, etc. (11 sets, +7.400 iconos).
+8. **Emojis y Emoticonos**: Fluent Emoji, Twemoji, OpenMoji, Noto Emoji, etc. (11 sets, +25.000 iconos).
+9. **Multicolor & Coloridas**: Flat Color Icons, Noto Color Emoji, etc. (12 sets, +12.000 iconos).
+10. **Banderas y Mapas**: Circle Flags, Flag Icons, Map Icons, etc. (12 sets, +6.200 iconos).
+11. **Temáticos Especializados**: Game Icons, Weather Icons, Medical, etc. (9 sets, +7.500 iconos).
+12. **Archivo & Legado**: Colecciones clásicas y de archivo (30 sets, +14.000 iconos).
 
-3. **Híbridas (Soporte Nativo Completo para AMBOS entornos: CDN + Framework)**:
-   - `Bootstrap Icons`: Iconos oficiales de Bootstrap para HTML puro o paquetes React.
-   - `Remix Icon`: Sistema neutral con variantes Line y Fill exactas.
-   - `Boxicons`: Diseñados para interfaces con estilos Regular, Solid y Logos.
-   - `Phosphor Icons`: Familia versátil con múltiples pesos (Regular, Bold, Fill).
-   - `Tabler Icons`: Más de 4.000 iconos vectoriales con cuadrícula de 24x24.
-   - `Google Material Icons / Symbols`: Diseño Material Design en variantes Outlined, Filled, Round y Sharp.
-   - `Font Awesome 5 Free`: Catálogo completo de 1.458 iconos y 58 categorías temáticas (incluyendo Brands).
+### 3. Filtros y Búsqueda en el Inspector y Modal de Selección
+- **Combobox de Categoría Temática**: Filtra al instante las colecciones disponibles.
+- **Combobox de Colección / Set**: Permite elegir la colección activa mostrando el total de iconos de cada una (ej. `Lucide (1,999)`, `Tabler (5,400)`, `Material Symbols (15,761)`).
+- **Combobox de Subcategoría Interna**: Cuando una colección incluye etiquetas temáticas internas (ej. Arrows, Media, Editor), se activa un tercer combobox para refinar la selección.
+- **Búsqueda Instantánea con Botón `X` de Limpieza**: Filtrado en tiempo real por nombre de icono con botón circular `X` en el borde derecho para vaciar la búsqueda en 1 clic.
+- **Paginación Fluida**: Renderizado optimizado a 120 iconos por página con controles `◀ Prev` / `Next ▶` y contador de páginas para mantener 60 FPS estables incluso en colecciones de más de 15.000 iconos.
 
----
-
-### Reglas de Selección y Estilos Dinámicos por Librería:
-1. **Combobox de Selección de Librería**:
-   - Tanto en el Inspector de Propiedades como en el Explorador Modal, un combobox permite alternar entre las librerías habilitadas para el tipo de proyecto actual.
-2. **Estilos Dinámicos Estrictos**:
-   - Al seleccionar un icono de una librería, el conmutador de estilos **únicamente presenta las variantes que esa librería soporta de forma nativa**:
-     - *Font Awesome 5*: Solid (`fas`), Regular (`far`), Brands (`fab`).
-     - *Line Awesome*: Solid (`las`), Regular (`lar`), Brands (`lab`).
-     - *Bootstrap Icons*: Outline (`bi`), Fill (`bi-fill`).
-     - *Remix Icon*: Line (`ri-...-line`), Fill (`ri-...-fill`).
-     - *Boxicons*: Regular (`bx`), Solid (`bxs`), Logos (`bxl`).
-     - *Phosphor*: Regular (`ph`), Bold (`ph-bold`), Fill (`ph-fill`).
-     - *Tabler*: Outline (`ti`), Filled (`ti-filled`).
-     - *Google Material*: Outlined, Filled, Round, Sharp.
-     - *Devicon*: Plain, Original, Line.
-     - *Heroicons*: Outline, Solid.
-     - *Lucide / Iconoir / Radix / Fontisto / Iconmonstr*: Estilo estándar contorneado. No se muestran opciones incompatibles.
-3. **Control Exclusivo de Color**:
-   - Selector visual de color nativo, campo hexadecimal editable, botón de reset y 8 swatches de acceso rápido para teñir vectorialmente cualquier icono.
-4. **Buscador con Botón de Limpieza (`X`)**:
-   - Búsqueda en tiempo real por nombre y etiquetas, con botón circular `X` en el borde derecho del textbox para restablecer la consulta en 1 clic.
+### 4. Personalización y Exportación Multi-Destino
+- **Control de Color y Relleno Vectorial**:
+  - Control de trazo / color (`stroke` / `color`) con selector visual, campo hexadecimal y swatches rápidos.
+  - Control de relleno (`fill`) para iconos sólidos o con fondo personalizado.
+  - Control de tamaño (`size`) mediante deslizador y campo numérico de 12px a 96px.
+- **Exportación Limpia**:
+  - **HTML/CSS & ESP32**: Inyecta los SVGs exactos directamente en línea (*inline SVG*), garantizando funcionamiento offline en microcontroladores y páginas estáticas sin dependencias de internet ni fuentes tipográficas externas.
+  - **React**: Genera componentes funcionales JSX con propiedades tipadas `{...props}` y atributos en camelCase.
 
 ---
 
