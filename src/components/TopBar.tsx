@@ -162,9 +162,21 @@ export const TopBar: React.FC<TopBarProps> = ({
           title="Haga clic para cambiar el tipo de proyecto e iconografía"
           className="flex items-center gap-1.5 px-2 py-1 rounded bg-[#1e1e1e] hover:bg-[#383838] border border-[#383838] text-[11px] font-medium text-zinc-300 transition-colors"
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
-          <span className="truncate max-w-[100px]">
-            {projectType === 'html_css' ? 'HTML/CSS' : projectType === 'framework' ? 'React/NPM' : 'Híbrido'}
+          <span
+            className={`w-1.5 h-1.5 rounded-full ${
+              projectType === 'esp32'
+                ? 'bg-emerald-400'
+                : projectType === 'html_css'
+                ? 'bg-amber-400'
+                : 'bg-[#0d99ff]'
+            }`}
+          />
+          <span className="truncate max-w-[130px]">
+            {projectType === 'esp32'
+              ? 'ESP32 / IoT'
+              : projectType === 'html_css'
+              ? 'HTML / CSS'
+              : 'React Web'}
           </span>
         </button>
 

@@ -1,6 +1,18 @@
 export type ComponentLibrary = 'shadcn' | 'bootstrap' | 'both';
 
-export type ProjectType = 'html_css' | 'framework' | 'hybrid';
+export type ProjectType = 'esp32' | 'html_css' | 'react' | 'framework' | 'hybrid';
+
+export type GpioAction = 'TOGGLE_PIN' | 'SET_HIGH' | 'SET_LOW' | 'PWM' | 'READ_PIN';
+export type GpioCommMode = 'HTTP_GET' | 'HTTP_POST' | 'WEBSOCKET';
+
+export interface GpioConfig {
+  enabled?: boolean;
+  pin: number;
+  action: GpioAction;
+  mode: GpioCommMode;
+  label?: string;
+  pwmValue?: number;
+}
 
 export interface CanvasNode {
   id: string;

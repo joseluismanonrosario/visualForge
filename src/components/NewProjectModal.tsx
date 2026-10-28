@@ -6,7 +6,7 @@ import { Sparkles, X, PlusCircle, Check, Layers, Code, Palette } from 'lucide-re
 interface NewProjectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreateProject: (name: string, type: ProjectType, iconLibrary: string, template: 'saas' | 'blank') => void;
+  onCreateProject: (name: string, type: ProjectType, iconLibrary: string, template: 'iot' | 'saas' | 'blank') => void;
   currentType: ProjectType;
 }
 
@@ -16,18 +16,33 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
   onCreateProject,
   currentType,
 }) => {
-  const [name, setName] = useState('Mi Nuevo Proyecto Web');
+  const [name, setName] = useState(
+    currentType === 'esp32' ? 'ESP32 IoT WebServer' : 'Mi Nuevo Proyecto Web'
+  );
   const [selectedType, setSelectedType] = useState<ProjectType>(currentType);
-  const [template, setTemplate] = useState<'saas' | 'blank'>('saas');
+  const [template, setTemplate] = useState<'iot' | 'saas' | 'blank'>(
+    currentType === 'esp32' ? 'iot' : 'saas'
+  );
 
   const availableLibraries = getLibrariesForWorkflow(selectedType);
   const [selectedLibrary, setSelectedLibrary] = useState<string>(
     availableLibraries[0]?.id || 'fontawesome'
   );
 
-  // Sync default library when workflow changes
+  // Sync default library and template when workflow changes
   const handleTypeChange = (type: ProjectType) => {
     setSelectedType(type);
+    if (type === 'esp32') {
+      setName('ESP32 IoT WebServer');
+      setTemplate('iot');
+    } else if (type === 'html_css') {
+      setName('Landing Page HTML & CSS');
+      setTemplate('saas');
+    } else {
+      setName('React 19 Web App');
+      setTemplate('saas');
+    }
+
     const libs = getLibrariesForWorkflow(type);
     if (!libs.some((l) => l.id === selectedLibrary)) {
       setSelectedLibrary(libs[0]?.id || 'fontawesome');
@@ -143,13 +158,27 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
           {/* Starter Template */}
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-zinc-200">Plantilla Inicial</label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {selectedType === 'esp32' && (
+                <button
+                  type="button"
+                  onClick={() => setTemplate('iot')}
+                  className={`p-2.5 rounded-lg border text-left transition-all ${
+                    template === 'iot'
+                      ? 'bg-emerald-500/15 border-emerald-500 text-white ring-1 ring-emerald-500'
+                      : 'bg-[#18181b] border-[#383838] text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  <div className="font-medium text-xs text-white">ESP32 IoT Dashboard</div>
+                  <div className="text-[11px] text-zinc-400">Pines GPIO 2, 4, 5, relé y PWM</div>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setTemplate('saas')}
                 className={`p-2.5 rounded-lg border text-left transition-all ${
                   template === 'saas'
-                    ? 'bg-[#0d99ff]/10 border-[#0d99ff] text-white'
+                    ? 'bg-[#0d99ff]/15 border-[#0d99ff] text-white ring-1 ring-[#0d99ff]'
                     : 'bg-[#18181b] border-[#383838] text-zinc-400 hover:text-white'
                 }`}
               >
@@ -161,7 +190,7 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
                 onClick={() => setTemplate('blank')}
                 className={`p-2.5 rounded-lg border text-left transition-all ${
                   template === 'blank'
-                    ? 'bg-[#0d99ff]/10 border-[#0d99ff] text-white'
+                    ? 'bg-[#0d99ff]/15 border-[#0d99ff] text-white ring-1 ring-[#0d99ff]'
                     : 'bg-[#18181b] border-[#383838] text-zinc-400 hover:text-white'
                 }`}
               >

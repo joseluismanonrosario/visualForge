@@ -1,22 +1,36 @@
-import React, { useState } from 'react';
-import { Download, Copy, Check, X, FileCode2, Sparkles } from 'lucide-react';
-import { CanvasNode } from '../types';
+import React, { useState, useEffect } from 'react';
+import { Download, Copy, Check, X, FileCode2, Sparkles, Cpu } from 'lucide-react';
+import { CanvasNode, ProjectType } from '../types';
 import {
   ExportFormat,
-  EXPORT_FORMATS,
+  getExportFormatsForProject,
+  getDefaultFormatForProject,
   generateCode,
   copyToClipboardSafe,
 } from '../utils/exportEngine';
 
 interface ExportModalProps {
   tree: CanvasNode[];
+  projectType?: ProjectType;
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const ExportModal: React.FC<ExportModalProps> = ({ tree, isOpen, onClose }) => {
-  const [activeFormat, setActiveFormat] = useState<ExportFormat>('react_shadcn');
+export const ExportModal: React.FC<ExportModalProps> = ({
+  tree,
+  projectType = 'react',
+  isOpen,
+  onClose,
+}) => {
+  const availableFormats = getExportFormatsForProject(projectType);
+  const [activeFormat, setActiveFormat] = useState<ExportFormat>(() =>
+    getDefaultFormatForProject(projectType)
+  );
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    setActiveFormat(getDefaultFormatForProject(projectType));
+  }, [projectType, isOpen]);
 
   if (!isOpen) return null;
 
@@ -30,23 +44,25 @@ export const ExportModal: React.FC<ExportModalProps> = ({ tree, isOpen, onClose 
     }
   };
 
-  const handleDownload = () => {
-    let filename = 'visualforge_export';
-    let mimeType = 'text/plain';
-
-    if (activeFormat === 'react_shadcn' || activeFormat === 'react_bootstrap') {
-      filename += '.tsx';
-      mimeType = 'text/typescript';
-    } else if (activeFormat === 'html_bootstrap' || activeFormat === 'html_css') {
-      filename += '.html';
-      mimeType = 'text/html';
+  const getDownloadInfo = () => {
+    if (activeFormat === 'esp32_html') {
+      return { filename: 'index.html', mimeType: 'text/html' };
+    } else if (activeFormat === 'esp32_main_cpp') {
+      return { filename: 'main.cpp', mimeType: 'text/x-c++src' };
     } else if (activeFormat === 'esp32_embedded') {
-      filename = 'esp32_webserver.h';
-      mimeType = 'text/x-chdr';
+      return { filename: 'esp32_webserver.h', mimeType: 'text/x-chdr' };
+    } else if (activeFormat === 'html_css' || activeFormat === 'html_bootstrap') {
+      return { filename: 'index.html', mimeType: 'text/html' };
+    } else if (activeFormat === 'react_shadcn' || activeFormat === 'react_bootstrap') {
+      return { filename: 'App.tsx', mimeType: 'text/typescript' };
     } else if (activeFormat === 'react_native_tailwind') {
-      filename += '.tsx';
-      mimeType = 'text/typescript';
+      return { filename: 'Screen.tsx', mimeType: 'text/typescript' };
     }
+    return { filename: 'export.txt', mimeType: 'text/plain' };
+  };
+
+  const handleDownload = () => {
+    const { filename, mimeType } = getDownloadInfo();
 
     const blob = new Blob([code], { type: mimeType });
     const url = URL.createObjectURL(blob);
@@ -59,18 +75,53 @@ export const ExportModal: React.FC<ExportModalProps> = ({ tree, isOpen, onClose 
     URL.revokeObjectURL(url);
   };
 
+  const downloadInfo = getDownloadInfo();
+
   return (
     <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 select-none">
       <div className="bg-[#1e1e1e] border border-[#383838] rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden text-xs text-zinc-300">
         {/* Modal Header */}
         <div className="px-5 py-4 border-b border-[#383838] flex items-center justify-between bg-[#262626]">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-violet-600 to-[#0d99ff] flex items-center justify-center text-white">
-              <FileCode2 className="w-4 h-4" />
+            <div
+              className={`w-7 h-7 rounded-lg flex items-center justify-center text-white ${
+                projectType === 'esp32'
+                  ? 'bg-gradient-to-tr from-emerald-600 to-teal-500'
+                  : projectType === 'html_css'
+                  ? 'bg-gradient-to-tr from-amber-600 to-orange-500'
+                  : 'bg-gradient-to-tr from-violet-600 to-[#0d99ff]'
+              }`}
+            >
+              {projectType === 'esp32' ? (
+                <Cpu className="w-4 h-4" />
+              ) : (
+                <FileCode2 className="w-4 h-4" />
+              )}
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-white">Export Production Code</h2>
-              <p className="text-[11px] text-zinc-400">Choose your preferred framework and download or copy cleanly</p>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-semibold text-white">Export Production Code</h2>
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
+                    projectType === 'esp32'
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                      : projectType === 'html_css'
+                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                      : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                  }`}
+                >
+                  {projectType === 'esp32'
+                    ? 'Target: ESP32 IoT'
+                    : projectType === 'html_css'
+                    ? 'Target: HTML / CSS'
+                    : 'Target: React Web'}
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-400">
+                {projectType === 'esp32'
+                  ? 'Exporta la interfaz web con SVGs inline y el firmware C++ complementario para ESP32'
+                  : 'Exporta código limpio con SVGs puros e inline optimizados sin dependencias externas'}
+              </p>
             </div>
           </div>
           <button
@@ -83,13 +134,15 @@ export const ExportModal: React.FC<ExportModalProps> = ({ tree, isOpen, onClose 
 
         {/* Format Selector Tabs */}
         <div className="px-5 py-3 border-b border-[#383838] bg-[#222223] flex items-center gap-2 overflow-x-auto">
-          {EXPORT_FORMATS.map((fmt) => (
+          {availableFormats.map((fmt) => (
             <button
               key={fmt.id}
               onClick={() => setActiveFormat(fmt.id)}
               className={`px-3 py-2 rounded-lg flex items-center gap-2 transition-all whitespace-nowrap ${
                 activeFormat === fmt.id
-                  ? 'bg-[#0d99ff] text-white font-medium shadow-sm'
+                  ? projectType === 'esp32'
+                    ? 'bg-emerald-600 text-white font-medium shadow-sm'
+                    : 'bg-[#0d99ff] text-white font-medium shadow-sm'
                   : 'bg-[#18181b] text-zinc-400 hover:text-white hover:bg-[#28282b] border border-[#383838]'
               }`}
             >
@@ -108,7 +161,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({ tree, isOpen, onClose 
         <div className="px-5 py-3 border-t border-[#383838] bg-[#262626] flex items-center justify-between">
           <div className="text-[11px] text-zinc-400 flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-violet-400" />
-            <span>Sandbox-safe clipboard with automatic fallback</span>
+            <span>
+              {projectType === 'esp32'
+                ? 'Rutas asíncronas no bloqueantes con ESPAsyncWebServer'
+                : 'Sandbox-safe clipboard con fallback automático'}
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -131,10 +188,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({ tree, isOpen, onClose 
 
             <button
               onClick={handleDownload}
-              className="px-4 py-2 rounded-lg bg-[#0d99ff] hover:bg-[#0082df] text-white font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+              className={`px-4 py-2 rounded-lg font-semibold flex items-center gap-1.5 transition-colors shadow-sm text-white ${
+                projectType === 'esp32'
+                  ? 'bg-emerald-600 hover:bg-emerald-500'
+                  : 'bg-[#0d99ff] hover:bg-[#0082df]'
+              }`}
             >
               <Download className="w-3.5 h-3.5" />
-              <span>Download File</span>
+              <span>Download {downloadInfo.filename}</span>
             </button>
           </div>
         </div>

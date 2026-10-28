@@ -1,53 +1,104 @@
-import { CanvasNode } from '../types';
+import { CanvasNode, ProjectType, GpioAction, GpioCommMode } from '../types';
 import { findCatalogIcon, customizeSvg } from './svgIconRenderer';
 import { getIconSvgSync } from './iconifyManager';
 
 export type ExportFormat =
+  | 'esp32_html'
+  | 'esp32_main_cpp'
+  | 'esp32_embedded'
   | 'react_shadcn'
+  | 'html_css'
   | 'html_bootstrap'
   | 'react_bootstrap'
-  | 'html_css'
-  | 'esp32_embedded'
   | 'react_native_tailwind';
 
-export const EXPORT_FORMATS: { id: ExportFormat; label: string; desc: string; icon: string }[] = [
+export interface ExportFormatItem {
+  id: ExportFormat;
+  label: string;
+  desc: string;
+  icon: string;
+  projectTypes?: ProjectType[];
+}
+
+export const EXPORT_FORMATS: ExportFormatItem[] = [
   {
-    id: 'react_shadcn',
-    label: 'React 19 + Components JSX',
-    desc: 'JSX con Tailwind CSS v4 y componentes SVG puros sin dependencias',
-    icon: 'fab fa-react',
+    id: 'esp32_html',
+    label: 'ESP32 WebUI (index.html)',
+    desc: 'HTML optimizado con SVGs inline y funciones fetch() asíncronas para ESP32',
+    icon: 'fas fa-microchip',
+    projectTypes: ['esp32'],
+  },
+  {
+    id: 'esp32_main_cpp',
+    label: 'Firmware C++ (main.cpp)',
+    desc: 'Código C++ con ESPAsyncWebServer y pinMode() configurados automáticamente según el diseño',
+    icon: 'fas fa-file-code',
+    projectTypes: ['esp32'],
+  },
+  {
+    id: 'esp32_embedded',
+    label: 'ESP32 All-in-One (esp32_webserver.h)',
+    desc: 'Cabecera C++ con HTML/SVG embebido en PROGMEM listo para compilar',
+    icon: 'fas fa-memory',
+    projectTypes: ['esp32'],
   },
   {
     id: 'html_css',
     label: 'HTML5 Puro (Inline SVG)',
     desc: 'HTML semántico con SVGs en línea directos, sin CDNs ni fuentes externas',
     icon: 'fab fa-html5',
+    projectTypes: ['html_css', 'esp32'],
   },
   {
-    id: 'esp32_embedded',
-    label: 'ESP32 Web Server (C++ PROGMEM)',
-    desc: 'C++ Raw Literal con HTML/SVG autónomo para SPIFFS/LittleFS en ESP32',
-    icon: 'fas fa-microchip',
+    id: 'react_shadcn',
+    label: 'React 19 + Components JSX',
+    desc: 'JSX con Tailwind CSS v4 y componentes SVG puros sin dependencias',
+    icon: 'fab fa-react',
+    projectTypes: ['react'],
   },
   {
     id: 'html_bootstrap',
     label: 'HTML5 + Bootstrap 5.3',
     desc: 'Markup semántico listo para ejecutar con Bootstrap 5.3 y SVGs',
     icon: 'fab fa-bootstrap',
+    projectTypes: ['html_css'],
   },
   {
     id: 'react_bootstrap',
     label: 'React + react-bootstrap',
     desc: 'Código React basado en react-bootstrap y SVGs optimizados',
     icon: 'fas fa-code',
+    projectTypes: ['react'],
   },
   {
     id: 'react_native_tailwind',
     label: 'React Native + NativeWind',
     desc: 'Componentes View y Text listos para móvil estilizados con Tailwind',
     icon: 'fas fa-mobile-alt',
+    projectTypes: ['react'],
   },
 ];
+
+export function getExportFormatsForProject(projectType?: ProjectType): ExportFormatItem[] {
+  if (!projectType) return EXPORT_FORMATS;
+  if (projectType === 'esp32') {
+    return EXPORT_FORMATS.filter((f) => !f.projectTypes || f.projectTypes.includes('esp32'));
+  }
+  if (projectType === 'html_css') {
+    return EXPORT_FORMATS.filter((f) => !f.projectTypes || f.projectTypes.includes('html_css'));
+  }
+  if (projectType === 'react') {
+    return EXPORT_FORMATS.filter((f) => !f.projectTypes || f.projectTypes.includes('react'));
+  }
+  return EXPORT_FORMATS;
+}
+
+export function getDefaultFormatForProject(projectType?: ProjectType): ExportFormat {
+  if (projectType === 'esp32') return 'esp32_html';
+  if (projectType === 'html_css') return 'html_css';
+  if (projectType === 'react') return 'react_shadcn';
+  return 'react_shadcn';
+}
 
 // Helper to convert style object to inline CSS string
 function styleToInlineCss(style: Record<string, any>): string {
@@ -106,6 +157,222 @@ export function extractUsedCatalogSvgs(nodes: CanvasNode[]): Map<string, { id: s
 
   traverse(nodes);
   return map;
+}
+
+export interface ExtractedGpioPin {
+  nodeId: string;
+  nodeName: string;
+  nodeType: string;
+  pin: number;
+  action: GpioAction;
+  mode: GpioCommMode;
+  label: string;
+  pwmValue?: number;
+}
+
+export function extractUsedGpioPins(nodes: CanvasNode[]): ExtractedGpioPin[] {
+  const result: ExtractedGpioPin[] = [];
+  const visited = new Set<string>();
+
+  function traverse(list: CanvasNode[]) {
+    for (const node of list) {
+      if (node.props?.gpio?.enabled && typeof node.props.gpio.pin === 'number') {
+        const key = `${node.id}-${node.props.gpio.pin}`;
+        if (!visited.has(key)) {
+          visited.add(key);
+          result.push({
+            nodeId: node.id,
+            nodeName: node.name,
+            nodeType: node.type,
+            pin: node.props.gpio.pin,
+            action: node.props.gpio.action || 'TOGGLE_PIN',
+            mode: node.props.gpio.mode || 'HTTP_GET',
+            label: node.props.gpio.label || node.name,
+            pwmValue: node.props.gpio.pwmValue,
+          });
+        }
+      }
+      if (node.children && node.children.length > 0) {
+        traverse(node.children);
+      }
+    }
+  }
+
+  traverse(nodes);
+  return result;
+}
+
+export function generateEsp32MainCpp(nodes: CanvasNode[]): string {
+  const pins = extractUsedGpioPins(nodes);
+
+  // Group by unique pin number
+  const uniquePinsMap = new Map<number, ExtractedGpioPin>();
+  for (const p of pins) {
+    if (!uniquePinsMap.has(p.pin)) {
+      uniquePinsMap.set(p.pin, p);
+    }
+  }
+
+  // Provide sensible defaults if no pin was explicitly marked active
+  if (uniquePinsMap.size === 0) {
+    uniquePinsMap.set(2, {
+      nodeId: 'led_default',
+      nodeName: 'LED Onboard',
+      nodeType: 'switch',
+      pin: 2,
+      action: 'TOGGLE_PIN',
+      mode: 'HTTP_GET',
+      label: 'LED Onboard (GPIO 2)',
+    });
+    uniquePinsMap.set(4, {
+      nodeId: 'relay_default',
+      nodeName: 'Relé Principal',
+      nodeType: 'button',
+      pin: 4,
+      action: 'TOGGLE_PIN',
+      mode: 'HTTP_GET',
+      label: 'Relé Principal (GPIO 4)',
+    });
+  }
+
+  const pinList = Array.from(uniquePinsMap.values());
+
+  const pinsDefinitions = pinList
+    .map((p) => {
+      const safeName = (p.label || `GPIO_${p.pin}`)
+        .toUpperCase()
+        .replace(/[^A-Z0-9_]/g, '_')
+        .replace(/_+/g, '_');
+      return `#define PIN_${safeName} ${p.pin} // ${p.label || p.nodeName} (${p.action})`;
+    })
+    .join('\n');
+
+  const pinsSetup = pinList
+    .map((p) => {
+      const safeName = (p.label || `GPIO_${p.pin}`)
+        .toUpperCase()
+        .replace(/[^A-Z0-9_]/g, '_')
+        .replace(/_+/g, '_');
+      if (p.action === 'PWM') {
+        return `  // ${p.label}: Canal PWM en pin ${p.pin}
+  #if ESP_ARDUINO_VERSION_MAJOR >= 3
+  ledcAttach(PIN_${safeName}, 5000, 8);
+  #else
+  ledcSetup(0, 5000, 8);
+  ledcAttachPin(PIN_${safeName}, 0);
+  #endif`;
+      } else if (p.action === 'READ_PIN') {
+        return `  // ${p.label}: Entrada Digital / Sensor en pin ${p.pin}
+  pinMode(PIN_${safeName}, INPUT);`;
+      } else {
+        return `  // ${p.label}: Salida Digital en pin ${p.pin}
+  pinMode(PIN_${safeName}, OUTPUT);
+  digitalWrite(PIN_${safeName}, LOW);`;
+      }
+    })
+    .join('\n\n');
+
+  return `// ====================================================================
+// VisualForge Studio - Firmware ESP32 Autogenerado
+// Web Server Asíncrono (ESPAsyncWebServer) con mapeo automático de pines GPIO
+// Compatible con: Arduino IDE, PlatformIO, ESP-IDF (Arduino framework)
+// ====================================================================
+
+#include <Arduino.h>
+#include <WiFi.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+
+// Credenciales Wi-Fi (Modo SoftAP Punto de Acceso o Estación)
+const char* ssid = "ESP32_VisualForge";
+const char* password = ""; // Red abierta (o asigna contraseña de 8+ caracteres)
+
+// Instancia del servidor HTTP asíncrono en puerto 80
+AsyncWebServer server(80);
+
+// --- Definición de Pines GPIO Utilizados en el Diseño ---
+${pinsDefinitions}
+
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+  Serial.println("\\n===========================================");
+  Serial.println("[VisualForge ESP32] Iniciando sistema IoT...");
+  Serial.println("===========================================");
+
+  // Configuración de modo de pines (pinMode) según componentes visuales:
+${pinsSetup}
+
+  // Inicializar Punto de Acceso Wi-Fi (SoftAP)
+  WiFi.softAP(ssid, password);
+  IPAddress IP = WiFi.softAPIP();
+  Serial.println("[WiFi] Punto de acceso iniciado exitosamente.");
+  Serial.print("[WiFi] Abre en el navegador de tu movil o PC: http://");
+  Serial.println(IP);
+
+  // Ruta principal (WebUI HTML)
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+    // Si index.html está en SPIFFS / LittleFS:
+    // request->send(LittleFS, "/index.html", "text/html");
+    // O si usas el header esp32_webserver.h con PROGMEM:
+    // request->send_P(200, "text/html", INDEX_HTML);
+    request->send(200, "text/html", "<h2>VisualForge ESP32 Activo</h2><p>Sube el archivo index.html generado a LittleFS/SPIFFS o usa esp32_webserver.h</p>");
+  });
+
+  // Ruta API para control y lectura de pines GPIO
+  server.on("/update", HTTP_GET, [](AsyncWebServerRequest *request) {
+    if (!request->hasParam("pin")) {
+      request->send(400, "text/plain", "Error: Falta parametro 'pin'");
+      return;
+    }
+
+    int pin = request->getParam("pin")->value().toInt();
+    String action = request->hasParam("action") ? request->getParam("action")->value() : "TOGGLE_PIN";
+    int val = request->hasParam("val") ? request->getParam("val")->value().toInt() : 0;
+
+    Serial.printf("[GPIO Update] Pin: %d | Accion: %s | Valor: %d\\n", pin, action.c_str(), val);
+
+    if (action == "TOGGLE_PIN") {
+      int currentState = digitalRead(pin);
+      int newState = (currentState == HIGH) ? LOW : HIGH;
+      digitalWrite(pin, newState);
+      request->send(200, "text/plain", newState == HIGH ? "ON" : "OFF");
+      return;
+    } else if (action == "SET_HIGH") {
+      digitalWrite(pin, HIGH);
+      request->send(200, "text/plain", "HIGH");
+      return;
+    } else if (action == "SET_LOW") {
+      digitalWrite(pin, LOW);
+      request->send(200, "text/plain", "LOW");
+      return;
+    } else if (action == "PWM") {
+      #if ESP_ARDUINO_VERSION_MAJOR >= 3
+      ledcWrite(pin, val);
+      #else
+      ledcWrite(0, val);
+      #endif
+      request->send(200, "text/plain", String(val));
+      return;
+    } else if (action == "READ_PIN") {
+      int readVal = digitalRead(pin);
+      request->send(200, "text/plain", String(readVal));
+      return;
+    }
+
+    request->send(200, "text/plain", "OK");
+  });
+
+  server.begin();
+  Serial.println("[VisualForge ESP32] Servidor Web iniciado y escuchando peticiones en puerto 80.");
+}
+
+void loop() {
+  // ESPAsyncWebServer es completamente no bloqueante (basado en eventos).
+  // loop() queda libre para tus tareas de control o sensores.
+  delay(10);
+}
+`;
 }
 
 // Convert raw SVG string to clean React JSX component code
@@ -201,14 +468,14 @@ ${indent}</div>`;
 }
 
 // Generate Clean Semantic HTML with INLINE SVGs (Zero CDNs, Zero .woff)
-function generateHtmlInlineSvg(nodes: CanvasNode[], indent = '      '): string {
+function generateHtmlInlineSvg(nodes: CanvasNode[], indent = '      ', isEsp32 = false): string {
   return nodes
     .map((node) => {
       const inlineCss = styleToInlineCss(node.style);
       const styleAttr = inlineCss ? ` style="${inlineCss}"` : '';
       const childrenCode =
         node.children && node.children.length > 0
-          ? `\n${generateHtmlInlineSvg(node.children, indent + '  ')}\n${indent}`
+          ? `\n${generateHtmlInlineSvg(node.children, indent + '  ', isEsp32)}\n${indent}`
           : '';
 
       switch (node.type) {
@@ -226,8 +493,47 @@ ${(node.props.links || []).map((l: any) => `${indent}    <a href="${l.href}">${l
 ${indent}  </nav>
 ${indent}  <div class="vf-nav-actions">${childrenCode}</div>
 ${indent}</header>`;
-        case 'button':
-          return `${indent}<button type="button" class="vf-button" id="${node.id}"${styleAttr}>${node.props.label || 'Button'}</button>`;
+        case 'button': {
+          const gpio = isEsp32 && node.props?.gpio?.enabled ? node.props.gpio : null;
+          let clickAttr = '';
+          if (gpio) {
+            if (gpio.action === 'PWM') {
+              clickAttr = ` onclick="updateGPIO(${gpio.pin}, 'PWM', ${gpio.pwmValue ?? 128})"`;
+            } else {
+              clickAttr = ` onclick="updateGPIO(${gpio.pin}, '${gpio.action}')"`;
+            }
+          }
+          return `${indent}<button type="button" class="vf-button" id="${node.id}"${clickAttr}${styleAttr}>${node.props.label || 'Button'}</button>`;
+        }
+        case 'switch': {
+          const gpio = isEsp32 && node.props?.gpio?.enabled ? node.props.gpio : null;
+          const eventAttr = gpio ? ` onchange="updateGPIO(${gpio.pin}, this.checked ? 'SET_HIGH' : 'SET_LOW')"` : '';
+          return `${indent}<label class="vf-switch" id="${node.id}"${styleAttr}>
+${indent}  <input type="checkbox"${node.props.checked ? ' checked' : ''}${eventAttr}>
+${indent}  <span class="vf-switch-label">${node.props.label || 'Switch'}</span>
+${indent}</label>`;
+        }
+        case 'slider': {
+          const gpio = isEsp32 && node.props?.gpio?.enabled ? node.props.gpio : null;
+          const eventAttr = gpio
+            ? ` oninput="const v=document.getElementById('${node.id}_val'); if(v) v.textContent=this.value; updateGPIO(${gpio.pin}, 'PWM', this.value)"`
+            : ` oninput="const v=document.getElementById('${node.id}_val'); if(v) v.textContent=this.value;"`;
+          return `${indent}<div class="vf-slider-group" id="${node.id}"${styleAttr}>
+${indent}  <div class="vf-slider-header">
+${indent}    <span>${node.props.label || 'Slider'}</span>
+${indent}    <span id="${node.id}_val" class="vf-slider-val">${node.props.value ?? 128}</span>
+${indent}  </div>
+${indent}  <input type="range" min="${node.props.min ?? 0}" max="${node.props.max ?? 255}" value="${node.props.value ?? 128}" class="vf-range"${eventAttr}>
+${indent}</div>`;
+        }
+        case 'checkbox': {
+          const gpio = isEsp32 && node.props?.gpio?.enabled ? node.props.gpio : null;
+          const eventAttr = gpio ? ` onchange="updateGPIO(${gpio.pin}, this.checked ? 'SET_HIGH' : 'SET_LOW')"` : '';
+          return `${indent}<label class="vf-checkbox" id="${node.id}"${styleAttr}>
+${indent}  <input type="checkbox"${node.props.checked ? ' checked' : ''}${eventAttr}>
+${indent}  <span>${node.props.label || 'Checkbox'}</span>
+${indent}</label>`;
+        }
         case 'input':
           return `${indent}<div class="vf-form-group">
 ${indent}  <label for="${node.id}">${node.props.label || 'Input'}</label>
@@ -430,25 +736,177 @@ ${generateReactShadcn(tree, usedSvgs)}
       padding: 8px 16px; border-radius: 6px; font-weight: 500;
       background: #0d99ff; color: #fff; border: none; cursor: pointer;
     }
+    .vf-switch { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+    .vf-switch input { width: 38px; height: 20px; accent-color: #10b981; cursor: pointer; }
+    .vf-range { width: 100%; accent-color: #0d99ff; cursor: pointer; }
   </style>
 </head>
 <body>
-${generateHtmlInlineSvg(tree)}
+${generateHtmlInlineSvg(tree, '      ', false)}
 </body>
 </html>`;
     }
 
+    case 'esp32_html': {
+      return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESP32 WebUI - VisualForge Studio</title>
+  <style>
+    /* 100% Autónomo: SVGs Inline, Cero CDNs, Cero Fuentes Externas */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #09090b;
+      color: #fafafa;
+      line-height: 1.5;
+      padding: 24px;
+    }
+    a { color: #38bdf8; text-decoration: none; }
+    .vf-container { width: 100%; max-width: 1200px; margin: 0 auto; }
+    .vf-grid { display: grid; gap: 16px; }
+    .vf-stack { display: flex; align-items: center; gap: 12px; }
+    .vf-card {
+      background: #18181b; border: 1px solid #27272a; border-radius: 12px;
+      padding: 20px; display: flex; flex-direction: column; gap: 12px;
+    }
+    .vf-card-header h3 { font-size: 16px; font-weight: 600; color: #fff; }
+    .vf-card-header p { font-size: 13px; color: #a1a1aa; }
+    .vf-card-body { display: flex; flex-direction: column; gap: 12px; }
+    .vf-icon-wrapper { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; }
+    .vf-icon-svg { display: block; }
+    .vf-button {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 13px;
+      background: #0d99ff; color: #fff; border: none; cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .vf-button:active { transform: scale(0.98); }
+    .vf-switch { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
+    .vf-switch input { width: 44px; height: 24px; accent-color: #10b981; cursor: pointer; }
+    .vf-switch-label { font-size: 13px; color: #e4e4e7; font-weight: 500; }
+    .vf-slider-group { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+    .vf-slider-header { display: flex; justify-content: space-between; font-size: 12px; color: #a1a1aa; }
+    .vf-slider-val { font-family: monospace; color: #38bdf8; font-weight: 600; }
+    .vf-range { width: 100%; accent-color: #0d99ff; cursor: pointer; height: 6px; }
+    #vf-esp32-status {
+      position: fixed; bottom: 20px; right: 20px;
+      background: #18181b; color: #10b981; border: 1px solid #27272a;
+      padding: 10px 18px; border-radius: 8px; font-family: monospace; font-size: 12px;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 9999;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+  </style>
+</head>
+<body>
+${generateHtmlInlineSvg(tree, '  ', true)}
+
+  <!-- Notificación Flotante de Estado GPIO -->
+  <div id="vf-esp32-status"></div>
+
+  <!-- Script Ligero de Comunicación HTTP Asíncrona con ESP32 -->
+  <script>
+    function updateGPIO(pin, action, valOrEl, elRef) {
+      var val = undefined;
+      if (typeof valOrEl !== 'object') {
+        val = valOrEl;
+      }
+      var toast = document.getElementById('vf-esp32-status');
+      if (toast) {
+        toast.style.opacity = '1';
+        toast.textContent = 'Enviando GPIO ' + pin + ': ' + action + (val !== undefined ? ' (' + val + ')' : '') + '...';
+      }
+
+      var url = '/update?pin=' + encodeURIComponent(pin) + '&action=' + encodeURIComponent(action);
+      if (val !== undefined && val !== null) {
+        url += '&val=' + encodeURIComponent(val);
+      }
+
+      fetch(url)
+        .then(function(res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.text();
+        })
+        .then(function(data) {
+          console.log('[ESP32 OK] Pin ' + pin + ' -> ' + data);
+          if (toast) {
+            toast.textContent = 'GPIO ' + pin + ' actualizado OK: ' + data;
+            setTimeout(function() { toast.style.opacity = '0'; }, 2500);
+          }
+        })
+        .catch(function(err) {
+          console.error('[ESP32 Error]:', err);
+          if (toast) {
+            toast.textContent = 'Error GPIO ' + pin + ': ' + err.message;
+            setTimeout(function() { toast.style.opacity = '0'; }, 4000);
+          }
+        });
+    }
+  </script>
+</body>
+</html>`;
+    }
+
+    case 'esp32_main_cpp': {
+      return generateEsp32MainCpp(tree);
+    }
+
     case 'esp32_embedded': {
-      const htmlBody = generateHtmlInlineSvg(tree, '  ');
+      const htmlBody = generateHtmlInlineSvg(tree, '  ', true);
+      const pins = extractUsedGpioPins(tree);
+      const uniquePinsMap = new Map<number, ExtractedGpioPin>();
+      for (const p of pins) {
+        if (!uniquePinsMap.has(p.pin)) uniquePinsMap.set(p.pin, p);
+      }
+      if (uniquePinsMap.size === 0) {
+        uniquePinsMap.set(2, { nodeId: 'l', nodeName: 'LED', nodeType: 'switch', pin: 2, action: 'TOGGLE_PIN', mode: 'HTTP_GET', label: 'LED Onboard' });
+        uniquePinsMap.set(4, { nodeId: 'r', nodeName: 'Relay', nodeType: 'button', pin: 4, action: 'TOGGLE_PIN', mode: 'HTTP_GET', label: 'Relé Principal' });
+      }
+      const pinList = Array.from(uniquePinsMap.values());
+      const pinsDefinitions = pinList
+        .map((p) => {
+          const safeName = (p.label || `GPIO_${p.pin}`).toUpperCase().replace(/[^A-Z0-9_]/g, '_');
+          return `#define PIN_${safeName} ${p.pin} // ${p.label || p.nodeName}`;
+        })
+        .join('\n');
+
+      const pinsSetup = pinList
+        .map((p) => {
+          const safeName = (p.label || `GPIO_${p.pin}`).toUpperCase().replace(/[^A-Z0-9_]/g, '_');
+          if (p.action === 'PWM') {
+            return `  #if ESP_ARDUINO_VERSION_MAJOR >= 3
+  ledcAttach(PIN_${safeName}, 5000, 8);
+  #else
+  ledcSetup(0, 5000, 8);
+  ledcAttachPin(PIN_${safeName}, 0);
+  #endif`;
+          } else if (p.action === 'READ_PIN') {
+            return `  pinMode(PIN_${safeName}, INPUT);`;
+          } else {
+            return `  pinMode(PIN_${safeName}, OUTPUT);\n  digitalWrite(PIN_${safeName}, LOW);`;
+          }
+        })
+        .join('\n');
+
       return `// ====================================================================
-// VisualForge Studio - ESP32 / Arduino / PlatformIO Embedded Web Server
+// VisualForge Studio - ESP32 All-in-One Embedded Web Server Header
 // Totalmente autónomo: SVGs inline, cero CDNs, cero fuentes .woff externas
-// Compatible con ESP32 AsyncWebServer, WebServer.h, SPIFFS y LittleFS
+// Compatible con ESPAsyncWebServer, Arduino IDE y PlatformIO
 // ====================================================================
 
 #pragma once
+#include <Arduino.h>
 #include <pgmspace.h>
+#include <WiFi.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
 
+// Definición de Pines GPIO Utilizados
+${pinsDefinitions}
+
+// HTML & SVG autónomo en memoria flash PROGMEM con fetch()
 const char INDEX_HTML[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html lang="es">
@@ -458,48 +916,78 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
   <title>ESP32 Web Server</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, sans-serif;
-      background: #121214;
-      color: #f4f4f5;
-      padding: 16px;
-      line-height: 1.5;
-    }
+    body { font-family: -apple-system, sans-serif; background: #09090b; color: #f4f4f5; padding: 20px; line-height: 1.5; }
     a { color: #38bdf8; text-decoration: none; }
+    .vf-container { width: 100%; max-width: 1200px; margin: 0 auto; }
+    .vf-grid { display: grid; gap: 16px; }
+    .vf-card { background: #18181b; border: 1px solid #27272a; border-radius: 12px; padding: 20px; }
     .vf-icon-wrapper { display: inline-flex; align-items: center; justify-content: center; }
-    .vf-button {
-      background: #0d99ff; color: white; border: none;
-      padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;
-    }
+    .vf-button { background: #0d99ff; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    .vf-switch { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; }
+    .vf-range { width: 100%; accent-color: #0d99ff; cursor: pointer; }
+    #vf-esp32-status { position: fixed; bottom: 20px; right: 20px; background: #18181b; color: #10b981; border: 1px solid #27272a; padding: 10px 18px; border-radius: 8px; font-family: monospace; font-size: 12px; opacity: 0; transition: opacity 0.3s; }
   </style>
 </head>
 <body>
 ${htmlBody}
+
+  <div id="vf-esp32-status"></div>
+  <script>
+    function updateGPIO(pin, action, valOrEl) {
+      var val = (typeof valOrEl !== 'object') ? valOrEl : undefined;
+      var toast = document.getElementById('vf-esp32-status');
+      if (toast) { toast.style.opacity = '1'; toast.textContent = 'GPIO ' + pin + ': ' + action + '...'; }
+      var url = '/update?pin=' + pin + '&action=' + action + (val !== undefined ? '&val=' + val : '');
+      fetch(url).then(r => r.text()).then(t => {
+        if (toast) { toast.textContent = 'GPIO ' + pin + ' -> ' + t; setTimeout(() => { toast.style.opacity = '0'; }, 2000); }
+      });
+    }
+  </script>
 </body>
 </html>
 )rawliteral";
 
-/*
-  // Ejemplo de uso en ESP32 con ESPAsyncWebServer:
-  #include <WiFi.h>
-  #include <ESPAsyncWebServer.h>
+inline void setupVisualForgeServer(AsyncWebServer &server) {
+  // Configuración de Pines
+${pinsSetup}
 
-  AsyncWebServer server(80);
+  // Ruta principal
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send_P(200, "text/html", INDEX_HTML);
+  });
 
-  void setup() {
-    Serial.begin(115200);
-    WiFi.begin("TU_SSID", "TU_PASSWORD");
-    while (WiFi.status() != WL_CONNECTED) delay(500);
+  // Ruta API para control de Pines GPIO
+  server.on("/update", HTTP_GET, [](AsyncWebServerRequest *request) {
+    if (!request->hasParam("pin")) {
+      request->send(400, "text/plain", "Falta pin");
+      return;
+    }
+    int pin = request->getParam("pin")->value().toInt();
+    String action = request->hasParam("action") ? request->getParam("action")->value() : "TOGGLE_PIN";
+    int val = request->hasParam("val") ? request->getParam("val")->value().toInt() : 0;
 
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-      request->send_P(200, "text/html", INDEX_HTML);
-    });
-    server.begin();
-    Serial.println(WiFi.localIP());
-  }
-
-  void loop() {}
-*/
+    if (action == "TOGGLE_PIN") {
+      int s = digitalRead(pin) == HIGH ? LOW : HIGH;
+      digitalWrite(pin, s);
+      request->send(200, "text/plain", s == HIGH ? "ON" : "OFF");
+    } else if (action == "SET_HIGH") {
+      digitalWrite(pin, HIGH);
+      request->send(200, "text/plain", "HIGH");
+    } else if (action == "SET_LOW") {
+      digitalWrite(pin, LOW);
+      request->send(200, "text/plain", "LOW");
+    } else if (action == "PWM") {
+      #if ESP_ARDUINO_VERSION_MAJOR >= 3
+      ledcWrite(pin, val);
+      #else
+      ledcWrite(0, val);
+      #endif
+      request->send(200, "text/plain", String(val));
+    } else {
+      request->send(200, "text/plain", "OK");
+    }
+  });
+}
 `;
     }
 

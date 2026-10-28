@@ -7,7 +7,7 @@ import {
   ComponentDefinition,
   ProjectType,
 } from './types';
-import { INITIAL_CANVAS_TREE } from './data/initialTemplate';
+import { INITIAL_CANVAS_TREE, ESP32_CANVAS_TREE } from './data/initialTemplate';
 import { COMPONENT_CATALOG } from './data/componentCatalog';
 import {
   findNodeInTree,
@@ -277,10 +277,15 @@ export function App() {
   }, [handleUndo, handleRedo, selectedId, handleDeleteNode, handleDuplicateNode]);
 
   const handleCreateProject = useCallback(
-    (name: string, type: ProjectType, iconLibrary: string, template: 'saas' | 'blank') => {
+    (name: string, type: ProjectType, iconLibrary: string, template: 'iot' | 'saas' | 'blank') => {
       setProjectName(name);
       setProjectType(type);
-      const initialTree = template === 'blank' ? [] : INITIAL_CANVAS_TREE;
+      let initialTree: CanvasNode[] = [];
+      if (template === 'iot' || (type === 'esp32' && template !== 'blank')) {
+        initialTree = ESP32_CANVAS_TREE;
+      } else if (template === 'saas') {
+        initialTree = INITIAL_CANVAS_TREE;
+      }
       setTree(initialTree);
       setHistory([initialTree]);
       setHistoryIdx(0);
@@ -355,6 +360,7 @@ export function App() {
       {/* Export Code Modal */}
       <ExportModal
         tree={tree}
+        projectType={projectType}
         isOpen={isExportOpen}
         onClose={() => setIsExportOpen(false)}
       />

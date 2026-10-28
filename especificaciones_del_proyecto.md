@@ -299,14 +299,39 @@ Organizado en secciones limpias y compactas con inputs estilizados de Figma (eti
 
 ---
 
-## 8. MOTOR DE EXPORTACIÓN A MÚLTIPLES FORMATOS Y PORTAPAPELES SEGURO
+## 8. MOTOR DE EXPORTACIÓN MULTI-TARGET Y PORTAPAPELES SEGURO
 
-### Formatos Soportados en el Modal de Exportación:
-1. `react_shadcn`: Componentes React 19 + shadcn/ui + Tailwind CSS v4.
-2. `html_bootstrap`: HTML5 semántico + Bootstrap 5.3 CDN + FontAwesome 5 Free CDN.
-3. `react_bootstrap`: Código React con paquete `react-bootstrap`.
-4. `html_css`: HTML5 semántico limpio + estilos CSS puros integrados.
-5. `react_native_tailwind`: Código React Native con utilidades NativeWind.
+El módulo de exportación de VisualForge Studio adapta sus formatos de forma dinámica y contextual según el `projectType` seleccionado, garantizando un código de salida modular, limpio y autocontenido.
+
+### Formatos Soportados por Target de Proyecto:
+1. **Target ESP32 / IoT (Microcontroladores)**:
+   - `esp32_html` (**ESP32 WebUI - index.html**):
+     - HTML5 100% autónomo y optimizado para almacenamiento en sistemas de archivos embebidos (**SPIFFS** o **LittleFS**).
+     - Incorpora **SVGs Inline puros** (sin CDNs, sin conexiones a internet, sin fuentes `.woff` externas).
+     - Vincula automáticamente llamadas asíncronas no bloqueantes `updateGPIO(pin, action, val)` mediante la API nativa `fetch('/update?pin=...')` a botones, switches y sliders del lienzo.
+     - Incluye notificación flotante de estado en pantalla (*toast*) para retroalimentación instantánea de confirmación de hardware.
+   - `esp32_main_cpp` (**Firmware C++ - main.cpp**):
+     - Archivo de firmware completo para **Arduino IDE** o **PlatformIO**.
+     - Utiliza **ESPAsyncWebServer** para un manejo HTTP asíncrono y no bloqueante.
+     - Escanea recursivamente el árbol de componentes del diseño y autogenera `#define PIN_...` y las declaraciones `pinMode(pin, OUTPUT/INPUT)` o canales `ledcAttach` para PWM en `setup()`.
+     - Implementa el handler de la ruta `/update` con decodificación de parámetros `pin`, `action` (`TOGGLE_PIN`, `SET_HIGH`, `SET_LOW`, `PWM`, `READ_PIN`) y `val`.
+   - `esp32_embedded` (**ESP32 All-in-One - esp32_webserver.h**):
+     - Cabecera C++ autocontenida que aloja la interfaz WebUI dentro de `const char INDEX_HTML[] PROGMEM` y la función auxiliar de configuración del servidor.
+
+2. **Target HTML / CSS Tradicional**:
+   - `html_css` (**HTML5 Puro con SVGs Inline**):
+     - Documento HTML semántico con SVGs integrados en línea y estilos CSS puros integrados. Cero dependencias externas.
+   - `html_bootstrap` (**HTML5 + Bootstrap 5.3**):
+     - Markup estructurado con rejilla y utilidades de Bootstrap 5.3 y SVGs limpios.
+
+3. **Target React Web (Frontend Moderno)**:
+   - `react_shadcn` (**React 19 + shadcn/ui + Tailwind CSS v4**):
+     - Componentes limpios en JSX/TSX.
+     - Extrae **únicamente** los iconos SVG utilizados en el diseño del usuario y los convierte en subcomponentes funcionales tipados (`React.SVGProps<SVGSVGElement>`), sin importar paquetes pesados innecesarios.
+   - `react_bootstrap` (**React + react-bootstrap**):
+     - Código modular basado en componentes de `react-bootstrap`.
+   - `react_native_tailwind` (**React Native + NativeWind**):
+     - Componentes `View`, `Text` y `TouchableOpacity` listos para plataformas móviles.
 
 ### Utilidad de Copia Robusta para Sandboxes:
 ```javascript
@@ -348,18 +373,67 @@ const handleCopyCode = async (textToCopy) => {
 
 ---
 
-## 9. ESTRUCTURA DE DATOS DEL ÁRBOL RECURSIVO (CANVAS TREE)
+## 9. WORKFLOW MULTI-TARGET Y CONTROL DE HARDWARE ESP32 / IoT
+
+VisualForge Studio soporta proyectos orientados a diferentes destinos de compilación y ejecución desde el momento de su creación.
+
+### Selector de Tipos de Proyecto (Modal Nuevo Proyecto)
+Al crear un nuevo proyecto (`NewProjectModal`), el usuario puede elegir entre 3 arquitecturas principales:
+1. **ESP32 / IoT (Microcontroladores)**:
+   - Optimizado para tableros de control de hardware, relés, sensores y automatización embebida.
+   - Proporciona la plantilla inicial *ESP32 IoT Hardware Dashboard* con relé en GPIO 4, LED Integrado en GPIO 2, dimmer PWM en GPIO 5 y tarjetas de telemetría.
+2. **HTML / CSS Tradicional**:
+   - Orientado a páginas web estáticas ultraligeras, emails o sistemas embebidos simples sin frameworks.
+3. **React Web (Frontend Moderno)**:
+   - Orientado a aplicaciones web modernas basadas en React 19, componentes shadcn/ui y Tailwind CSS v4.
+
+### Panel de Propiedades Condicional: Inspector de Hardware (GPIO)
+Cuando el proyecto activo es de tipo `esp32`:
+- Aparece una pestaña dedicada **Hardware (GPIO)** en la cabecera del panel lateral derecho con el icono de microcontrolador (`Cpu`).
+- Para componentes interactivos (`button`, `switch`, `slider`, `toggle`, `checkbox`), se añade además una sección integrada de **Hardware / GPIO (ESP32)** dentro de la pestaña principal `Design`.
+- **Propiedades de Hardware Configurables**:
+  - **Habilitar Control GPIO**: Switch de activación que vincula el componente visual con el hardware físico.
+  - **Pin GPIO**: Selector desplegable con pines comunes de ESP32 (`GPIO 2` LED built-in, `GPIO 4` Relé, `GPIO 5` PWM, `GPIO 12-27`, `GPIO 32-33`) y soporte para número de pin libre.
+  - **Tipo de Acción (`action`)**:
+    - `TOGGLE_PIN`: Invierte el estado lógico del pin digital (ideal para conmutar relés o pulsadores).
+    - `SET_HIGH`: Fuerza el pin a nivel alto (3.3V / 1 lógico).
+    - `SET_LOW`: Fuerza el pin a nivel bajo (0V / 0 lógico).
+    - `PWM`: Modulación de ancho de pulso con rango 0–255 (ideal para dimers de luces LED o control de motores).
+    - `READ_PIN`: Configura el pin en modo lectura (`INPUT`) para sensores.
+  - **Modo de Comunicación (`mode`)**:
+    - `HTTP_GET`: Realiza una petición asíncrona no bloqueante `fetch('/update?pin=X&action=Y')`.
+    - `HTTP_POST`: Envío estructurado de payload JSON a `/api/gpio`.
+    - `WEBSOCKET`: Transmisión bidireccional por socket en tiempo real.
+  - **Etiqueta / Alias**: Nombre descriptivo de hardware (ej. "Relé Iluminación", "Bomba Agua").
+  - **Previsualización de Ruta en Tiempo Real**: Muestra el comando exacto que el firmware del microcontrolador espera recibir.
+
+---
+
+## 10. ESTRUCTURA DE DATOS DEL ÁRBOL RECURSIVO (CANVAS TREE)
 
 Cada nodo del lienzo responde a la interfaz estricta de capas jerárquicas:
 ```typescript
-interface CanvasNode {
+export type ProjectType = 'esp32' | 'html_css' | 'react' | 'framework' | 'hybrid';
+export type GpioAction = 'TOGGLE_PIN' | 'SET_HIGH' | 'SET_LOW' | 'PWM' | 'READ_PIN';
+export type GpioCommMode = 'HTTP_GET' | 'HTTP_POST' | 'WEBSOCKET';
+
+export interface GpioConfig {
+  enabled?: boolean;
+  pin: number;
+  action: GpioAction;
+  mode: GpioCommMode;
+  label?: string;
+  pwmValue?: number;
+}
+
+export interface CanvasNode {
   id: string;                       // Identificador único (ej: "hero-frame-1")
   name?: string;                    // Nombre amigable para el panel de capas (ej: "Header Navbar")
   type: string;                     // Tipo de componente del catálogo
   library: 'shadcn' | 'bootstrap' | 'both';
   isContainer: boolean;             // Si permite anidar elementos hijos (Frame / Stack)
   style: Record<string, any>;       // Estilos CSS/Auto-layout (gap, padding, flex, fills, borders)
-  props: Record<string, any>;       // Propiedades específicas (variant, label, src, iconName)
+  props: Record<string, any>;       // Propiedades específicas (variant, label, src, iconName, gpio)
   children: CanvasNode[];           // Hijos anidados recursivamente
   locked?: boolean;                 // Estado de bloqueo de capa
   hidden?: boolean;                 // Estado de visibilidad de capa
@@ -374,10 +448,12 @@ Funciones inmutables y puras para manipular el árbol de capas:
 - `insertNodeRelative(tree, targetId, nodeToInsert, position: 'before' | 'after' | 'inside')`
 - `moveNodeSibling(nodes, targetId, direction: 'up' | 'down')`
 - `reorderNodeInTree(nodes, draggedId, targetId, position: 'before' | 'after' | 'inside')`
+- `extractUsedCatalogSvgs(nodes)`: Extrae únicamente los SVGs usados en el lienzo.
+- `extractUsedGpioPins(nodes)`: Extrae los pines GPIO configurados para auto-configuración de firmware.
 
 ---
 
-## 10. REGLAS DE DESARROLLO Y ALCANCE ESTRICTO (STRICT SCOPE)
+## 11. REGLAS DE DESARROLLO Y ALCANCE ESTRICTO (STRICT SCOPE)
 
 - **Modificación y adición estrictamente bajo demanda**: Modificar y agregar únicamente lo que el usuario solicite explícitamente en sus instrucciones.
 - **Prohibición de cambios no solicitados**: No realizar refactorizaciones no pedidas, no alterar archivos ni estilos ajenos al alcance del pedido, ni agregar librerías o funcionalidades por cuenta propia.

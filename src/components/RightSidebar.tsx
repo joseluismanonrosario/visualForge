@@ -24,8 +24,11 @@ import {
   Star,
   Search,
   X,
+  Cpu,
+  Zap,
+  Radio,
 } from 'lucide-react';
-import { CanvasNode, ProjectType } from '../types';
+import { CanvasNode, ProjectType, GpioConfig, GpioAction, GpioCommMode } from '../types';
 import {
   ICON_LIBRARIES,
   getLibrariesForWorkflow,
@@ -54,6 +57,28 @@ interface RightSidebarProps {
   setIsOpen: (val: boolean) => void;
 }
 
+const COMMON_ESP32_GPIOS = [
+  { pin: 2, label: 'GPIO 2 (LED Integrado / Boot)' },
+  { pin: 4, label: 'GPIO 4 (Salida General / Relé 1)' },
+  { pin: 5, label: 'GPIO 5 (Salida PWM / Dimmer / Relé 2)' },
+  { pin: 12, label: 'GPIO 12 (HSPI MISO / Salida)' },
+  { pin: 13, label: 'GPIO 13 (HSPI MOSI / Salida)' },
+  { pin: 14, label: 'GPIO 14 (HSPI CLK / Salida)' },
+  { pin: 15, label: 'GPIO 15 (HSPI SS / Salida)' },
+  { pin: 16, label: 'GPIO 16 (UART2 RX / Salida)' },
+  { pin: 17, label: 'GPIO 17 (UART2 TX / Salida)' },
+  { pin: 18, label: 'GPIO 18 (VSPI SCK / Salida)' },
+  { pin: 19, label: 'GPIO 19 (VSPI MISO / Salida)' },
+  { pin: 21, label: 'GPIO 21 (I2C SDA / Salida)' },
+  { pin: 22, label: 'GPIO 22 (I2C SCL / Salida)' },
+  { pin: 23, label: 'GPIO 23 (VSPI MOSI / Salida)' },
+  { pin: 25, label: 'GPIO 25 (DAC1 / Analógico / Salida)' },
+  { pin: 26, label: 'GPIO 26 (DAC2 / Analógico / Salida)' },
+  { pin: 27, label: 'GPIO 27 (Salida General)' },
+  { pin: 32, label: 'GPIO 32 (ADC1_CH4 / Sensor)' },
+  { pin: 33, label: 'GPIO 33 (ADC1_CH5 / Sensor)' },
+];
+
 export const RightSidebar: React.FC<RightSidebarProps> = ({
   selectedNode,
   projectType,
@@ -62,7 +87,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   isOpen,
   setIsOpen,
 }) => {
-  const [activeTab, setActiveTab] = useState<'design' | 'inspect'>('design');
+  const [activeTab, setActiveTab] = useState<'design' | 'inspect' | 'hardware'>('design');
   const [showIconModal, setShowIconModal] = useState(false);
   const [iconSearch, setIconSearch] = useState('');
   const [copiedCss, setCopiedCss] = useState(false);
@@ -233,6 +258,186 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
     }
   };
 
+  const isInteractiveForEsp32 =
+    ['button', 'switch', 'slider', 'toggle', 'checkbox', 'card'].includes(selectedNode.type) ||
+    Boolean(selectedNode.props?.gpio);
+
+  const renderHardwareGpioContent = (isFullTab: boolean = false) => {
+    const gpio: GpioConfig = props.gpio || {
+      enabled: isInteractiveForEsp32,
+      pin: selectedNode.type === 'slider' ? 5 : selectedNode.type === 'switch' ? 2 : 4,
+      action: selectedNode.type === 'slider' ? 'PWM' : 'TOGGLE_PIN',
+      mode: 'HTTP_GET',
+      label: props.label || selectedNode.name,
+      pwmValue: props.gpio?.pwmValue ?? 128,
+    };
+
+    const updateGpio = (updates: Partial<GpioConfig>) => {
+      onUpdateProps({
+        gpio: {
+          ...gpio,
+          ...updates,
+        },
+      });
+    };
+
+    return (
+      <div
+        className={`space-y-3 bg-[#18181b] border border-emerald-500/30 rounded-xl p-3 shadow-sm ${
+          isFullTab ? 'h-full overflow-y-auto' : ''
+        }`}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between pb-2 border-b border-[#383838]">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+              <Cpu className="w-3.5 h-3.5" />
+            </div>
+            <div>
+              <h4 className="text-[11px] font-semibold text-emerald-300 uppercase tracking-wide">
+                Hardware / GPIO (ESP32)
+              </h4>
+              <p className="text-[10px] text-zinc-400">Control de microcontrolador IoT</p>
+            </div>
+          </div>
+
+          {/* Enabled Checkbox */}
+          <label className="flex items-center gap-1.5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={!!gpio.enabled}
+              onChange={(e) => updateGpio({ enabled: e.target.checked })}
+              className="w-3.5 h-3.5 rounded border-zinc-600 text-emerald-500 accent-emerald-500 focus:ring-0 cursor-pointer"
+            />
+            <span className="text-[11px] font-medium text-zinc-300">
+              {gpio.enabled ? 'Activo' : 'Inactivo'}
+            </span>
+          </label>
+        </div>
+
+        {gpio.enabled ? (
+          <div className="space-y-3 pt-1">
+            {/* GPIO Pin Selector */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-medium text-zinc-400 flex items-center gap-1">
+                  <Zap className="w-3 h-3 text-emerald-400" />
+                  <span>Pin GPIO (ESP32)</span>
+                </label>
+                <span className="text-[10px] font-mono text-emerald-400 font-semibold">
+                  GPIO {gpio.pin}
+                </span>
+              </div>
+              <select
+                value={gpio.pin}
+                onChange={(e) => updateGpio({ pin: parseInt(e.target.value, 10) || 0 })}
+                className="w-full bg-[#252526] border border-[#383838] focus:border-emerald-500 rounded px-2.5 py-1.5 text-white text-xs focus:outline-none"
+              >
+                {COMMON_ESP32_GPIOS.map((g) => (
+                  <option key={g.pin} value={g.pin} className="bg-[#1e1e1e]">
+                    {g.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Action Type */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-medium text-zinc-400">Tipo de Acción Hardware</label>
+              <select
+                value={gpio.action}
+                onChange={(e) => updateGpio({ action: e.target.value as GpioAction })}
+                className="w-full bg-[#252526] border border-[#383838] focus:border-emerald-500 rounded px-2.5 py-1.5 text-white text-xs focus:outline-none"
+              >
+                <option value="TOGGLE_PIN" className="bg-[#1e1e1e]">
+                  TOGGLE_PIN — Invertir Estado (Relé / Pulsador)
+                </option>
+                <option value="SET_HIGH" className="bg-[#1e1e1e]">
+                  SET_HIGH — Encender / Activar (1 / 3.3V)
+                </option>
+                <option value="SET_LOW" className="bg-[#1e1e1e]">
+                  SET_LOW — Apagar / Desactivar (0 / 0V)
+                </option>
+                <option value="PWM" className="bg-[#1e1e1e]">
+                  PWM — Modulación Ancho de Pulso (0 - 255)
+                </option>
+                <option value="READ_PIN" className="bg-[#1e1e1e]">
+                  READ_PIN — Lectura Entrada / Sensor
+                </option>
+              </select>
+            </div>
+
+            {/* Communication Mode */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-medium text-zinc-400">Modo de Comunicación</label>
+              <select
+                value={gpio.mode}
+                onChange={(e) => updateGpio({ mode: e.target.value as GpioCommMode })}
+                className="w-full bg-[#252526] border border-[#383838] focus:border-emerald-500 rounded px-2.5 py-1.5 text-white text-xs focus:outline-none"
+              >
+                <option value="HTTP_GET" className="bg-[#1e1e1e]">
+                  HTTP_GET — Llamada asíncrona fetch('/update?pin=...')
+                </option>
+                <option value="HTTP_POST" className="bg-[#1e1e1e]">
+                  HTTP_POST — JSON payload en /api/gpio
+                </option>
+                <option value="WEBSOCKET" className="bg-[#1e1e1e]">
+                  WEBSOCKET — Mensaje en tiempo real ws://
+                </option>
+              </select>
+            </div>
+
+            {/* Alias / Label */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-medium text-zinc-400">Etiqueta de Referencia Hardware</label>
+              <input
+                type="text"
+                value={gpio.label || ''}
+                onChange={(e) => updateGpio({ label: e.target.value })}
+                placeholder="Ej. Relé Luz Sala, LED Notificación..."
+                className="w-full bg-[#252526] border border-[#383838] focus:border-emerald-500 rounded px-2.5 py-1.5 text-white text-xs focus:outline-none"
+              />
+            </div>
+
+            {/* PWM Default Value if action is PWM */}
+            {gpio.action === 'PWM' && (
+              <div className="space-y-1 bg-[#202024] p-2 rounded border border-[#383838]">
+                <div className="flex justify-between text-[10px] text-zinc-400">
+                  <span>Valor Inicial PWM</span>
+                  <span className="font-mono text-emerald-400">{gpio.pwmValue ?? 128} (0-255)</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="255"
+                  value={gpio.pwmValue ?? 128}
+                  onChange={(e) => updateGpio({ pwmValue: parseInt(e.target.value, 10) })}
+                  className="w-full accent-emerald-500"
+                />
+              </div>
+            )}
+
+            {/* Generated Endpoint Route Preview */}
+            <div className="pt-2 border-t border-[#383838]/80">
+              <span className="text-[10px] text-zinc-400 block mb-1">Ruta HTTP generada en Firmware:</span>
+              <div className="bg-[#0f0f11] p-2 rounded border border-[#2a2a2e] font-mono text-[10px] text-emerald-400 break-all select-all">
+                {gpio.mode === 'HTTP_GET'
+                  ? `GET /update?pin=${gpio.pin}&action=${gpio.action}${
+                      gpio.action === 'PWM' ? '&val=' + (gpio.pwmValue ?? 128) : ''
+                    }`
+                  : `POST /api/gpio { "pin": ${gpio.pin}, "action": "${gpio.action}" }`}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="py-2 text-center text-[11px] text-zinc-500">
+            Marca la casilla <span className="text-zinc-300 font-medium">Activo</span> para enlazar este elemento a un pin físico del ESP32.
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <aside className="w-80 bg-[#252526] border-l border-[#383838] flex flex-col h-[calc(100vh-44px)] select-none z-20 flex-shrink-0 text-xs text-zinc-300">
       {/* Header Tabs */}
@@ -258,6 +463,20 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
           >
             Inspect
           </button>
+          {projectType === 'esp32' && (
+            <button
+              onClick={() => setActiveTab('hardware')}
+              className={`px-2.5 py-1 rounded font-medium transition-colors flex items-center gap-1.5 ${
+                activeTab === 'hardware'
+                  ? 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 shadow-xs'
+                  : 'text-zinc-400 hover:text-emerald-300'
+              }`}
+              title="Inspector de Pines GPIO y Hardware ESP32"
+            >
+              <Cpu className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Hardware</span>
+            </button>
+          )}
         </div>
 
         <button
@@ -268,7 +487,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
         </button>
       </div>
 
-      {activeTab === 'design' ? (
+      {activeTab === 'design' && (
         <div className="flex-1 overflow-y-auto divide-y divide-[#383838] p-3 space-y-4">
           {/* Quick Alignment Bar */}
           <div className="space-y-2">
@@ -601,6 +820,63 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
               </div>
             )}
 
+            {/* If Switch */}
+            {selectedNode.type === 'switch' && (
+              <div className="space-y-1.5">
+                <label className="text-zinc-400 text-[11px]">Etiqueta Switch</label>
+                <input
+                  type="text"
+                  value={props.label || ''}
+                  onChange={(e) => onUpdateProps({ label: e.target.value })}
+                  className="w-full bg-[#1e1e1e] border border-[#383838] rounded px-2 py-1 text-white focus:outline-none"
+                />
+              </div>
+            )}
+
+            {/* If Slider */}
+            {selectedNode.type === 'slider' && (
+              <div className="space-y-2">
+                <div className="space-y-1">
+                  <label className="text-zinc-400 text-[11px]">Etiqueta Slider</label>
+                  <input
+                    type="text"
+                    value={props.label || ''}
+                    onChange={(e) => onUpdateProps({ label: e.target.value })}
+                    className="w-full bg-[#1e1e1e] border border-[#383838] rounded px-2 py-1 text-white focus:outline-none"
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <span className="text-[10px] text-zinc-500">Mínimo</span>
+                    <input
+                      type="number"
+                      value={props.min ?? 0}
+                      onChange={(e) => onUpdateProps({ min: Number(e.target.value) })}
+                      className="w-full bg-[#1e1e1e] border border-[#383838] rounded px-1.5 py-1 text-white text-xs"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-zinc-500">Máximo</span>
+                    <input
+                      type="number"
+                      value={props.max ?? 255}
+                      onChange={(e) => onUpdateProps({ max: Number(e.target.value) })}
+                      className="w-full bg-[#1e1e1e] border border-[#383838] rounded px-1.5 py-1 text-white text-xs"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-zinc-500">Valor</span>
+                    <input
+                      type="number"
+                      value={props.value ?? 128}
+                      onChange={(e) => onUpdateProps({ value: Number(e.target.value) })}
+                      className="w-full bg-[#1e1e1e] border border-[#383838] rounded px-1.5 py-1 text-white text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* If Vector Icon Component (Iconify Universal Offline) */}
             {(selectedNode.type === 'fontawesome_icon' || selectedNode.type === 'svg_icon') && (
               <div className="space-y-3 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
@@ -810,10 +1086,18 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                 </div>
               </div>
             )}
+            {/* Conditional ESP32 Hardware Inspector Section inside Design Tab */}
+            {projectType === 'esp32' && isInteractiveForEsp32 && (
+              <div className="pt-2">
+                {renderHardwareGpioContent(false)}
+              </div>
+            )}
           </div>
         </div>
-      ) : (
-        /* Inspect / Code Tab */
+      )}
+
+      {/* Inspect / Code Tab */}
+      {activeTab === 'inspect' && (
         <div className="flex-1 overflow-y-auto p-3 space-y-4 font-mono text-xs">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-semibold text-zinc-400 uppercase font-sans tracking-wider">
@@ -860,6 +1144,22 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
           <div className="text-zinc-400 font-sans text-[11px]">
             Node ID: <span className="font-mono text-white">{selectedNode.id}</span>
           </div>
+        </div>
+      )}
+
+      {/* Hardware / GPIO ESP32 Tab */}
+      {activeTab === 'hardware' && (
+        <div className="flex-1 overflow-y-auto p-3 space-y-4 text-xs">
+          <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-xl p-3 flex items-start gap-2.5 text-emerald-200 text-xs">
+            <Cpu className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-emerald-300">ESP32 Hardware Inspector</h3>
+              <p className="text-[11px] text-emerald-400/80 mt-0.5">
+                Componente activo: <span className="font-medium text-white">{selectedNode.name}</span> ({selectedNode.type})
+              </p>
+            </div>
+          </div>
+          {renderHardwareGpioContent(true)}
         </div>
       )}
 

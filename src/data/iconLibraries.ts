@@ -11,25 +11,25 @@ export interface ProjectTypeInfo {
 
 export const PROJECT_TYPES_INFO: ProjectTypeInfo[] = [
   {
+    id: 'esp32',
+    title: 'ESP32 / IoT (Microcontroladores)',
+    badge: 'ESP32 & IoT Hardware',
+    desc: 'Interfaces web embebidas para ESP32 con control GPIO, firmware C++ ESPAsyncWebServer y SVGs inline.',
+    icon: 'fas fa-microchip',
+  },
+  {
     id: 'html_css',
-    title: 'HTML / CSS Puro',
-    badge: 'CDN & Vanilla CSS',
-    desc: 'Funciona de forma nativa con HTML / CSS puro mediante CDN y etiquetas <i>',
-    icon: 'fa-html5',
+    title: 'HTML / CSS Tradicional',
+    badge: 'HTML5 & CSS Puro',
+    desc: 'Sitios web y páginas estáticas optimizadas, con SVGs en línea y sin dependencias de frameworks.',
+    icon: 'fab fa-html5',
   },
   {
-    id: 'framework',
-    title: 'Frameworks Modernos',
-    badge: 'React 19 / NPM',
-    desc: 'Diseñadas prioritariamente como paquetes de componentes para Frameworks (React, Vue, Vite)',
-    icon: 'fa-react',
-  },
-  {
-    id: 'hybrid',
-    title: 'Híbrido (Universal)',
-    badge: 'Multi-Entorno (CDN + NPM)',
-    desc: 'Soporte nativo completo para AMBOS entornos con máxima compatibilidad',
-    icon: 'fa-layer-group',
+    id: 'react',
+    title: 'React Web (Frontend Moderno)',
+    badge: 'React 19 & Tailwind',
+    desc: 'Aplicaciones web modernas modulares con componentes JSX limpios, shadcn/ui y Tailwind CSS v4.',
+    icon: 'fab fa-react',
   },
 ];
 
@@ -496,11 +496,10 @@ export function getLibrariesForWorkflow(workflow: ProjectType): IconLibraryDef[]
   if (workflow === 'hybrid') {
     return ICON_LIBRARIES;
   }
-  // If html_css, return html_css + hybrid
-  if (workflow === 'html_css') {
+  if (workflow === 'esp32' || workflow === 'html_css') {
     return ICON_LIBRARIES.filter((lib) => lib.workflow === 'html_css' || lib.workflow === 'hybrid');
   }
-  // If framework, return framework + hybrid
+  // If react or framework
   return ICON_LIBRARIES.filter((lib) => lib.workflow === 'framework' || lib.workflow === 'hybrid');
 }
 
