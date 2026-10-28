@@ -342,3 +342,11 @@ Funciones inmutables y puras para manipular el árbol de capas:
 - `insertNodeRelative(tree, targetId, nodeToInsert, position: 'before' | 'after' | 'inside')`
 - `moveNodeSibling(nodes, targetId, direction: 'up' | 'down')`
 - `reorderNodeInTree(nodes, draggedId, targetId, position: 'before' | 'after' | 'inside')`
+
+---
+
+## 10. REGLAS DE DESARROLLO Y ALCANCE ESTRICTO (STRICT SCOPE)
+
+- **Modificación y adición estrictamente bajo demanda**: Modificar y agregar únicamente lo que el usuario solicite explícitamente en sus instrucciones.
+- **Prohibición de cambios no solicitados**: No realizar refactorizaciones no pedidas, no alterar archivos ni estilos ajenos al alcance del pedido, ni agregar librerías o funcionalidades por cuenta propia.
+- **Preservación del trabajo previo**: Mantener intactas las funcionalidades ya implementadas y probadas, salvo petición expresa de cambio.
