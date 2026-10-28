@@ -47,6 +47,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   const [showFaModal, setShowFaModal] = useState(false);
   const [faSearch, setFaSearch] = useState('');
   const [faCategory, setFaCategory] = useState<string>('All');
+  const [faStyleFilter, setFaStyleFilter] = useState<'all' | 'solid' | 'regular' | 'brands'>('all');
   const [copiedCss, setCopiedCss] = useState(false);
 
   if (!isOpen) {
@@ -132,7 +133,9 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
       item.class.toLowerCase().includes(faSearch.toLowerCase()) ||
       item.tags.some((t) => t.toLowerCase().includes(faSearch.toLowerCase()));
     const matchesCategory = faCategory === 'All' || item.category === faCategory;
-    return matchesSearch && matchesCategory;
+    const matchesStyle =
+      faStyleFilter === 'all' || item.styles.includes(faStyleFilter);
+    return matchesSearch && matchesCategory && matchesStyle;
   });
 
   return (
@@ -508,20 +511,54 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
 
             {/* If FontAwesome Icon */}
             {selectedNode.type === 'fontawesome_icon' && (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <i
-                      className={`${props.prefix || 'fa-solid'} ${props.iconName || 'fa-rocket'} text-lg text-[#0d99ff]`}
+                      className={`${props.prefix || 'fas'} ${props.iconName || 'fa-rocket'} text-xl text-[#0d99ff]`}
                     />
-                    <span className="font-mono text-zinc-200">{props.iconName || 'fa-rocket'}</span>
+                    <div>
+                      <span className="font-mono text-zinc-200 block text-xs">{props.iconName || 'fa-rocket'}</span>
+                      <span className="text-[10px] text-zinc-500 font-mono">{props.prefix || 'fas'}</span>
+                    </div>
                   </div>
                   <button
                     onClick={() => setShowFaModal(true)}
-                    className="px-2.5 py-1 rounded bg-[#0d99ff] text-white font-medium hover:bg-[#0082df]"
+                    className="px-2.5 py-1 rounded bg-[#0d99ff] text-white font-medium hover:bg-[#0082df] text-[11px]"
                   >
                     Change Icon
                   </button>
+                </div>
+
+                {/* FA5 Style / Family Switcher (fas, far, fab) */}
+                <div className="space-y-1">
+                  <span className="text-[10px] text-zinc-400">FA5 Style (Prefix)</span>
+                  <div className="grid grid-cols-3 gap-1 bg-[#1e1e1e] p-1 rounded-md border border-[#383838]">
+                    <button
+                      onClick={() => onUpdateProps({ prefix: 'fas' })}
+                      className={`py-1 text-[10px] rounded font-medium transition-colors ${
+                        (props.prefix || 'fas') === 'fas' ? 'bg-[#0d99ff] text-white' : 'text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      Solid (fas)
+                    </button>
+                    <button
+                      onClick={() => onUpdateProps({ prefix: 'far' })}
+                      className={`py-1 text-[10px] rounded font-medium transition-colors ${
+                        props.prefix === 'far' ? 'bg-[#0d99ff] text-white' : 'text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      Regular (far)
+                    </button>
+                    <button
+                      onClick={() => onUpdateProps({ prefix: 'fab' })}
+                      className={`py-1 text-[10px] rounded font-medium transition-colors ${
+                        props.prefix === 'fab' ? 'bg-[#0d99ff] text-white' : 'text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      Brands (fab)
+                    </button>
+                  </div>
                 </div>
 
                 {/* Size slider */}
@@ -600,74 +637,114 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
 
       {/* FontAwesome Icon Picker Modal */}
       {showFaModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#252526] border border-[#383838] rounded-xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#252526] border border-[#383838] rounded-xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl">
             {/* Modal Header */}
             <div className="p-4 border-b border-[#383838] flex items-center justify-between bg-[#2c2c2c] rounded-t-xl">
               <div className="flex items-center gap-2">
                 <Star className="w-4 h-4 text-amber-400" />
-                <h3 className="font-semibold text-white text-sm">FontAwesome 6 Icon Picker</h3>
+                <div>
+                  <h3 className="font-semibold text-white text-sm">FontAwesome 5 Free (58 Categorías)</h3>
+                  <p className="text-[10px] text-zinc-400">Solid (fas) • Regular (far) • Brands (fab)</p>
+                </div>
               </div>
               <button
                 onClick={() => setShowFaModal(false)}
-                className="text-zinc-400 hover:text-white text-sm px-2 py-1"
+                className="text-zinc-400 hover:text-white text-sm px-2 py-1 rounded hover:bg-[#383838]"
               >
                 ✕
               </button>
             </div>
 
             {/* Modal Search & Filters */}
-            <div className="p-3 border-b border-[#383838] space-y-2 bg-[#202021]">
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-2.5 text-zinc-400" />
-                <input
-                  type="text"
-                  placeholder="Search icons by name or tag (rocket, lock, cart, etc.)..."
-                  value={faSearch}
-                  onChange={(e) => setFaSearch(e.target.value)}
-                  className="w-full bg-[#18181b] border border-[#383838] rounded-md pl-9 pr-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#0d99ff]"
-                  autoFocus
-                />
+            <div className="p-3 border-b border-[#383838] space-y-2.5 bg-[#202021]">
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 absolute left-3 top-2.5 text-zinc-400" />
+                  <input
+                    type="text"
+                    placeholder="Search icons (rocket, user, wifi, coffee, github, etc.)..."
+                    value={faSearch}
+                    onChange={(e) => setFaSearch(e.target.value)}
+                    className="w-full bg-[#18181b] border border-[#383838] rounded-md pl-9 pr-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#0d99ff]"
+                    autoFocus
+                  />
+                </div>
+
+                {/* Category Dropdown Selector for 58 Categories */}
+                <select
+                  value={faCategory}
+                  onChange={(e) => setFaCategory(e.target.value)}
+                  className="bg-[#18181b] border border-[#383838] text-zinc-200 text-xs rounded-md px-3 py-1.5 focus:outline-none focus:border-[#0d99ff] max-w-[240px]"
+                >
+                  {FA_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat} className="bg-[#18181b]">
+                      {cat}
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              {/* Category Pills */}
-              <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
-                {FA_CATEGORIES.map((cat) => (
+              {/* Style Family Filter (All, Solid, Regular, Brands) */}
+              <div className="flex items-center gap-1.5 pt-0.5">
+                <span className="text-[11px] text-zinc-400 mr-1">Style:</span>
+                {(
+                  [
+                    { id: 'all', label: 'All Styles' },
+                    { id: 'solid', label: 'Solid (fas)' },
+                    { id: 'regular', label: 'Regular (far)' },
+                    { id: 'brands', label: 'Brands (fab)' },
+                  ] as const
+                ).map((st) => (
                   <button
-                    key={cat}
-                    onClick={() => setFaCategory(cat)}
-                    className={`px-2 py-0.5 rounded text-[11px] transition-colors ${
-                      faCategory === cat
-                        ? 'bg-[#0d99ff] text-white font-medium'
+                    key={st.id}
+                    onClick={() => setFaStyleFilter(st.id)}
+                    className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${
+                      faStyleFilter === st.id
+                        ? 'bg-[#0d99ff] text-white shadow-xs'
                         : 'bg-[#2c2c2c] text-zinc-400 hover:text-white'
                     }`}
                   >
-                    {cat}
+                    {st.label}
                   </button>
                 ))}
+                <span className="ml-auto text-[10px] text-zinc-500 font-mono">
+                  {filteredIcons.length} icons found
+                </span>
               </div>
             </div>
 
             {/* Icon Grid */}
-            <div className="flex-1 overflow-y-auto p-4 grid grid-cols-4 sm:grid-cols-6 gap-2">
-              {filteredIcons.map((icon) => (
-                <button
-                  key={icon.class}
-                  onClick={() => {
-                    const prefix = icon.styles.includes('brands') ? 'fa-brands' : 'fa-solid';
-                    onUpdateProps({ iconName: icon.class, prefix });
-                    setShowFaModal(false);
-                  }}
-                  className="group flex flex-col items-center justify-center p-3 bg-[#1e1e1e] hover:bg-[#0d99ff]/10 border border-[#383838] hover:border-[#0d99ff] rounded-lg transition-colors"
-                >
-                  <i
-                    className={`${icon.styles.includes('brands') ? 'fa-brands' : 'fa-solid'} ${icon.class} text-xl mb-2 text-zinc-300 group-hover:text-[#0d99ff]`}
-                  />
-                  <span className="text-[11px] text-zinc-400 group-hover:text-white truncate w-full text-center">
-                    {icon.name}
-                  </span>
-                </button>
-              ))}
+            <div className="flex-1 overflow-y-auto p-4 grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+              {filteredIcons.map((icon) => {
+                const prefix = icon.styles.includes('brands')
+                  ? 'fab'
+                  : faStyleFilter === 'regular' && icon.styles.includes('regular')
+                  ? 'far'
+                  : 'fas';
+
+                return (
+                  <button
+                    key={icon.class}
+                    onClick={() => {
+                      onUpdateProps({ iconName: icon.class, prefix });
+                      setShowFaModal(false);
+                    }}
+                    className="group flex flex-col items-center justify-center p-3 bg-[#1e1e1e] hover:bg-[#0d99ff]/15 border border-[#383838] hover:border-[#0d99ff] rounded-lg transition-all text-center"
+                    title={`${prefix} ${icon.class} (${icon.category})`}
+                  >
+                    <i
+                      className={`${prefix} ${icon.class} text-xl mb-2 text-zinc-300 group-hover:text-[#0d99ff] group-hover:scale-110 transition-transform`}
+                    />
+                    <span className="text-[10px] text-zinc-400 group-hover:text-white truncate w-full">
+                      {icon.name}
+                    </span>
+                    <span className="text-[9px] text-zinc-600 font-mono">
+                      {prefix}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

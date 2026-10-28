@@ -293,7 +293,7 @@ export const INITIAL_CANVAS_TREE: CanvasNode[] = [
             },
             props: {
               iconName: 'fa-rocket',
-              prefix: 'fa-solid',
+              prefix: 'fas',
             },
             children: [],
           },
@@ -353,7 +353,7 @@ export const INITIAL_CANVAS_TREE: CanvasNode[] = [
             },
             props: {
               iconName: 'fa-pen-nib',
-              prefix: 'fa-solid',
+              prefix: 'fas',
             },
             children: [],
           },
@@ -413,7 +413,7 @@ export const INITIAL_CANVAS_TREE: CanvasNode[] = [
             },
             props: {
               iconName: 'fa-code',
-              prefix: 'fa-solid',
+              prefix: 'fas',
             },
             children: [],
           },

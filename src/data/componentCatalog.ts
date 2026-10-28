@@ -1028,7 +1028,7 @@ export const COMPONENT_CATALOG: ComponentDefinition[] = [
   // --- 6. MEDIA & VECTORS ---
   {
     type: 'fontawesome_icon',
-    name: 'FontAwesome 6 Icon',
+    name: 'FontAwesome 5 Icon',
     category: 'Media & Vectors',
     library: 'both',
     icon: 'Star',
@@ -1041,7 +1041,7 @@ export const COMPONENT_CATALOG: ComponentDefinition[] = [
     },
     defaultProps: {
       iconName: 'fa-rocket',
-      prefix: 'fa-solid',
+      prefix: 'fas',
       size: 28,
       rotation: 0,
     },

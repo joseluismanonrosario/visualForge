@@ -450,7 +450,7 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
             className={`${selectionClasses} inline-flex items-center justify-center`}
           >
             <i
-              className={`${props.prefix || 'fa-solid'} ${props.iconName || 'fa-star'}`}
+              className={`${props.prefix || 'fas'} ${props.iconName || 'fa-star'}`}
               style={style}
             />
           </div>

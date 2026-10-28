@@ -12,31 +12,31 @@ export const EXPORT_FORMATS: { id: ExportFormat; label: string; desc: string; ic
     id: 'react_shadcn',
     label: 'React 19 + shadcn/ui',
     desc: 'TypeScript JSX with Tailwind CSS v4 and shadcn components',
-    icon: 'fa-brands fa-react',
+    icon: 'fab fa-react',
   },
   {
     id: 'html_bootstrap',
     label: 'HTML5 + Bootstrap 5.3',
-    desc: 'Ready-to-run semantic HTML with Bootstrap CDN and FontAwesome',
-    icon: 'fa-brands fa-bootstrap',
+    desc: 'Ready-to-run semantic HTML with Bootstrap CDN and FontAwesome 5',
+    icon: 'fab fa-bootstrap',
   },
   {
     id: 'react_bootstrap',
     label: 'React + react-bootstrap',
     desc: 'Component-based React code using react-bootstrap library',
-    icon: 'fa-solid fa-code',
+    icon: 'fas fa-code',
   },
   {
     id: 'html_css',
     label: 'Semantic HTML5 + Pure CSS',
     desc: 'Clean markup with embedded external CSS styles',
-    icon: 'fa-brands fa-html5',
+    icon: 'fab fa-html5',
   },
   {
     id: 'react_native_tailwind',
     label: 'React Native + NativeWind',
     desc: 'Mobile-ready View and Text elements styled with Tailwind',
-    icon: 'fa-solid fa-mobile-screen',
+    icon: 'fas fa-mobile-alt',
   },
 ];
 
@@ -98,7 +98,7 @@ ${indent}</Card>`;
           const Tag = node.props.as || 'p';
           return `${indent}<${Tag} id="${node.id}"${styleAttr}>${node.props.text || ''}</${Tag}>`;
         case 'fontawesome_icon':
-          return `${indent}<i className="${node.props.prefix || 'fa-solid'} ${node.props.iconName || 'fa-star'}" id="${node.id}"${styleAttr} />`;
+          return `${indent}<i className="${node.props.prefix || 'fas'} ${node.props.iconName || 'fa-star'}" id="${node.id}"${styleAttr} />`;
         case 'image':
           return `${indent}<img src="${node.props.src}" alt="${node.props.alt || ''}" id="${node.id}" className="rounded-lg object-cover"${styleAttr} />`;
         case 'switch':
@@ -163,7 +163,7 @@ ${indent}</div>`;
           const Tag = node.props.as || 'p';
           return `${indent}<${Tag} id="${node.id}"${styleAttr}>${node.props.text || ''}</${Tag}>`;
         case 'fontawesome_icon':
-          return `${indent}<i class="${node.props.prefix || 'fa-solid'} ${node.props.iconName || 'fa-star'}" id="${node.id}"${styleAttr}></i>`;
+          return `${indent}<i class="${node.props.prefix || 'fas'} ${node.props.iconName || 'fa-star'}" id="${node.id}"${styleAttr}></i>`;
         case 'image':
           return `${indent}<img src="${node.props.src}" alt="${node.props.alt || ''}" class="img-fluid rounded" id="${node.id}"${styleAttr}>`;
         default:
@@ -230,8 +230,8 @@ ${generateReactShadcn(tree)}
   <title>VisualForge Studio - Exported Page</title>
   <!-- Bootstrap 5.3 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- FontAwesome 6 Free -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- FontAwesome 5 Free -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body class="bg-dark text-light">
 
@@ -262,7 +262,7 @@ ${generateHtmlBootstrap(tree)}
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VisualForge Export</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #09090b; color: #fafafa; padding: 24px; }

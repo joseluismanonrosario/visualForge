@@ -2,7 +2,7 @@
 
 Eres un Ingeniero Frontend Principal y Diseñador de Sistemas UI/UX. Tu objetivo es construir desde cero una aplicación web completa y lista para producción en **React 19**, **Tailwind CSS v4** y **Lucide Icons** llamada **VisualForge Studio**.
 
-La aplicación es un **constructor visual de páginas web drag-and-drop con interfaz moderna estilo Figma**, que combina componentes de **shadcn/ui** y **Bootstrap 5 (incluidas novedades de v6)**, auto-layout avanzado, gestión de estilos CSS completa, iconos FontAwesome 6, árbol de capas jerárquico y exportación a múltiples formatos de código listos para producción.
+La aplicación es un **constructor visual de páginas web drag-and-drop con interfaz moderna estilo Figma**, que combina componentes de **shadcn/ui** y **Bootstrap 5 (incluidas novedades de v6)**, auto-layout avanzado, gestión de estilos CSS completa, iconos FontAwesome 5 Free (58 categorías temáticas), árbol de capas jerárquico y exportación a múltiples formatos de código listos para producción.
 
 ---
 
@@ -117,7 +117,7 @@ Organizado como librería de Assets de Figma por categorías oficiales, con bús
    - `stepper` (Paso a paso guiado estilo Bootstrap v6)
 
 6. **Media & Vectors**:
-   - `fontawesome_icon` (Vector FontAwesome 6 editable)
+   - `fontawesome_icon` (Vector FontAwesome 5 editable con prefijos fas/far/fab)
    - `image` (Imagen con URL, modo fit `cover`/`contain`/`fill` y ratio)
    - `typography` (Encabezados H1-H6 y textos enriquecidos)
 
@@ -165,15 +165,82 @@ En lugar de selectores genéricos, el panel de propiedades cuenta con un control
 
 ---
 
-## 5. CATÁLOGO E INTERCAMBIADOR DE ÍCONOS FONTAWESOME 6
+## 5. CATÁLOGO E INTERCAMBIADOR DE ÍCONOS FONTAWESOME 5 FREE
 
-Integración de Font Awesome 6 Free con experiencia visual de selector de glifos vectoriales:
-- **Vista Previa de Glifo**: Muestra el icono ampliado, nombre técnico y prefijo activo.
-- **Selector de Estilos / Prefijo**: Alternar con 1 clic entre `fa-solid` (Solid), `fa-regular` (Regular) y `fa-brands` (Marcas).
-- **Controles Vectoriales**: Sliders interactivos de tamaño (`12px` a `96px`) y rotación (`0°` a `360°`), más selector de color del icono.
-- **Filtro por las 10 Categorías Oficiales**: General, Negocios, Comercio, Comunicación, Medios, Desarrollo, Seguridad, Transporte, Marcas, Flechas.
-- **Buscador en Tiempo Real**: Filtrado reactivo por keywords (ej. `search`, `user`, `cart`, `check`).
-- **Reemplazo Instantáneo**: Al pulsar cualquier icono de la cuadrícula, se actualiza de inmediato el nodo activo sin perder sus propiedades ni estilos configurados.
+Integración oficial de Font Awesome 5 Free (`https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css`) inyectado en el `<head>`.
+
+### Familias y Estilos Free Disponibles:
+- **Solid (`fas`)**: Iconos con relleno sólido (`fas fa-...`).
+- **Regular (`far`)**: Iconos con trazo lineal (`far fa-...`).
+- **Brands (`fab`)**: Logos oficiales de marcas, redes sociales y tecnologías (`fab fa-...`).
+
+### Las 58 Categorías Temáticas de Font Awesome 5 Free:
+1. `Accessibility (Accesibilidad)`
+2. `Arrows (Flechas)`
+3. `Business (Negocios / Empresa)`
+4. `Camping (Campamento / Aire libre)`
+5. `Charity (Caridad / Ayuda social)`
+6. `Charts + Diagrams (Gráficos y diagramas)`
+7. `Childhood (Infancia / Niños)`
+8. `Clothing + Fashion (Ropa y moda)`
+9. `Coding (Programación / Desarrollo)`
+10. `Communication (Comunicación)`
+11. `Connectivity (Conectividad / Redes)`
+12. `Construction (Construcción)`
+13. `Design (Diseño)`
+14. `Devices + Hardware (Dispositivos y hardware)`
+15. `Disaster + Crisis (Desastres y crisis)`
+16. `Editing (Edición de texto)`
+17. `Education (Educación)`
+18. `Emoji (Emojis y expresiones)`
+19. `Energy (Energía)`
+20. `Files (Archivos y documentos)`
+21. `Film + Video (Cine y video)`
+22. `Food + Beverage (Alimentos y bebidas)`
+23. `Fruits + Vegetables (Frutas y verduras)`
+24. `Gaming (Videojuegos)`
+25. `Genders (Géneros)`
+26. `Halloween (Halloween / Festividades)`
+27. `Hands (Manos)`
+28. `Holidays (Días festivos / Vacaciones)`
+29. `Household (Hogar / Casa)`
+30. `Humanitarian (Humanitario)`
+31. `Logistics (Logística y envíos)`
+32. `Maps (Mapas / Ubicación)`
+33. `Maritime (Marítimo)`
+34. `Marketing (Marketing y publicidad)`
+35. `Mathematics (Matemáticas)`
+36. `Media Playback (Reproducción multimedia)`
+37. `Medical + Health (Salud y medicina)`
+38. `Money (Dinero / Finanzas)`
+39. `Moving (Mudanza / Movimiento)`
+40. `Music + Audio (Música y audio)`
+41. `Photos + Images (Fotos e imágenes)`
+42. `Punctuation + Symbols (Puntuación y símbolos)`
+43. `Religion (Religión)`
+44. `Science (Ciencia)`
+45. `Science Fiction (Ciencia ficción)`
+46. `Security (Seguridad)`
+47. `Shapes (Formas geométricas)`
+48. `Shopping (Compras / Comercio electrónico)`
+49. `Social (Redes sociales / Social)`
+50. `Spinners (Indicadores de carga / Animaciones)`
+51. `Sports + Fitness (Deportes y ejercicio)`
+52. `Text Formatting (Formato de texto)`
+53. `Time (Tiempo / Relojes)`
+54. `Toggle (Interruptores / Controles)`
+55. `Transportation (Transporte)`
+56. `Travel + Hotel (Viajes y hotelería)`
+57. `Users + People (Usuarios y personas)`
+58. `Weather (Clima / Tiempo atmosférico)`
+
+### Características del Selector en el Inspector de Diseño:
+- **Vista Previa de Glifo**: Muestra el icono activo, nombre técnico (`fa-rocket`) y familia (`fas` / `far` / `fab`).
+- **Selector Rápido de Prefijo/Estilo**: Botones para alternar con 1 clic entre Solid (`fas`), Regular (`far`) y Brands (`fab`).
+- **Controles Vectoriales**: Sliders interactivos de tamaño (`12px` a `80px`) y rotación, sincronizados con `fontSize`.
+- **Selector de Categoría**: Menú desplegable completo con las 58 categorías oficiales temáticas.
+- **Buscador en Tiempo Real**: Filtrado reactivo instantáneo por nombre y palabras clave semánticas.
+- **Reemplazo Instantáneo**: Al hacer clic en cualquier icono, se actualiza de inmediato el nodo activo sin alterar estilos ni jerarquía.
 
 ---
 
@@ -230,7 +297,7 @@ Organizado en secciones limpias y compactas con inputs estilizados de Figma (eti
 
 ### Formatos Soportados en el Modal de Exportación:
 1. `react_shadcn`: Componentes React 19 + shadcn/ui + Tailwind CSS v4.
-2. `html_bootstrap`: HTML5 semántico + Bootstrap 5.3 CDN + FontAwesome CDN.
+2. `html_bootstrap`: HTML5 semántico + Bootstrap 5.3 CDN + FontAwesome 5 Free CDN.
 3. `react_bootstrap`: Código React con paquete `react-bootstrap`.
 4. `html_css`: HTML5 semántico limpio + estilos CSS puros integrados.
 5. `react_native_tailwind`: Código React Native con utilidades NativeWind.
