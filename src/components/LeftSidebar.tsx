@@ -18,9 +18,13 @@ import {
   Sparkles,
   X,
   Cpu,
+  ArrowUp,
+  ArrowDown,
+  GripVertical,
 } from 'lucide-react';
-import { CanvasNode, ProjectType, ComponentDefinition } from '../types';
+import { CanvasNode, ProjectType, ComponentDefinition, DropPosition } from '../types';
 import { getCatalogForProject } from '../data/componentCatalog';
+import { findNodeInTree } from '../utils/treeUtils';
 
 interface LeftSidebarProps {
   tree: CanvasNode[];
@@ -31,6 +35,8 @@ interface LeftSidebarProps {
   onToggleVisibility: (id: string) => void;
   onToggleLock: (id: string) => void;
   onInsertComponent: (compDef: ComponentDefinition) => void;
+  onReorderNode: (draggedId: string, targetId: string, position: DropPosition) => void;
+  onMoveSibling?: (id: string, direction: 'up' | 'down') => void;
   isOpen: boolean;
   setIsOpen: (val: boolean) => void;
 }
@@ -44,6 +50,8 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   onToggleVisibility,
   onToggleLock,
   onInsertComponent,
+  onReorderNode,
+  onMoveSibling,
   isOpen,
   setIsOpen,
 }) => {
@@ -55,6 +63,116 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
     navbar_root: true,
     features_grid: true,
   });
+
+  // Drag and drop state for layers
+  const [draggedLayerId, setDraggedLayerId] = useState<string | null>(null);
+  const [dropTargetLayerId, setDropTargetLayerId] = useState<string | null>(null);
+  const [layerDropPosition, setLayerDropPosition] = useState<DropPosition | null>(null);
+
+  const handleLayerDragStart = (e: React.DragEvent, node: CanvasNode) => {
+    if (node.locked) {
+      e.preventDefault();
+      return;
+    }
+    e.stopPropagation();
+    setDraggedLayerId(node.id);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData(
+      'application/json',
+      JSON.stringify({
+        sourceType: 'canvas',
+        nodeId: node.id,
+      })
+    );
+    e.dataTransfer.setData('text/plain', node.id);
+  };
+
+  const handleLayerDragEnd = (e: React.DragEvent) => {
+    e.stopPropagation();
+    setDraggedLayerId(null);
+    setDropTargetLayerId(null);
+    setLayerDropPosition(null);
+  };
+
+  const handleLayerDragOver = (e: React.DragEvent, targetNode: CanvasNode) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (draggedLayerId === targetNode.id) return;
+
+    if (draggedLayerId) {
+      const draggedNode = findNodeInTree(tree, draggedLayerId);
+      if (draggedNode && findNodeInTree([draggedNode], targetNode.id)) return;
+    }
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clientY = e.clientY - rect.top;
+    const height = rect.height;
+
+    let position: DropPosition = 'after';
+    if (targetNode.isContainer) {
+      if (clientY < height * 0.25) {
+        position = 'before';
+      } else if (clientY > height * 0.75) {
+        position = 'after';
+      } else {
+        position = 'inside';
+      }
+    } else {
+      if (clientY < height * 0.5) {
+        position = 'before';
+      } else {
+        position = 'after';
+      }
+    }
+
+    setDropTargetLayerId(targetNode.id);
+    setLayerDropPosition(position);
+  };
+
+  const handleLayerDrop = (e: React.DragEvent, targetNode: CanvasNode) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const currentPosition = layerDropPosition || 'after';
+    setDropTargetLayerId(null);
+    setLayerDropPosition(null);
+    setDraggedLayerId(null);
+
+    try {
+      const dataStr = e.dataTransfer.getData('application/json');
+      if (!dataStr) return;
+      const data = JSON.parse(dataStr);
+
+      if (data.nodeId && data.nodeId !== targetNode.id) {
+        onReorderNode(data.nodeId, targetNode.id, currentPosition);
+      }
+    } catch {
+      // Fallback
+    }
+  };
+
+  const handleLayersContainerDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDropTargetLayerId(null);
+    setLayerDropPosition(null);
+    setDraggedLayerId(null);
+
+    try {
+      const dataStr = e.dataTransfer.getData('application/json');
+      if (!dataStr) return;
+      const data = JSON.parse(dataStr);
+
+      if (data.nodeId && tree.length > 0) {
+        const lastRoot = tree[tree.length - 1];
+        if (lastRoot.id !== data.nodeId) {
+          onReorderNode(data.nodeId, lastRoot.id, 'after');
+        }
+      }
+    } catch {
+      // Fallback
+    }
+  };
 
   const isFramework = projectType === 'react' || projectType === 'framework';
   const activeCatalog = getCatalogForProject(projectType);
@@ -84,19 +202,39 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
     const isSelected = selectedId === node.id;
     const isExpanded = expandedNodes[node.id] !== false;
     const hasChildren = node.children && node.children.length > 0;
+    const isDragging = draggedLayerId === node.id;
+    const isTarget = dropTargetLayerId === node.id && draggedLayerId !== node.id;
 
     return (
-      <div key={node.id} className="text-xs">
+      <div key={node.id} className="text-xs relative">
+        {/* Drop Indicators */}
+        {isTarget && layerDropPosition === 'before' && (
+          <div className="absolute -top-1 left-2 right-2 h-1 bg-[#d946ef] z-30 rounded-full shadow-[0_0_8px_#d946ef] pointer-events-none" />
+        )}
+        {isTarget && layerDropPosition === 'after' && (
+          <div className="absolute -bottom-1 left-2 right-2 h-1 bg-[#d946ef] z-30 rounded-full shadow-[0_0_8px_#d946ef] pointer-events-none" />
+        )}
+
         <div
+          draggable={!node.locked}
+          onDragStart={(e) => handleLayerDragStart(e, node)}
+          onDragEnd={handleLayerDragEnd}
+          onDragOver={(e) => handleLayerDragOver(e, node)}
+          onDrop={(e) => handleLayerDrop(e, node)}
           onClick={() => onSelectNode(node.id)}
-          className={`group flex items-center justify-between px-2 py-1.5 cursor-pointer rounded transition-colors ${
-            isSelected
+          className={`group flex items-center justify-between px-2 py-1.5 cursor-grab active:cursor-grabbing rounded transition-all select-none relative ${
+            isDragging ? 'opacity-30 bg-[#2c2c2c]' : ''
+          } ${
+            isTarget && layerDropPosition === 'inside'
+              ? 'ring-2 ring-violet-500 bg-violet-500/20 text-white'
+              : isSelected
               ? 'bg-[#0d99ff] text-white font-medium'
               : 'text-zinc-300 hover:bg-[#323232]'
           } ${node.hidden ? 'opacity-40' : ''}`}
           style={{ paddingLeft: `${depth * 14 + 8}px` }}
         >
           <div className="flex items-center gap-1.5 truncate">
+            <GripVertical className="w-3 h-3 text-zinc-500 opacity-0 group-hover:opacity-100 flex-shrink-0 cursor-grab" />
             {hasChildren ? (
               <button
                 onClick={(e) => toggleExpand(node.id, e)}
@@ -120,6 +258,30 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
 
           {/* Quick Actions on Hover */}
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {onMoveSibling && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onMoveSibling(node.id, 'up');
+                  }}
+                  title="Subir capa (Alt+↑)"
+                  className="p-0.5 hover:bg-black/30 rounded text-zinc-400 hover:text-white"
+                >
+                  <ArrowUp className="w-3 h-3" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onMoveSibling(node.id, 'down');
+                  }}
+                  title="Bajar capa (Alt+↓)"
+                  className="p-0.5 hover:bg-black/30 rounded text-zinc-400 hover:text-white"
+                >
+                  <ArrowDown className="w-3 h-3" />
+                </button>
+              </>
+            )}
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -224,7 +386,11 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
 
       {/* Tab Content */}
       {activeTab === 'layers' ? (
-        <div className="flex-1 overflow-y-auto p-2 space-y-1">
+        <div
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={handleLayersContainerDrop}
+          className="flex-1 overflow-y-auto p-2 space-y-1"
+        >
           <div className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider px-2 py-1 flex items-center justify-between">
             <span>Canvas Artboard</span>
             <span className="text-[10px] text-zinc-600">{tree.length} items</span>

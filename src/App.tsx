@@ -341,6 +341,8 @@ export function App() {
           onToggleVisibility={handleToggleVisibility}
           onToggleLock={handleToggleLock}
           onInsertComponent={(comp) => handleInsertComponent(comp, selectedId, 'inside')}
+          onReorderNode={handleReorderNode}
+          onMoveSibling={handleMoveSibling}
           isOpen={isLeftOpen}
           setIsOpen={setIsLeftOpen}
         />

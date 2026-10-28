@@ -30,9 +30,15 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
    - Cabecera con pestañas conmutables estilo Figma:
      - **Layers (Capas)**:
        - Vista en árbol jerárquico recursivo de todos los elementos del lienzo.
-       - Iconos semánticos por tipo de nodo (Frame, Componente, Texto, Imagen, etc.).
+       - Iconos semánticos por tipo de nodo y tiradores de arrastre (`GripVertical`) visibles en hover.
+       - **Movimiento y Reordenamiento de Capas por Arrastre (Drag-and-Drop)**:
+         - Arrastrar cualquier capa para reordenarla jerárquicamente o anidarla dentro de contenedores.
+         - Detección precisa de zonas: línea de neón magenta superior (`before`), línea magenta inferior (`after`), y recuadro violeta translúcido (`inside`) para contenedores.
+         - Interoperabilidad bidireccional: arrastrar una capa directamente al lienzo o un componente del lienzo al árbol de capas.
+         - Soltar en el área vacía del panel de capas traslada el nodo a la raíz del árbol.
+       - **Botones de Movimiento Rápido de Capa**: Controles dedicados "Subir capa" (`ArrowUp`) y "Bajar capa" (`ArrowDown`) en cada fila de capa al pasar el cursor.
        - Indicadores de visibilidad (icono de ojo para ocultar/mostrar) y candado (bloquear edición).
-       - Arrastrar capas dentro del árbol para reordenar o anidar jerarquías.
+       - Acceso rápido para eliminar capas.
      - **Assets (Componentes & Catálogo)**:
        - Catálogo de componentes de **shadcn/ui** y **Bootstrap 5 + v6**.
        - Barra de búsqueda en tiempo real y filtros rápidos (**All**, **shadcn**, **Bootstrap**).
