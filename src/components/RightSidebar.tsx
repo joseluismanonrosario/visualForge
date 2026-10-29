@@ -50,6 +50,9 @@ import {
   Eye,
   EyeOff,
   Move,
+  RotateCw,
+  FlipHorizontal,
+  FlipVertical,
 } from 'lucide-react';
 import { CanvasNode, ProjectType, GpioConfig, GpioAction, GpioCommMode } from '../types';
 import {
@@ -321,6 +324,53 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
         onUpdateStyle(tagStyles[newTag]);
       }
     }
+  };
+
+  const isIcon =
+    selectedNode.type === 'svg_icon' ||
+    selectedNode.type === 'fontawesome_icon' ||
+    selectedNode.type === 'styled_icon';
+
+  const currentIconSize = Number(props.size) || parseInt(style.width || '') || parseInt(style.fontSize || '') || 24;
+
+  const handleIconSizeChange = (newSize: number | string) => {
+    const num = typeof newSize === 'number' ? newSize : parseInt(newSize.toString().replace('px', '')) || 24;
+    const clamped = Math.max(8, Math.min(512, num));
+    const px = `${clamped}px`;
+    onUpdateProps({ size: clamped });
+    onUpdateStyle({
+      width: px,
+      height: px,
+      fontSize: px,
+    });
+  };
+
+  const getIconRotation = () => {
+    const match = (style.transform || '').match(/rotate\((\d+)deg\)/);
+    return match ? parseInt(match[1]) : 0;
+  };
+
+  const getIconFlipH = () => {
+    return (style.transform || '').includes('scaleX(-1)');
+  };
+
+  const getIconFlipV = () => {
+    return (style.transform || '').includes('scaleY(-1)');
+  };
+
+  const handleIconTransform = (rotation: number, flipH: boolean, flipV: boolean) => {
+    const parts: string[] = [];
+    if (rotation % 360 !== 0) {
+      parts.push(`rotate(${rotation % 360}deg)`);
+    }
+    if (flipH) {
+      parts.push('scaleX(-1)');
+    }
+    if (flipV) {
+      parts.push('scaleY(-1)');
+    }
+    const transform = parts.length > 0 ? parts.join(' ') : 'none';
+    onUpdateStyle({ transform });
   };
 
   const isInteractiveForEsp32 =
@@ -645,8 +695,15 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                 <span className="text-zinc-500 font-mono text-[11px] mr-2">W</span>
                 <input
                   type="text"
-                  value={style.width || '100%'}
-                  onChange={(e) => onUpdateStyle({ width: e.target.value })}
+                  value={isIcon ? `${currentIconSize}px` : (style.width || '100%')}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (isIcon) {
+                      handleIconSizeChange(val);
+                    } else {
+                      onUpdateStyle({ width: val });
+                    }
+                  }}
                   className="w-full bg-transparent text-white focus:outline-none text-xs font-mono"
                 />
               </div>
@@ -654,28 +711,53 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                 <span className="text-zinc-500 font-mono text-[11px] mr-2">H</span>
                 <input
                   type="text"
-                  value={style.height || 'auto'}
-                  onChange={(e) => onUpdateStyle({ height: e.target.value })}
+                  value={isIcon ? `${currentIconSize}px` : (style.height || 'auto')}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (isIcon) {
+                      handleIconSizeChange(val);
+                    } else {
+                      onUpdateStyle({ height: val });
+                    }
+                  }}
                   className="w-full bg-transparent text-white focus:outline-none text-xs font-mono"
                 />
               </div>
             </div>
 
             {/* Sizing shortcuts */}
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => onUpdateStyle({ width: 'auto', alignSelf: 'auto' })}
-                className="flex-1 py-1 rounded bg-[#1e1e1e] hover:bg-[#323232] border border-[#383838] text-[11px] text-zinc-300 text-center transition-colors"
-              >
-                Hug Contents
-              </button>
-              <button
-                onClick={() => onUpdateStyle({ width: '100%', alignSelf: 'stretch' })}
-                className="flex-1 py-1 rounded bg-[#1e1e1e] hover:bg-[#323232] border border-[#383838] text-[11px] text-zinc-300 text-center transition-colors"
-              >
-                Fill Container
-              </button>
-            </div>
+            {!isIcon ? (
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => onUpdateStyle({ width: 'auto', alignSelf: 'auto' })}
+                  className="flex-1 py-1 rounded bg-[#1e1e1e] hover:bg-[#323232] border border-[#383838] text-[11px] text-zinc-300 text-center transition-colors"
+                >
+                  Hug Contents
+                </button>
+                <button
+                  onClick={() => onUpdateStyle({ width: '100%', alignSelf: 'stretch' })}
+                  className="flex-1 py-1 rounded bg-[#1e1e1e] hover:bg-[#323232] border border-[#383838] text-[11px] text-zinc-300 text-center transition-colors"
+                >
+                  Fill Container
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1">
+                {[16, 20, 24, 32, 48].map((sz) => (
+                  <button
+                    key={sz}
+                    onClick={() => handleIconSizeChange(sz)}
+                    className={`flex-1 py-1 rounded border text-[10px] font-mono text-center transition-colors ${
+                      currentIconSize === sz
+                        ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                        : 'bg-[#1e1e1e] hover:bg-[#323232] text-zinc-300 border-[#383838]'
+                    }`}
+                  >
+                    {sz}px
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Min-Width & Max-Width */}
             <div className="grid grid-cols-2 gap-2">
@@ -706,6 +788,8 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
           {/* 3. AUTO LAYOUT & SPACING                                 */}
           {/* ======================================================== */}
           <div className="pt-3 space-y-3">
+            {!isIcon && (
+              <>
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
                 <Columns3 className="w-3.5 h-3.5 text-[#0d99ff]" />
@@ -916,8 +1000,10 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                 </div>
               )}
             </div>
+              </>
+            )}
 
-            {/* MARGIN CONTROL */}
+            {/* MARGIN CONTROL (Exterior spacing) */}
             <div className="space-y-1.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
@@ -1124,7 +1210,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
             )}
 
             {/* Other Component Text / Content if applicable */}
-            {selectedNode.type !== 'typography' && (props.text !== undefined || selectedNode.type === 'blockquote' || selectedNode.type === 'label') && (
+            {!isIcon && selectedNode.type !== 'typography' && (props.text !== undefined || selectedNode.type === 'blockquote' || selectedNode.type === 'label') && (
               <div className="space-y-1.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
                 <label className="text-[10px] font-medium text-zinc-400">Texto del Elemento</label>
                 <textarea
@@ -1364,24 +1450,30 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
             )}
 
             {/* If Vector Icon Component (Iconify Universal Offline) */}
-            {(selectedNode.type === 'fontawesome_icon' || selectedNode.type === 'svg_icon' || selectedNode.type === 'styled_icon') && (
-              <div className="space-y-3 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
-                <div className="flex items-center justify-between">
+            {isIcon && (
+              <div className="space-y-3 bg-[#1e1e1e] p-3 rounded-lg border border-[#383838]">
+                {/* Visual Icon Identifier & Explorer Button */}
+                <div className="flex items-center justify-between pb-2 border-b border-[#383838]">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded bg-[#252526] border border-[#383838] flex items-center justify-center">
+                    <div
+                      className="w-10 h-10 rounded-lg bg-[#252526] border border-[#383838] flex items-center justify-center shrink-0 overflow-hidden"
+                      style={{
+                        transform: style.transform,
+                      }}
+                    >
                       <SvgIconRenderer
                         iconId={props.iconName || 'lucide:rocket'}
-                        size={22}
+                        size={Math.min(28, currentIconSize)}
                         stroke={style.color || '#0d99ff'}
-                        fill={style.fill || 'none'}
+                        fill={style.fill || props.fill || 'none'}
                       />
                     </div>
                     <div>
-                      <span className="font-mono text-zinc-200 block text-xs truncate max-w-[130px]">
+                      <span className="font-mono text-white block text-xs font-semibold truncate max-w-[130px]">
                         {props.iconName || 'lucide:rocket'}
                       </span>
-                      <span className="text-[10px] text-zinc-500 font-sans">
-                        {currentCollectionMeta?.name || 'Iconify Set'}
+                      <span className="text-[10px] text-zinc-400 font-sans block">
+                        {currentCollectionMeta?.name || 'Colección Iconify'}
                       </span>
                     </div>
                   </div>
@@ -1391,99 +1483,255 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                       setIconPage(1);
                       setShowIconModal(true);
                     }}
-                    className="px-2.5 py-1 rounded bg-[#0d99ff] text-white font-medium hover:bg-[#0082df] text-[11px] shadow-xs transition-colors"
+                    className="px-2.5 py-1 rounded bg-[#0d99ff] hover:bg-[#0082df] text-white font-medium text-[11px] shadow-xs transition-colors flex items-center gap-1"
                   >
-                    Explorar
+                    <Sparkles className="w-3 h-3" />
+                    <span>Cambiar</span>
                   </button>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[10px] text-zinc-400 font-medium">Categoría de Iconos</label>
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => {
-                      const newCat = e.target.value;
-                      setSelectedCategory(newCat);
-                      const sets = getCollectionsByCategory(newCat);
-                      if (sets.length > 0 && !sets.some((s) => s.prefix === selectedCollection)) {
-                        setSelectedCollection(sets[0].prefix);
-                      }
-                    }}
-                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1.5 text-white text-xs focus:outline-none focus:border-[#0d99ff]"
-                  >
-                    {iconCategories.map((cat) => (
-                      <option key={cat.id} value={cat.id} className="bg-[#1e1e1e]">
-                        {cat.label}
-                      </option>
+                {/* 1. CONTROL DE TAMAÑO EXHAUSTIVO (SIZE) */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-medium text-zinc-300">Tamaño del Icono</span>
+                    <div className="flex items-center bg-[#252526] border border-[#383838] focus-within:border-[#0d99ff] rounded px-2 py-0.5 w-20">
+                      <input
+                        type="number"
+                        min="8"
+                        max="512"
+                        value={currentIconSize}
+                        onChange={(e) => handleIconSizeChange(e.target.value)}
+                        className="w-full bg-transparent text-white text-xs font-mono text-right focus:outline-none"
+                      />
+                      <span className="text-[10px] text-zinc-500 font-mono ml-1">px</span>
+                    </div>
+                  </div>
+
+                  {/* Size Slider */}
+                  <input
+                    type="range"
+                    min="12"
+                    max="128"
+                    value={currentIconSize}
+                    onChange={(e) => handleIconSizeChange(Number(e.target.value))}
+                    className="w-full accent-[#0d99ff]"
+                  />
+
+                  {/* Quick Preset Size Pills */}
+                  <div className="flex items-center gap-1 pt-0.5 flex-wrap">
+                    {[16, 20, 24, 32, 40, 48, 64].map((sz) => (
+                      <button
+                        key={sz}
+                        onClick={() => handleIconSizeChange(sz)}
+                        className={`px-2 py-0.5 rounded text-[10px] font-mono border transition-colors ${
+                          currentIconSize === sz
+                            ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                            : 'bg-[#252526] hover:bg-[#323232] text-zinc-400 border-[#383838]'
+                        }`}
+                      >
+                        {sz}px
+                      </button>
                     ))}
-                  </select>
+                  </div>
                 </div>
 
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-[10px] text-zinc-400">
-                    <span>Colección Iconify (Offline)</span>
-                    <span className="text-zinc-500 font-mono">
-                      {currentCollectionMeta?.total.toLocaleString() || 0} iconos
+                {/* 2. COLOR DE TRAZO / ICONO (STROKE / COLOR) */}
+                <div className="space-y-1.5 pt-1 border-t border-[#383838]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-medium text-zinc-300">Color de Trazo (Stroke)</span>
+                    <span className="text-[10px] text-zinc-500 font-mono">
+                      {style.color || '#0d99ff'}
                     </span>
                   </div>
-                  <select
-                    value={selectedCollection}
-                    onChange={(e) => setSelectedCollection(e.target.value)}
-                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1.5 text-white text-xs focus:outline-none focus:border-[#0d99ff]"
-                  >
-                    {availableCollections.map((col) => (
-                      <option key={col.prefix} value={col.prefix} className="bg-[#1e1e1e]">
-                        {col.name} ({col.total.toLocaleString()} iconos)
-                      </option>
+                  <div className="flex items-center gap-2 bg-[#252526] border border-[#383838] focus-within:border-[#0d99ff] rounded-md p-1.5">
+                    <input
+                      type="color"
+                      value={style.color?.startsWith('#') ? style.color : '#0d99ff'}
+                      onChange={(e) => onUpdateStyle({ color: e.target.value, stroke: e.target.value })}
+                      className="w-6 h-6 rounded cursor-pointer border border-[#383838] bg-transparent"
+                    />
+                    <input
+                      type="text"
+                      value={style.color || ''}
+                      onChange={(e) => onUpdateStyle({ color: e.target.value, stroke: e.target.value })}
+                      placeholder="#0d99ff"
+                      className="flex-1 bg-transparent text-white focus:outline-none text-xs font-mono"
+                    />
+                    <button
+                      onClick={() => onUpdateStyle({ color: 'currentColor', stroke: 'currentColor' })}
+                      className="px-2 py-0.5 text-[10px] rounded bg-[#1e1e1e] hover:bg-[#323232] text-zinc-400 hover:text-white transition-colors"
+                      title="Heredar color de texto"
+                    >
+                      Inherit
+                    </button>
+                  </div>
+
+                  {/* Preset Swatches */}
+                  <div className="flex items-center gap-1.5 pt-0.5">
+                    {[
+                      { color: '#ffffff', label: 'Blanco' },
+                      { color: '#e4e4e7', label: 'Zinc Claro' },
+                      { color: '#71717a', label: 'Gris' },
+                      { color: '#0d99ff', label: 'Figma Blue' },
+                      { color: '#8b5cf6', label: 'Violeta' },
+                      { color: '#10b981', label: 'Esmeralda' },
+                      { color: '#f59e0b', label: 'Ámbar' },
+                      { color: '#ef4444', label: 'Rojo' },
+                    ].map((sw) => (
+                      <button
+                        key={sw.color}
+                        onClick={() => onUpdateStyle({ color: sw.color, stroke: sw.color })}
+                        style={{ backgroundColor: sw.color }}
+                        title={sw.label}
+                        className={`w-4 h-4 rounded-full border border-black/40 hover:scale-110 transition-transform ${
+                          style.color === sw.color
+                            ? 'ring-2 ring-[#0d99ff] ring-offset-1 ring-offset-[#1e1e1e]'
+                            : ''
+                        }`}
+                      />
                     ))}
-                  </select>
+                  </div>
                 </div>
 
-                {subcategories.length > 1 && (
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-zinc-400 font-medium">Subcategoría Interna</label>
-                    <select
-                      value={selectedSubcategory}
+                {/* 3. COLOR DE RELLENO (FILL) */}
+                <div className="space-y-1.5 pt-1 border-t border-[#383838]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-medium text-zinc-300">Relleno del Icono (Fill)</span>
+                    <span className="text-[10px] text-zinc-500 font-mono">
+                      {style.fill || props.fill || 'none'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-[#252526] border border-[#383838] focus-within:border-[#0d99ff] rounded-md p-1.5">
+                    <input
+                      type="color"
+                      value={style.fill?.startsWith('#') ? style.fill : '#0d99ff'}
                       onChange={(e) => {
-                        setSelectedSubcategory(e.target.value);
-                        setIconPage(1);
+                        onUpdateStyle({ fill: e.target.value });
+                        onUpdateProps({ fill: e.target.value });
                       }}
-                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                      className="w-6 h-6 rounded cursor-pointer border border-[#383838] bg-transparent"
+                    />
+                    <input
+                      type="text"
+                      value={style.fill || props.fill || 'none'}
+                      onChange={(e) => {
+                        onUpdateStyle({ fill: e.target.value });
+                        onUpdateProps({ fill: e.target.value });
+                      }}
+                      className="flex-1 bg-transparent text-white focus:outline-none text-xs font-mono"
+                    />
+                    <button
+                      onClick={() => {
+                        onUpdateStyle({ fill: 'none' });
+                        onUpdateProps({ fill: 'none' });
+                      }}
+                      className="px-2 py-0.5 text-[10px] rounded bg-[#1e1e1e] hover:bg-[#323232] text-zinc-400 hover:text-white transition-colors"
+                      title="Sin relleno (transparente)"
                     >
-                      {subcategories.map((sub) => (
-                        <option key={sub} value={sub} className="bg-[#1e1e1e]">
-                          {sub === 'All' ? 'Todas las Subcategorías' : sub}
+                      None
+                    </button>
+                  </div>
+                </div>
+
+                {/* 4. ORIENTACIÓN Y ROTACIÓN (TRANSFORM / FLIP) */}
+                <div className="space-y-1.5 pt-1 border-t border-[#383838]">
+                  <span className="text-[11px] font-medium text-zinc-300 block">Orientación & Rotación</span>
+                  <div className="grid grid-cols-4 gap-1">
+                    {[0, 90, 180, 270].map((deg) => (
+                      <button
+                        key={deg}
+                        onClick={() => handleIconTransform(deg, getIconFlipH(), getIconFlipV())}
+                        className={`py-1 text-[10px] font-mono rounded border transition-colors flex items-center justify-center gap-1 ${
+                          getIconRotation() === deg
+                            ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                            : 'bg-[#252526] hover:bg-[#323232] text-zinc-300 border-[#383838]'
+                        }`}
+                      >
+                        <RotateCw className="w-2.5 h-2.5" />
+                        <span>{deg}°</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-2 gap-1 pt-1">
+                    <button
+                      onClick={() => handleIconTransform(getIconRotation(), !getIconFlipH(), getIconFlipV())}
+                      className={`py-1 text-[10px] rounded border transition-colors flex items-center justify-center gap-1.5 ${
+                        getIconFlipH()
+                          ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                          : 'bg-[#252526] hover:bg-[#323232] text-zinc-300 border-[#383838]'
+                      }`}
+                      title="Voltear horizontalmente (Reflejo en X)"
+                    >
+                      <FlipHorizontal className="w-3 h-3" />
+                      <span>Voltear H</span>
+                    </button>
+                    <button
+                      onClick={() => handleIconTransform(getIconRotation(), getIconFlipH(), !getIconFlipV())}
+                      className={`py-1 text-[10px] rounded border transition-colors flex items-center justify-center gap-1.5 ${
+                        getIconFlipV()
+                          ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                          : 'bg-[#252526] hover:bg-[#323232] text-zinc-300 border-[#383838]'
+                      }`}
+                      title="Voltear verticalmente (Reflejo en Y)"
+                    >
+                      <FlipVertical className="w-3 h-3" />
+                      <span>Voltear V</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 5. SELECTORES DE CATEGORÍA Y COLECCIÓN OFFLINE */}
+                <div className="space-y-2 pt-1 border-t border-[#383838]">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-zinc-400 font-medium">Categoría Temática</label>
+                    <select
+                      value={selectedCategory}
+                      onChange={(e) => {
+                        const newCat = e.target.value;
+                        setSelectedCategory(newCat);
+                        const sets = getCollectionsByCategory(newCat);
+                        if (sets.length > 0 && !sets.some((s) => s.prefix === selectedCollection)) {
+                          setSelectedCollection(sets[0].prefix);
+                        }
+                      }}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2.5 py-1 text-white text-xs focus:outline-none focus:border-[#0d99ff]"
+                    >
+                      {iconCategories.map((cat) => (
+                        <option key={cat.id} value={cat.id} className="bg-[#1e1e1e]">
+                          {cat.label}
                         </option>
                       ))}
                     </select>
                   </div>
-                )}
 
-                <div className="space-y-1 pt-1 border-t border-[#383838]">
-                  <div className="flex justify-between text-[11px] text-zinc-400">
-                    <span>Tamaño</span>
-                    <span>{props.size || 28}px</span>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-[10px] text-zinc-400">
+                      <span>Colección Iconify (Offline)</span>
+                      <span className="text-zinc-500 font-mono">
+                        {currentCollectionMeta?.total.toLocaleString() || 0} iconos
+                      </span>
+                    </div>
+                    <select
+                      value={selectedCollection}
+                      onChange={(e) => setSelectedCollection(e.target.value)}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2.5 py-1 text-white text-xs focus:outline-none focus:border-[#0d99ff]"
+                    >
+                      {availableCollections.map((col) => (
+                        <option key={col.prefix} value={col.prefix} className="bg-[#1e1e1e]">
+                          {col.name} ({col.total.toLocaleString()} iconos)
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                  <input
-                    type="range"
-                    min="12"
-                    max="80"
-                    value={props.size || 28}
-                    onChange={(e) => {
-                      const val = Number(e.target.value);
-                      onUpdateProps({ size: val });
-                      onUpdateStyle({ fontSize: `${val}px` });
-                    }}
-                    className="w-full accent-[#0d99ff]"
-                  />
                 </div>
               </div>
             )}
           </div>
 
           {/* ======================================================== */}
-          {/* 5. TYPOGRAPHY                                            */}
+          {/* 5. TYPOGRAPHY (Excluido para iconos vectoriales)          */}
           {/* ======================================================== */}
+          {!isIcon && (
           <div className="pt-3 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -1718,6 +1966,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
               </div>
             </div>
           </div>
+          )}
 
           {/* ======================================================== */}
           {/* 6. FILL                                                  */}

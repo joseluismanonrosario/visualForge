@@ -866,7 +866,7 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
               rawSvg={props.svgContent}
               size={effectiveSize}
               stroke={style.color || '#0d99ff'}
-              fill={style.fill || 'none'}
+              fill={style.fill || props.fill || 'none'}
             />
           </div>
         );
@@ -1195,7 +1195,7 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
               rawSvg={props.svgContent}
               size={effectiveSize}
               stroke={style.color || style.stroke || '#0d99ff'}
-              fill={style.fill || 'none'}
+              fill={style.fill || props.fill || 'none'}
             />
           </div>
         );

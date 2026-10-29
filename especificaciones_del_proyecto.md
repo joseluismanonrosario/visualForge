@@ -379,9 +379,18 @@ Controles contextuales específicos según el componente o sub-elemento seleccio
 - **Tarjetas, Alertas y Colapsables (`card`, `alert`, `collapsible`)**: Título y descripción multilínea.
 - **Teclado (`kbd`)**: Combinación de teclas (`props.keys`).
 - **Interruptores y Deslizadores (`switch`, `slider`)**: Etiqueta, mínimo, máximo y valor activo.
-- **Iconos Vectoriales (`svg_icon`, `fontawesome_icon`)**: Integración con el explorador Iconify Offline (+418.000 iconos), selector de colección, subcategoría y control deslizante de tamaño.
+- **Iconos Vectoriales (`svg_icon`, `fontawesome_icon`, `styled_icon`)**:
+  - **Panel Dedicado de Propiedades de Icono Vectorial**: Reconociendo que los iconos son gráficos vectoriales y **no texto o tipografía**, el panel presenta una interfaz especializada y suprime secciones innecesarias:
+    - **Ocultamiento de Tipografía y Layout de Contenedor**: Se omite por completo el panel de Tipografía (`fontSize`, `fontWeight`, `lineHeight`, `letterSpacing`, `textAlign`, transformaciones `Aa`/`AA`, decoraciones de texto subrayado/tachado y editor de texto) y los controles de flexbox/alineación de hijos en Auto Layout, preservando únicamente el margen exterior (`Margin`) para espaciado en el lienzo.
+    - **Dimensionamiento Cuadrado Sincronizado**: Los campos de ancho (`W`) y alto (`H`) en la sección de Frame actualizan el tamaño del icono manteniendo su relación 1:1, acompañados de píldoras de presets (`16px`, `20px`, `24px`, `32px`, `48px`).
+    - **Visor Previo & Metadatos**: Vista previa en vivo del icono SVG estilizado, visualización del identificador (`props.icon` o `props.name`), nombre de colección y botón "Cambiar" para acceder al explorador modal Iconify Offline (+418.000 iconos).
+    - **Control de Tamaño Integral**: Entrada numérica directa en píxeles (`px`), deslizador continuo (12px a 96px) y 7 píldoras de acceso rápido (`16px`, `20px`, `24px`, `32px`, `40px`, `48px`, `64px`), sincronizando simultáneamente `props.size`, `style.width`, `style.height` y `style.fontSize`.
+    - **Color de Trazo / Icono (`Stroke`)**: Selector cromático visual con entrada hexadecimal, botón Clear y 10 muestras rápidas de color.
+    - **Color de Relleno Vectorial (`Fill`)**: Selector cromático para el interior de las figuras vectoriales, botón dedicado "Ninguno" (`none`) para iconos con contorno/transparentes y muestras de color.
+    - **Orientación y Transformación Geométrica**: Botones de rotación rápida en 90° (`RotateCw`) y volteo horizontal / vertical (`FlipHorizontal`, `FlipVertical`), aplicando transformaciones CSS (`transform: rotate(...) scaleX(...) scaleY(...)`) tanto en el lienzo interactivo como en la exportación (SVG Inline, JSX y ESP32).
 
 ### 5. Tipografía (Typography Panel)
+*(Visible exclusivamente para componentes con contenido textual; se oculta automáticamente al seleccionar iconos vectoriales)*
 - **Tamaño de Fuente (`fontSize`)**: Entrada en píxeles y barra de 8 píldoras de acceso rápido (`12px`, `14px`, `16px`, `18px`, `20px`, `24px`, `32px`, `40px`).
 - **Peso de Fuente (`fontWeight`)**: Menú desplegable con 9 escalas numéricas (*Thin 100* a *Black 900*).
 - **Interlineado (`lineHeight`)**: Control de espaciado entre líneas (LH).
@@ -514,8 +523,14 @@ Organizado en secciones limpias y compactas que reproducen fielmente la jerarqu�
    - `Padding` con conmutador de vinculación uniforme/independiente (4 lados) y píldoras.
    - `Margin` con conmutador de vinculación, píldoras y botón `Auto Center` (`margin: 0 auto`).
 4. **Propiedades de Componente (Component Properties)**:
-   - Controles contextuales: selector de etiqueta HTML `h1`-`h6`, `p`, etc., editor de texto, variantes de botón/badge, links, imágenes, inputs, cards, switches, sliders, kbd e iconos offline Iconify.
+   - Controles contextuales: selector de etiqueta HTML `h1`-`h6`, `p`, etc., editor de texto, variantes de botón/badge, links, imágenes, inputs, cards, switches, sliders, kbd.
+   - **Inspector de Iconos Vectoriales Dedicado (`svg_icon`, `fontawesome_icon`, `styled_icon`)**:
+     - Visualización previa en vivo, identificador y acceso a Iconify Offline (+418.000 iconos).
+     - Control de tamaño numérico (px), slider continuo (12px-96px) y píldoras rápidas (`16px`, `20px`, `24px`, `32px`, `40px`, `48px`, `64px`).
+     - Control cromático de trazo (`Stroke`) y de relleno interior (`Fill`) con opción "Ninguno" (transparente).
+     - Controles de rotación en 90° (`RotateCw`) y volteo horizontal y vertical (`FlipHorizontal`, `FlipVertical`).
 5. **Tipografía (Typography Panel)**:
+   - *(Oculto automáticamente para iconos vectoriales, al no ser texto o tipografía)*
    - Tamaño (`fontSize`) y peso (`fontWeight`).
    - Píldoras de tamaño rápido (`12px` a `40px`), interlineado (`lineHeight`) y tracking (`letterSpacing`).
    - Alineación de texto (Izquierda, Centro, Derecha, Justificado).

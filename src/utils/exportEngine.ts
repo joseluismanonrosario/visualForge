@@ -654,7 +654,7 @@ function generateHtmlInlineSvg(nodes: CanvasNode[], indent = '      ', isEsp32 =
           const iconKey = node.props.svgId || node.props.iconName || 'lucide:zap';
           const size = node.props.size || 20;
           const stroke = node.style?.color || 'currentColor';
-          const fill = node.style?.fill || 'none';
+          const fill = node.style?.fill || node.props?.fill || 'none';
           const item = findCatalogIcon(iconKey);
           const inlineSvg =
             getIconSvgSync(iconKey, { width: size, height: size, stroke, fill }) ||
@@ -771,7 +771,7 @@ ${indent}</header>`;
           const iconKey = node.props.svgId || node.props.iconName || 'lucide:rocket';
           const size = node.props.size || node.style?.fontSize || 24;
           const stroke = node.style?.color || 'currentColor';
-          const fill = node.style?.fill || 'none';
+          const fill = node.style?.fill || node.props?.fill || 'none';
           const item = findCatalogIcon(iconKey);
           const inlineSvg =
             getIconSvgSync(iconKey, { width: size, height: size, stroke, fill }) ||
@@ -844,7 +844,7 @@ ${indent}</div>`;
           const iconKey = node.props.svgId || node.props.iconName || (node.type === 'styled_icon' ? 'lucide:zap' : 'lucide:rocket');
           const size = node.props.size || node.style?.fontSize || 24;
           const stroke = node.style?.color || 'currentColor';
-          const fill = node.style?.fill || 'none';
+          const fill = node.style?.fill || node.props?.fill || 'none';
           const item = findCatalogIcon(iconKey);
           const inlineSvg =
             getIconSvgSync(iconKey, { width: size, height: size, stroke, fill }) ||
