@@ -1364,7 +1364,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
             )}
 
             {/* If Vector Icon Component (Iconify Universal Offline) */}
-            {(selectedNode.type === 'fontawesome_icon' || selectedNode.type === 'svg_icon') && (
+            {(selectedNode.type === 'fontawesome_icon' || selectedNode.type === 'svg_icon' || selectedNode.type === 'styled_icon') && (
               <div className="space-y-3 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">

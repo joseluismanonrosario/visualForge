@@ -102,6 +102,7 @@ Si el proyecto es de tipo Framework (`projectType === 'react' | 'framework'`), s
    - `Blockquote (Cita)`: Cita en bloque estilizada con borde lateral
    - `Image (Imagen)`: Elemento de imagen responsiva con bordes redondeados (`<img >`)
    - `Divider (<hr>)`: Línea divisoria semántica horizontal
+   - `Icon (Icono Vectorial)`: Icono vectorial interactivo universal (`svg_icon`) con acceso completo al explorador Iconify Offline (+418.000 iconos vectoriales en 244 colecciones), ajuste dinámico de tamaño, color de trazo y relleno.
 
 3. **Forms & Inputs**:
    - `Button`: Botón con variantes Shadcn (default, outline, ghost, secondary, destructive, link)
@@ -171,6 +172,7 @@ Si el proyecto es de tipo HTML o ESP32 (`projectType === 'html_css' | 'esp32'`),
    - `Dividers and <hr>`: Separadores horizontales con estilo sutil Preline
    - `KBD`: Elementos de teclado formateados (`kbd`) para atajos
    - `Custom Scrollbar`: Contenedor con barra de scroll personalizada
+   - `Icon (Icono Vectorial)`: Icono vectorial interactivo universal (`svg_icon`) con acceso completo al explorador Iconify Offline (+418.000 iconos vectoriales en 244 colecciones) y exportación limpia como SVG en línea puro para HTML y firmware C++ ESP32.
 
 2. **Base Components**:
    - `Accordion`: Acordeones expandibles Preline (`hs-accordion`)

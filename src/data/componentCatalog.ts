@@ -342,6 +342,27 @@ export const SHADCN_CATALOG: ComponentDefinition[] = [
     },
     defaultProps: { orientation: 'horizontal' },
   },
+  {
+    type: 'svg_icon',
+    name: 'Icon (Icono Vectorial)',
+    category: 'Basic HTML & Typography',
+    catalog: 'shadcn',
+    library: 'shadcn',
+    icon: 'Sparkles',
+    isContainer: false,
+    defaultStyle: {
+      width: '24px',
+      height: '24px',
+      color: '#0d99ff',
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    defaultProps: {
+      iconName: 'lucide:rocket',
+      size: 24,
+    },
+  },
 
   // --- 2. Forms & Inputs ---
   {
@@ -1522,6 +1543,27 @@ export const PRELINE_CATALOG: ComponentDefinition[] = [
       border: '1px solid #27272a',
     },
     defaultProps: {},
+  },
+  {
+    type: 'svg_icon',
+    name: 'Icon (Icono Vectorial)',
+    category: 'Layout & Content',
+    catalog: 'preline',
+    library: 'bootstrap',
+    icon: 'Sparkles',
+    isContainer: false,
+    defaultStyle: {
+      width: '24px',
+      height: '24px',
+      color: '#0d99ff',
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    defaultProps: {
+      iconName: 'lucide:rocket',
+      size: 24,
+    },
   },
 
   // --- 2. Base Components ---

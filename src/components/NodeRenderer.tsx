@@ -843,12 +843,34 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
           </div>
         );
 
-      case 'styled_icon':
+      case 'styled_icon': {
+        const effectiveSize = props.size || 20;
+        const iconIdentifier = props.iconName || props.svgId || props.iconId || 'lucide:zap';
         return (
-          <div id={node.id} onClick={handleClick} className={`${selectionClasses} w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400`}>
-            <Sparkles className="w-4 h-4" />
+          <div
+            id={node.id}
+            onClick={handleClick}
+            className={`${selectionClasses} inline-flex items-center justify-center`}
+            style={{
+              width: style.width || '40px',
+              height: style.height || '40px',
+              borderRadius: style.borderRadius || '10px',
+              backgroundColor: style.backgroundColor || 'rgba(13, 153, 255, 0.15)',
+              color: style.color || '#0d99ff',
+              border: style.border || '1px solid rgba(13, 153, 255, 0.3)',
+              ...style,
+            }}
+          >
+            <SvgIconRenderer
+              iconId={iconIdentifier}
+              rawSvg={props.svgContent}
+              size={effectiveSize}
+              stroke={style.color || '#0d99ff'}
+              fill={style.fill || 'none'}
+            />
           </div>
         );
+      }
 
       case 'timeline':
         return (
@@ -1203,6 +1225,7 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
         node.type === 'badge' ||
         node.type === 'svg_icon' ||
         node.type === 'fontawesome_icon' ||
+        node.type === 'styled_icon' ||
         node.type === 'link' ||
         node.type === 'kbd' ||
         node.type === 'legend_indicator';

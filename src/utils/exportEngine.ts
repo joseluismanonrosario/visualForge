@@ -127,8 +127,8 @@ export function extractUsedCatalogSvgs(nodes: CanvasNode[]): Map<string, { id: s
 
   function traverse(list: CanvasNode[]) {
     for (const node of list) {
-      if (node.type === 'fontawesome_icon' || node.type === 'svg_icon') {
-        const iconKey = node.props.svgId || node.props.iconName || 'lucide:rocket';
+      if (node.type === 'fontawesome_icon' || node.type === 'svg_icon' || node.type === 'styled_icon') {
+        const iconKey = node.props.svgId || node.props.iconName || (node.type === 'styled_icon' ? 'lucide:zap' : 'lucide:rocket');
         const syncSvg = getIconSvgSync(iconKey) || node.props.svgContent;
         if (syncSvg && !map.has(iconKey)) {
           map.set(iconKey, {
@@ -534,11 +534,15 @@ ${indent}</header>`;
           const Tag = node.props.as || 'p';
           return `${indent}<${Tag} id="${node.id}"${styleAttr}>${node.props.text || ''}</${Tag}>`;
         case 'svg_icon':
-        case 'fontawesome_icon': {
-          const iconKey = node.props.svgId || node.props.iconName || 'lucide:rocket';
+        case 'fontawesome_icon':
+        case 'styled_icon': {
+          const iconKey = node.props.svgId || node.props.iconName || (node.type === 'styled_icon' ? 'lucide:zap' : 'lucide:rocket');
           const size = node.props.size || node.style?.fontSize || 24;
           const sizeVal = typeof size === 'number' ? size : parseInt(size) || 24;
           const compName = toComponentName(iconKey.replace(/[: -]/g, '_'));
+          if (node.type === 'styled_icon') {
+            return `${indent}<div id="${node.id}" className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/30 inline-flex items-center justify-center text-blue-500"${styleAttr}><${compName} width={${sizeVal}} height={${sizeVal}} /></div>`;
+          }
           return `${indent}<${compName} width={${sizeVal}} height={${sizeVal}} id="${node.id}"${styleAttr} />`;
         }
         case 'image':
@@ -646,8 +650,17 @@ function generateHtmlInlineSvg(nodes: CanvasNode[], indent = '      ', isEsp32 =
           return `${indent}<div class="animate-pulse bg-zinc-800 rounded-lg h-10 w-full" id="${node.id}"${styleAttr}></div>`;
         case 'spinner':
           return `${indent}<div class="animate-spin inline-block size-6 border-[3px] border-current border-t-transparent text-blue-600 rounded-full" role="status" id="${node.id}"><span class="sr-only">Cargando...</span></div>`;
-        case 'styled_icon':
-          return `${indent}<div class="inline-flex items-center justify-center size-10 rounded-lg bg-blue-600/10 text-blue-500 border border-blue-500/20" id="${node.id}"${styleAttr}>${childrenCode || '★'}</div>`;
+        case 'styled_icon': {
+          const iconKey = node.props.svgId || node.props.iconName || 'lucide:zap';
+          const size = node.props.size || 20;
+          const stroke = node.style?.color || 'currentColor';
+          const fill = node.style?.fill || 'none';
+          const item = findCatalogIcon(iconKey);
+          const inlineSvg =
+            getIconSvgSync(iconKey, { width: size, height: size, stroke, fill }) ||
+            (item ? customizeSvg(item.svgContent, { width: size, height: size, stroke, fill, className: 'vf-icon-svg' }) : '');
+          return `${indent}<div class="inline-flex items-center justify-center size-10 rounded-lg bg-blue-600/10 text-blue-500 border border-blue-500/20" id="${node.id}"${styleAttr}>${inlineSvg || childrenCode || '★'}</div>`;
+        }
         case 'toast':
           return `${indent}<div class="p-3 bg-zinc-900 border border-zinc-800 rounded-lg shadow-lg text-sm text-zinc-200" id="${node.id}"${styleAttr}>${node.props.label || 'Notificación Toast'}</div>`;
         case 'timeline':
@@ -826,8 +839,9 @@ ${indent}</div>`;
           const Tag = node.props.as || 'p';
           return `${indent}<${Tag} id="${node.id}"${styleAttr}>${node.props.text || ''}</${Tag}>`;
         case 'svg_icon':
-        case 'fontawesome_icon': {
-          const iconKey = node.props.svgId || node.props.iconName || 'lucide:rocket';
+        case 'fontawesome_icon':
+        case 'styled_icon': {
+          const iconKey = node.props.svgId || node.props.iconName || (node.type === 'styled_icon' ? 'lucide:zap' : 'lucide:rocket');
           const size = node.props.size || node.style?.fontSize || 24;
           const stroke = node.style?.color || 'currentColor';
           const fill = node.style?.fill || 'none';
