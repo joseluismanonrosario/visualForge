@@ -44,9 +44,9 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
        - Indicadores de visibilidad (icono de ojo para ocultar/mostrar) y candado (bloquear edición).
        - Acceso rápido para eliminar capas.
      - **Assets (Componentes & Catálogo)**:
-       - Catálogo de componentes de **shadcn/ui** y **Bootstrap 5 + v6**.
-       - Barra de búsqueda en tiempo real y filtros rápidos (**All**, **shadcn**, **Bootstrap**).
-       - Vistas en tarjeta compacta arrastrables directamente al lienzo o al árbol de capas.
+       - Catálogo de componentes adaptado dinámicamente al tipo de proyecto (**Shadcn/ui** para Frameworks o **Preline UI** para HTML/ESP32), encabezado siempre por la categoría genérica universal **Componentes Básicos**.
+       - Barra de búsqueda en tiempo real y selector de filtrado por categoría (*All*, *Componentes Básicos*, y categorías compuestas de la biblioteca activa).
+       - Vistas en tarjeta compacta con indicación de origen (*Básico*, *Shadcn*, *Preline*) arrastrables directamente al lienzo o al árbol de capas.
    - Pestaña colapsable con atajo `Ctrl+\` / `Cmd+\` para maximizar el lienzo.
 
 3. **Lienzo Central (Infinite Canvas & Artboard Viewport)**:
@@ -72,13 +72,15 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
 
 ---
 
-## 2. CATÁLOGOS DINÁMICOS DE COMPONENTES UI (CATÁLOGO A: SHADCN/UI, CATÁLOGO B: PRELINE UI Y CATÁLOGO C: IOT & DASHBOARDS ESP32)
+## 2. CATÁLOGOS DINÁMICOS DE COMPONENTES UI (CATÁLOGO A: SHADCN/UI & CATÁLOGO B: PRELINE UI)
 
 El panel lateral de componentes (`LeftSidebar`) se adapta dinámicamente según el tipo de proyecto activo (`projectType`), cargando estrictamente el catálogo correspondiente:
+- **Proyectos de Framework (`projectType === 'react' | 'framework'`)**: Carga los componentes compuestos oficiales de **Shadcn/ui**.
+- **Proyectos de HTML / CSS o ESP32 (`projectType === 'html_css' | 'esp32'`)**: Carga los componentes compuestos oficiales de **Preline UI**.
 
-### 2.0 CONJUNTO DE COMPONENTES BÁSICOS Y PRIMITIVOS (PRIMITIVES & BASICS)
+### 2.0 CATEGORÍA GENÉRICA: COMPONENTES BÁSICOS (DISPONIBLE PARA TODOS LOS PROYECTOS)
 
-Tanto en el catálogo de Frameworks (Shadcn/ui) como en el de HTML / ESP32 (Preline UI), se incluye en la primera posición una categoría prioritaria de **Assets Básicos y Primitivos** (`Primitives & Basics`), diseñados como átomos fundamentales reutilizables para construir cualquier sección o pantalla compleja (como headers, footers, navbars, cards o sidebars) con soporte exhaustivo para propiedades, variantes y estados:
+En **todos los proyectos sin excepción** (tanto Frameworks como HTML/CSS y ESP32), se incluye de forma universal y prioritaria en la primera posición del catálogo la categoría **Componentes Básicos** (`Componentes Básicos`). Estos activos actúan como átomos fundamentales y primitivos reutilizables para construir cualquier sección o pantalla compleja (como headers, footers, navbars, cards o dashboards IoT) con soporte exhaustivo para propiedades, variantes, estados interactivos y metadatos de enlace de datos (`dataBinding`):
 
 1. **Text (Tipografía)**:
    - **Niveles y Tipos Semánticos**: Selector de jerarquía con soporte para títulos (`h1`, `h2`, `h3`, `h4`, `h5`, `h6`), subtítulos destacados (`subtitle`), párrafos estándar (`p`), etiquetas de campo (`label`), texto en línea (`span`), citas (`blockquote`), contenedores (`div`) y bloques de código (`code`).
@@ -136,10 +138,26 @@ Tanto en el catálogo de Frameworks (Shadcn/ui) como en el de HTML / ESP32 (Prel
      - *Bloque (`Block`)*: Flujo de bloque HTML tradicional.
    - Control integral de alineación (ejes horizontal y vertical), espaciados (padding y margin uniformes o independientes de 4 lados) y bordes (radio de curvatura, grosor, estilo y color).
 
+7. **Componentes Gráficos y Visualización de Datos (Basados en Chart.js / Canvas / Vector SVG Dinámicos)**:
+   - **LineChart (Telemetría en Vivo)**: Gráfico de líneas temporales con curvas suavizadas, gradiente translúcido, rejilla de referencia, marcas de tiempo y punto pulsante en vivo, ideal para graficar temperatura, humedad o presión.
+   - **BarChart (Consumo / Niveles)**: Gráfico de barras responsivas con soporte para unidades físicas (`mA`, `W`, `L`, etc.), cálculo dinámico de escala y etiquetas por nodo.
+   - **PieChart (Distribución de Estados)**: Gráfico de anillo / dona vectorial SVG para representar el uso de memoria Flash, Heap libre o particiones SPIFFS/LittleFS en el microcontrolador.
+   - **AreaChart (Potencia & Señal)**: Gráfico de área sombreada para monitorear potencias RMS, RSSI Wi-Fi en dBm o consumo de corriente instantáneo.
+   - **GaugeChart (Medidor / Tacómetro)**: Medidor radial semicircular de 180° con arco graduado dinámico de 0 a 100 (o rango personalizado), coloreado contextual (azul seguro, amarillo advertencia, rojo crítico) para presión de tanques o tacómetros.
+   - **Telemetry Metric Card (Widget)**: Tarjeta widget integral que combina título, etiqueta de protocolo (`MQTT`, `WS`, `HTTP`), indicador numérico de gran tamaño con tipografía monoespaciada, unidad de medida, estado de salud con punto pulsante (`OPTIMAL`, `ALERT`) y descripción de tendencia.
+
+8. **Indicadores de Estado y Control Físico para Hardware**:
+   - **Status Badge (Conexión ESP32 / Dispositivo)**: Píldora de estado con tres modos de conectividad (*Online*, *Connecting*, *Offline*) con animación pulsante de ping (`animate-ping`) y lectura de latencia en milisegundos (`18ms`).
+   - **Toggle Switch (Relay Control)**: Control físico para activación y desactivación de relés de potencia, optoacopladores o transistores MOSFET acoplados a pines GPIO, con cambio visual de estado (CERRADO/ENCENDIDO vs ABIERTO/APAGADO) y emisión de comandos `fetch('/api/gpio/toggle?pin=X')`.
+   - **Slider / Range (Control PWM / Analógico)**: Deslizador interactivo en tiempo real de 0 a 255 (o rango configurable) para modulación por ancho de pulsos (PWM), control de velocidad de motores DC o dimmers de iluminación LED, con emisión de peticiones automáticas `fetch('/api/gpio/pwm?pin=X&val=Y')`.
+
+9. **Capa de Mapeo y Enlace de Datos (Data Binding Metadata Layer)**:
+   Todos los componentes básicos disponen de metadatos de enlace de datos para definir su integración con backends o microcontroladores ESP32 (`bindingMode`, `dataSource`, `topic`/`endpoint`, `dataKey`, `gpioPin`/`variableName` y `refreshInterval`).
+
 ---
 
 ### Catálogo A: Para Frameworks (React / Vue - Basado en Shadcn/ui)
-Si el proyecto es de tipo Framework (`projectType === 'react' | 'framework'`), se cargan los componentes agrupados en sus categorías:
+Si el proyecto es de tipo Framework (`projectType === 'react' | 'framework'`), se cargan los componentes compuestos oficiales de Shadcn/ui agrupados en sus categorías:
 
 1. **Layout & Structure (Contenedores y Disposición)**:
    - `Container`: Contenedor centrado responsivo con ancho máximo configurable (`max-w-7xl mx-auto px-4`)
@@ -338,62 +356,12 @@ Tanto en el catálogo de Frameworks (Shadcn/ui) como en el de HTML / ESP32 (Prel
 
 ---
 
-### Catálogo C: Biblioteca Especializada para Dashboards IoT & Microcontroladores (ESP32 / Web General)
-
-El panel lateral izquierdo (`LeftSidebar`) incorpora un selector conmutador tripartito de catálogos (**Shadcn**, **Preline UI** e **IoT & ESP32**). Cuando se activa el catálogo **IoT & ESP32**, se presenta una biblioteca estructurada en 3 categorías optimizada tanto para maquetar interfaces web generales de alta interactividad como para generar dashboards de telemetría y control físico para microcontroladores como el **ESP32**, donde cada componente posee metadatos descriptivos de datos (`data-binding`) para su integración directa con el firmware C++ o backend:
-
-1. **Componentes Primitivos Base (UI General)**:
-   - **Text (Typography & Readings)**: Elemento de texto multipropósito que soporta jerarquías semánticas (`h1`-`h6`, `subtitle`, `p`, `label`, `span`) con variantes de tamaño, peso tipográfico, alineación, color e itálica. Incluye enlace a lecturas de sensores en tiempo real.
-   - **Action Button (Control / Disparo)**: Botón de comando con soporte para variantes (`default`, `secondary`, `outline`, `ghost`, `destructive`), tamaños, estados interactivos (loading, disabled) e iconos SVG integrables, optimizado para emitir comandos HTTP/WebSocket al ESP32.
-   - **Action Link (Navegación)**: Enlace de acción rápida que comparte la estética y variantes de los botones para enlaces externos, manuales o saltos entre vistas del microcontrolador.
-   - **Icon (Gráfico SVG Dinámico)**: Componente vectorial directo con selección cromática, escalado continuo e integración embebida en botones, links o métricas.
-   - **Image (Stream ESP32-CAM / Media)**: Contenedor multimedia con proporciones (`16:9`, `4:3`, `1:1`, etc.), control de ajuste (`cover`, `contain`), carga diferida y fallback de error, optimizado para flujos MJPEG de cámaras ESP32-CAM o logotipos de proyectos.
-   - **Form Controls (Entradas de Configuración)**:
-     - `Input`: Entrada de texto, número, contraseña, email o fecha para ajuste de parámetros de red Wi-Fi, umbrales y calibración.
-     - `Textarea`: Bloque multilínea ideal para visores de terminal serie, logs y volcados de consola.
-     - `Checkbox`: Interruptor booleano para banderas de configuración (flags de habilitación, modo depuración).
-     - `Radio`: Selector excluyente para selección de perfiles o modos de operación (ej. Automático, Manual, Eco).
-     - `Select`: Desplegable de selección de sensores conectados o puertos de comunicación.
-   - **Box (Layout Container)**: Contenedor maestro con distribución configurable (Flex Row, Flex Column, Grid de 2 a 4 columnas o Bloque), control de alineación, espaciados independientes y bordes.
-
-2. **Componentes Gráficos y Visualización de Datos (Basados en Chart.js / Canvas / Vector SVG Dinámicos)**:
-   - **LineChart (Telemetría en Vivo)**: Gráfico de líneas temporales con curvas suavizadas, gradiente translúcido, rejilla de referencia, marcas de tiempo y punto pulsante en vivo, ideal para graficar temperatura, humedad o presión.
-   - **BarChart (Consumo / Niveles)**: Gráfico de barras responsivas con soporte para unidades físicas (`mA`, `W`, `L`, etc.), cálculo dinámico de escala y etiquetas por nodo.
-   - **PieChart (Distribución de Estados)**: Gráfico de anillo / dona vectorial SVG para representar el uso de memoria Flash, Heap libre o particiones SPIFFS/LittleFS en el microcontrolador.
-   - **AreaChart (Potencia & Señal)**: Gráfico de área sombreada para monitorear potencias RMS, RSSI Wi-Fi en dBm o consumo de corriente instantáneo.
-   - **GaugeChart (Medidor / Tacómetro)**: Medidor radial semicircular de 180° con arco graduado dinámico de 0 a 100 (o rango personalizado), coloreado contextual (azul seguro, amarillo advertencia, rojo crítico) para presión de tanques o tacómetros.
-   - **Telemetry Metric Card (Widget)**: Tarjeta widget integral que combina título, etiqueta de protocolo (`MQTT`, `WS`, `HTTP`), indicador numérico de gran tamaño con tipografía monoespaciada, unidad de medida, estado de salud con punto pulsante (`OPTIMAL`, `ALERT`) y descripción de tendencia.
-
-3. **Capa de Mapeo y Enlace de Datos para ESP32 / IoT (Data Binding Metadata Layer)**:
-   Todos los componentes del sistema disponen en el Inspector de Diseño (`RightSidebar`) de una sección dedicada **Data Binding (ESP32 / IoT)** con conmutador de activación (`Activar`), que almacena en el nodo las directivas de enlace:
-   - **Modos de Enlace (`bindingMode`)**:
-     - `read`: Solo lectura para sensores (ej. lecturas analógicas ADC, DHT22, BME280).
-     - `write`: Solo escritura para actuadores (ej. relés, servomotores, solenoides).
-     - `bidirectional`: Sincronización bidireccional en tiempo real para estados compartidos.
-   - **Fuente de Datos / Protocolo (`dataSource`)**:
-     - `websocket`: Conexión de baja latencia con WebSocket nativo de `ESPAsyncWebServer`.
-     - `mqtt`: Tópicos MQTT con brokers como Mosquitto o HiveMQ.
-     - `http-poll`: Peticiones REST periódicas (`fetch('/api/...')`).
-     - `serial`: Comunicación serie UART por cable USB o módulo Bluetooth.
-   - **Tópico / Endpoint (`topic` / `endpoint`)**: Ruta del recurso (ej. `esp32/dht22/temperature` o `/api/gpio/2`).
-   - **Clave de Datos (`dataKey` / `jsonPath`)**: Propiedad JSON a deserializar (ej. `payload.temperature`).
-   - **Mapeo de Pines Físicos y Variables C++ (`gpioPin` / `variableName`)**: Identificador del pin físico en la placa o nombre de variable en C++ (ej. `GPIO_2`, `GPIO_4`, `PWM_CHANNEL_0`).
-   - **Intervalo de Refresco (`refreshInterval`)**: Tiempo de muestreo en milisegundos (por defecto 1000 ms) y actualización automática (`autoUpdate`).
-   - **Previsualización de Código**: Genera un fragmento en vivo del handler en C++ (`ESP.on(...)` o `ESP.publish(...)`).
-
-4. **Indicadores de Estado y Control Físico para Hardware**:
-   - **Status Badge (Conexión ESP32)**: Píldora de estado con tres modos de conectividad (*Online*, *Connecting*, *Offline*) con animación pulsante de ping (`animate-ping`) y lectura de latencia en milisegundos (`18ms`).
-   - **Toggle Switch (Relay Control)**: Control físico para activación y desactivación de relés de potencia, optoacopladores o transistores MOSFET acoplados a pines GPIO, con cambio visual de estado (CERRADO/ENCENDIDO vs ABIERTO/APAGADO) y emisión de comandos `fetch('/api/gpio/toggle?pin=X')`.
-   - **Slider / Range (Control PWM / Analógico)**: Deslizador interactivo en tiempo real de 0 a 255 (o rango configurable) para modulación por ancho de pulsos (PWM), control de velocidad de motores DC o dimmers de iluminación LED, con emisión de peticiones automáticas `fetch('/api/gpio/pwm?pin=X&val=Y')`.
-
----
-
 ### 3. MOTOR DE RENDERIZADO Y EXPORTACIÓN ADAPTATIVA
 
 El sistema garantiza coherencia total entre el lienzo de edición y el código exportado:
 
 1. **Lienzo Central (Canvas & NodeRenderer)**:
-   - Renderiza fielmente los componentes según el catálogo activo (`shadcn`, `preline` o `iot`).
+   - Renderiza fielmente los componentes según el catálogo activo (`shadcn` para Frameworks, `preline` para HTML/ESP32, y la categoría universal `Componentes Básicos`).
    - Soporta interactividad en modo Preview (tabs, sliders, toggles, acordeones, modales, relés y controles PWM).
    - Inyecta metadatos del catálogo y datos de enlace (`dataBinding`) en cada nodo para garantizar su correcta exportación.
 

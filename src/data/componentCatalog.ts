@@ -4,324 +4,6 @@ import { ComponentDefinition, ProjectType } from '../types';
 // CATÁLOGO A: PARA FRAMEWORKS (REACT / VUE) - BASADO EN SHADCN/UI
 // ====================================================================
 export const SHADCN_CATALOG: ComponentDefinition[] = [
-  // ====================================================================
-  // 0. PRIMITIVES & BASICS (ÁTOMOS REUTILIZABLES PARA CUALQUIER SECCIÓN)
-  // ====================================================================
-  {
-    type: 'box',
-    name: 'Box (Layout)',
-    category: 'Primitives & Basics',
-    catalog: 'shadcn',
-    library: 'shadcn',
-    icon: 'Box',
-    isContainer: true,
-    defaultStyle: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '16px',
-      padding: '16px',
-      width: '100%',
-      borderRadius: '8px',
-      backgroundColor: '#18181b',
-      border: '1px solid #27272a',
-    },
-    defaultProps: { label: 'Box Container' },
-  },
-  {
-    type: 'container',
-    name: 'Container',
-    category: 'Primitives & Basics',
-    catalog: 'shadcn',
-    library: 'shadcn',
-    icon: 'Box',
-    isContainer: true,
-    defaultStyle: {
-      width: '100%',
-      maxWidth: '1200px',
-      margin: '0 auto',
-      padding: '24px',
-    },
-    defaultProps: { label: 'Contenedor Centrado' },
-  },
-  {
-    type: 'typography',
-    name: 'Text (Tipografía)',
-    category: 'Primitives & Basics',
-    catalog: 'shadcn',
-    library: 'shadcn',
-    icon: 'Type',
-    isContainer: false,
-    defaultStyle: {
-      fontSize: '16px',
-      fontWeight: '400',
-      color: '#f4f4f5',
-      lineHeight: '1.5',
-      textAlign: 'left',
-      fontStyle: 'normal',
-    },
-    defaultProps: {
-      as: 'p',
-      text: 'Texto tipográfico editable con soporte para H1-H6, párrafos, subtítulos y labels.',
-    },
-  },
-  {
-    type: 'button',
-    name: 'Button (Acción)',
-    category: 'Primitives & Basics',
-    catalog: 'shadcn',
-    library: 'shadcn',
-    icon: 'MousePointerClick',
-    isContainer: true,
-    defaultStyle: {
-      display: 'inline-flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '8px',
-      padding: '8px 16px',
-      backgroundColor: '#0d99ff',
-      color: '#ffffff',
-      borderRadius: '6px',
-      fontWeight: '500',
-      fontSize: '13px',
-      border: 'none',
-      cursor: 'pointer',
-    },
-    defaultProps: {
-      label: 'Botón de Acción',
-      variant: 'primary',
-      size: 'md',
-      disabled: false,
-      isLoading: false,
-      isActive: false,
-      iconName: '',
-      iconPosition: 'left',
-    },
-  },
-  {
-    type: 'link',
-    name: 'Link (Acción)',
-    category: 'Primitives & Basics',
-    catalog: 'shadcn',
-    library: 'shadcn',
-    icon: 'Link',
-    isContainer: true,
-    defaultStyle: {
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '6px',
-      color: '#0d99ff',
-      fontSize: '14px',
-      textDecoration: 'none',
-      fontWeight: '500',
-      cursor: 'pointer',
-    },
-    defaultProps: {
-      label: 'Enlace interactivo',
-      href: '#',
-      target: '_self',
-      variant: 'link',
-      size: 'md',
-      disabled: false,
-      iconName: '',
-      iconPosition: 'right',
-    },
-  },
-  {
-    type: 'svg_icon',
-    name: 'Icon (Gráfico)',
-    category: 'Primitives & Basics',
-    catalog: 'shadcn',
-    library: 'shadcn',
-    icon: 'Sparkles',
-    isContainer: false,
-    defaultStyle: {
-      width: '24px',
-      height: '24px',
-      color: '#0d99ff',
-      display: 'inline-flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    defaultProps: {
-      iconName: 'lucide:sparkles',
-      size: 24,
-      stroke: '#0d99ff',
-      fill: 'none',
-    },
-  },
-  {
-    type: 'image',
-    name: 'Image (Multimedia)',
-    category: 'Primitives & Basics',
-    catalog: 'shadcn',
-    library: 'shadcn',
-    icon: 'Image',
-    isContainer: false,
-    defaultStyle: {
-      width: '100%',
-      aspectRatio: '16/9',
-      borderRadius: '8px',
-      objectFit: 'cover',
-      overflow: 'hidden',
-    },
-    defaultProps: {
-      src: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800&auto=format&fit=crop&q=80',
-      alt: 'Imagen ilustrativa',
-      aspectRatio: '16/9',
-      objectFit: 'cover',
-      loading: 'lazy',
-      fallbackSrc: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80',
-    },
-  },
-  {
-    type: 'form',
-    name: 'Form (Formulario)',
-    category: 'Primitives & Basics',
-    catalog: 'shadcn',
-    library: 'shadcn',
-    icon: 'FileText',
-    isContainer: true,
-    defaultStyle: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '16px',
-      width: '100%',
-      padding: '20px',
-      borderRadius: '8px',
-      backgroundColor: '#18181b',
-      border: '1px solid #27272a',
-    },
-    defaultProps: {
-      action: '#',
-      method: 'POST',
-      label: 'Formulario',
-    },
-  },
-  {
-    type: 'label',
-    name: 'Label (Etiqueta)',
-    category: 'Primitives & Basics',
-    catalog: 'shadcn',
-    library: 'shadcn',
-    icon: 'Tag',
-    isContainer: false,
-    defaultStyle: {
-      fontSize: '13px',
-      fontWeight: '500',
-      color: '#d4d4d8',
-      display: 'block',
-      marginBottom: '4px',
-    },
-    defaultProps: {
-      text: 'Etiqueta de campo',
-      htmlFor: '',
-      required: false,
-    },
-  },
-  {
-    type: 'input',
-    name: 'Input (Entrada de Texto)',
-    category: 'Primitives & Basics',
-    catalog: 'shadcn',
-    library: 'shadcn',
-    icon: 'Square',
-    isContainer: false,
-    defaultStyle: {
-      width: '100%',
-    },
-    defaultProps: {
-      label: 'Campo de texto',
-      placeholder: 'Escribe aquí...',
-      value: '',
-      type: 'text',
-      inputType: 'text',
-      disabled: false,
-      hasError: false,
-      errorMessage: 'Este campo es obligatorio o contiene un formato no válido',
-      required: false,
-    },
-  },
-  {
-    type: 'textarea',
-    name: 'Textarea (Texto Multilínea)',
-    category: 'Primitives & Basics',
-    catalog: 'shadcn',
-    library: 'shadcn',
-    icon: 'AlignLeft',
-    isContainer: false,
-    defaultStyle: {
-      width: '100%',
-    },
-    defaultProps: {
-      label: 'Mensaje o Comentarios',
-      placeholder: 'Escribe una descripción detallada...',
-      value: '',
-      rows: 3,
-      disabled: false,
-      hasError: false,
-      errorMessage: 'Por favor complete este campo',
-      required: false,
-    },
-  },
-  {
-    type: 'checkbox',
-    name: 'Checkbox (Casilla)',
-    category: 'Primitives & Basics',
-    catalog: 'shadcn',
-    library: 'shadcn',
-    icon: 'CheckSquare',
-    isContainer: false,
-    defaultStyle: {
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '8px',
-      cursor: 'pointer',
-    },
-    defaultProps: {
-      label: 'Acepto los términos y condiciones',
-      checked: false,
-      disabled: false,
-    },
-  },
-  {
-    type: 'radio',
-    name: 'Radio (Opción)',
-    category: 'Primitives & Basics',
-    catalog: 'shadcn',
-    library: 'shadcn',
-    icon: 'Radio',
-    isContainer: false,
-    defaultStyle: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '8px',
-    },
-    defaultProps: {
-      label: 'Selecciona una preferencia',
-      name: 'radio_group_1',
-      options: ['Opción A', 'Opción B', 'Opción C'],
-      value: 'Opción A',
-      disabled: false,
-    },
-  },
-  {
-    type: 'select',
-    name: 'Select (Desplegable)',
-    category: 'Primitives & Basics',
-    catalog: 'shadcn',
-    library: 'shadcn',
-    icon: 'ChevronDown',
-    isContainer: false,
-    defaultStyle: {
-      width: '100%',
-    },
-    defaultProps: {
-      label: 'Seleccionar Opción',
-      placeholder: 'Selecciona un elemento...',
-      options: ['Opción 1', 'Opción 2', 'Opción 3'],
-      disabled: false,
-    },
-  },
   // --- 1. Layout & Structure ---
   {
     type: 'container',
@@ -1609,324 +1291,6 @@ export const SHADCN_CATALOG: ComponentDefinition[] = [
 // CATÁLOGO B: PARA HTML / ESP32 - BASADO EN PRELINE UI (TAILWIND CSS)
 // ====================================================================
 export const PRELINE_CATALOG: ComponentDefinition[] = [
-  // ====================================================================
-  // 0. PRIMITIVES & BASICS (ÁTOMOS REUTILIZABLES PARA CUALQUIER SECCIÓN)
-  // ====================================================================
-  {
-    type: 'box',
-    name: 'Box (Layout)',
-    category: 'Primitives & Basics',
-    catalog: 'preline',
-    library: 'bootstrap',
-    icon: 'Box',
-    isContainer: true,
-    defaultStyle: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '16px',
-      padding: '16px',
-      width: '100%',
-      borderRadius: '8px',
-      backgroundColor: '#18181b',
-      border: '1px solid #27272a',
-    },
-    defaultProps: { label: 'Box Container' },
-  },
-  {
-    type: 'container',
-    name: 'Container',
-    category: 'Primitives & Basics',
-    catalog: 'preline',
-    library: 'bootstrap',
-    icon: 'Box',
-    isContainer: true,
-    defaultStyle: {
-      width: '100%',
-      maxWidth: '1200px',
-      margin: '0 auto',
-      padding: '24px',
-    },
-    defaultProps: { label: 'Contenedor Centrado' },
-  },
-  {
-    type: 'typography',
-    name: 'Text (Tipografía)',
-    category: 'Primitives & Basics',
-    catalog: 'preline',
-    library: 'bootstrap',
-    icon: 'Type',
-    isContainer: false,
-    defaultStyle: {
-      fontSize: '16px',
-      fontWeight: '400',
-      color: '#f4f4f5',
-      lineHeight: '1.5',
-      textAlign: 'left',
-      fontStyle: 'normal',
-    },
-    defaultProps: {
-      as: 'p',
-      text: 'Texto tipográfico editable con soporte para H1-H6, párrafos, subtítulos y labels.',
-    },
-  },
-  {
-    type: 'button',
-    name: 'Button (Acción)',
-    category: 'Primitives & Basics',
-    catalog: 'preline',
-    library: 'bootstrap',
-    icon: 'MousePointerClick',
-    isContainer: true,
-    defaultStyle: {
-      display: 'inline-flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '8px',
-      padding: '8px 16px',
-      backgroundColor: '#0d99ff',
-      color: '#ffffff',
-      borderRadius: '6px',
-      fontWeight: '500',
-      fontSize: '13px',
-      border: 'none',
-      cursor: 'pointer',
-    },
-    defaultProps: {
-      label: 'Botón de Acción',
-      variant: 'primary',
-      size: 'md',
-      disabled: false,
-      isLoading: false,
-      isActive: false,
-      iconName: '',
-      iconPosition: 'left',
-    },
-  },
-  {
-    type: 'link',
-    name: 'Link (Acción)',
-    category: 'Primitives & Basics',
-    catalog: 'preline',
-    library: 'bootstrap',
-    icon: 'Link',
-    isContainer: true,
-    defaultStyle: {
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '6px',
-      color: '#0d99ff',
-      fontSize: '14px',
-      textDecoration: 'none',
-      fontWeight: '500',
-      cursor: 'pointer',
-    },
-    defaultProps: {
-      label: 'Enlace interactivo',
-      href: '#',
-      target: '_self',
-      variant: 'link',
-      size: 'md',
-      disabled: false,
-      iconName: '',
-      iconPosition: 'right',
-    },
-  },
-  {
-    type: 'svg_icon',
-    name: 'Icon (Gráfico)',
-    category: 'Primitives & Basics',
-    catalog: 'preline',
-    library: 'bootstrap',
-    icon: 'Sparkles',
-    isContainer: false,
-    defaultStyle: {
-      width: '24px',
-      height: '24px',
-      color: '#0d99ff',
-      display: 'inline-flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    defaultProps: {
-      iconName: 'lucide:sparkles',
-      size: 24,
-      stroke: '#0d99ff',
-      fill: 'none',
-    },
-  },
-  {
-    type: 'image',
-    name: 'Image (Multimedia)',
-    category: 'Primitives & Basics',
-    catalog: 'preline',
-    library: 'bootstrap',
-    icon: 'Image',
-    isContainer: false,
-    defaultStyle: {
-      width: '100%',
-      aspectRatio: '16/9',
-      borderRadius: '8px',
-      objectFit: 'cover',
-      overflow: 'hidden',
-    },
-    defaultProps: {
-      src: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800&auto=format&fit=crop&q=80',
-      alt: 'Imagen ilustrativa',
-      aspectRatio: '16/9',
-      objectFit: 'cover',
-      loading: 'lazy',
-      fallbackSrc: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80',
-    },
-  },
-  {
-    type: 'form',
-    name: 'Form (Formulario)',
-    category: 'Primitives & Basics',
-    catalog: 'preline',
-    library: 'bootstrap',
-    icon: 'FileText',
-    isContainer: true,
-    defaultStyle: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '16px',
-      width: '100%',
-      padding: '20px',
-      borderRadius: '8px',
-      backgroundColor: '#18181b',
-      border: '1px solid #27272a',
-    },
-    defaultProps: {
-      action: '#',
-      method: 'POST',
-      label: 'Formulario',
-    },
-  },
-  {
-    type: 'label',
-    name: 'Label (Etiqueta)',
-    category: 'Primitives & Basics',
-    catalog: 'preline',
-    library: 'bootstrap',
-    icon: 'Tag',
-    isContainer: false,
-    defaultStyle: {
-      fontSize: '13px',
-      fontWeight: '500',
-      color: '#d4d4d8',
-      display: 'block',
-      marginBottom: '4px',
-    },
-    defaultProps: {
-      text: 'Etiqueta de campo',
-      htmlFor: '',
-      required: false,
-    },
-  },
-  {
-    type: 'input',
-    name: 'Input (Entrada de Texto)',
-    category: 'Primitives & Basics',
-    catalog: 'preline',
-    library: 'bootstrap',
-    icon: 'Square',
-    isContainer: false,
-    defaultStyle: {
-      width: '100%',
-    },
-    defaultProps: {
-      label: 'Campo de texto',
-      placeholder: 'Escribe aquí...',
-      value: '',
-      type: 'text',
-      inputType: 'text',
-      disabled: false,
-      hasError: false,
-      errorMessage: 'Este campo es obligatorio o contiene un formato no válido',
-      required: false,
-    },
-  },
-  {
-    type: 'textarea',
-    name: 'Textarea (Texto Multilínea)',
-    category: 'Primitives & Basics',
-    catalog: 'preline',
-    library: 'bootstrap',
-    icon: 'AlignLeft',
-    isContainer: false,
-    defaultStyle: {
-      width: '100%',
-    },
-    defaultProps: {
-      label: 'Mensaje o Comentarios',
-      placeholder: 'Escribe una descripción detallada...',
-      value: '',
-      rows: 3,
-      disabled: false,
-      hasError: false,
-      errorMessage: 'Por favor complete este campo',
-      required: false,
-    },
-  },
-  {
-    type: 'checkbox',
-    name: 'Checkbox (Casilla)',
-    category: 'Primitives & Basics',
-    catalog: 'preline',
-    library: 'bootstrap',
-    icon: 'CheckSquare',
-    isContainer: false,
-    defaultStyle: {
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '8px',
-      cursor: 'pointer',
-    },
-    defaultProps: {
-      label: 'Acepto los términos y condiciones',
-      checked: false,
-      disabled: false,
-    },
-  },
-  {
-    type: 'radio',
-    name: 'Radio (Opción)',
-    category: 'Primitives & Basics',
-    catalog: 'preline',
-    library: 'bootstrap',
-    icon: 'Radio',
-    isContainer: false,
-    defaultStyle: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '8px',
-    },
-    defaultProps: {
-      label: 'Selecciona una preferencia',
-      name: 'radio_group_1',
-      options: ['Opción A', 'Opción B', 'Opción C'],
-      value: 'Opción A',
-      disabled: false,
-    },
-  },
-  {
-    type: 'select',
-    name: 'Select (Desplegable)',
-    category: 'Primitives & Basics',
-    catalog: 'preline',
-    library: 'bootstrap',
-    icon: 'ChevronDown',
-    isContainer: false,
-    defaultStyle: {
-      width: '100%',
-    },
-    defaultProps: {
-      label: 'Seleccionar Opción',
-      placeholder: 'Selecciona un elemento...',
-      options: ['Opción 1', 'Opción 2', 'Opción 3'],
-      disabled: false,
-    },
-  },
   // --- 1. Layout & Content ---
   {
     type: 'container',
@@ -3616,14 +2980,14 @@ export const PRELINE_CATALOG: ComponentDefinition[] = [
 
 
 // ====================================================================
-// CATÁLOGO C: IOT & HARDWARE DASHBOARD (MICROCONTROLADORES & WEB UI)
+// CATEGORÍA GENÉRICA: COMPONENTES BÁSICOS / PRIMITIVOS (PARA TODOS LOS PROYECTOS)
 // ====================================================================
-export const IOT_DASHBOARD_CATALOG: ComponentDefinition[] = [
+export const BASIC_COMPONENTS_CATALOG: ComponentDefinition[] = [
   // --- 1. Componentes Primitivos Base (UI General) ---
   {
     type: 'box',
     name: 'Box (Layout Container)',
-    category: '1. Primitivos Base (UI General)',
+    category: 'Componentes Básicos',
     catalog: 'iot',
     library: 'both',
     icon: 'Box',
@@ -3652,7 +3016,7 @@ export const IOT_DASHBOARD_CATALOG: ComponentDefinition[] = [
   {
     type: 'typography',
     name: 'Text (Typography & Readings)',
-    category: '1. Primitivos Base (UI General)',
+    category: 'Componentes Básicos',
     catalog: 'iot',
     library: 'both',
     icon: 'Type',
@@ -3685,7 +3049,7 @@ export const IOT_DASHBOARD_CATALOG: ComponentDefinition[] = [
   {
     type: 'button',
     name: 'Action Button (Control / Disparo)',
-    category: '1. Primitivos Base (UI General)',
+    category: 'Componentes Básicos',
     catalog: 'iot',
     library: 'both',
     icon: 'MousePointerClick',
@@ -3727,7 +3091,7 @@ export const IOT_DASHBOARD_CATALOG: ComponentDefinition[] = [
   {
     type: 'link',
     name: 'Action Link (Navegación)',
-    category: '1. Primitivos Base (UI General)',
+    category: 'Componentes Básicos',
     catalog: 'iot',
     library: 'both',
     icon: 'Link',
@@ -3759,7 +3123,7 @@ export const IOT_DASHBOARD_CATALOG: ComponentDefinition[] = [
   {
     type: 'svg_icon',
     name: 'Icon (Gráfico SVG Dinámico)',
-    category: '1. Primitivos Base (UI General)',
+    category: 'Componentes Básicos',
     catalog: 'iot',
     library: 'both',
     icon: 'Sparkles',
@@ -3789,7 +3153,7 @@ export const IOT_DASHBOARD_CATALOG: ComponentDefinition[] = [
   {
     type: 'image',
     name: 'Image (Stream ESP32-CAM / Media)',
-    category: '1. Primitivos Base (UI General)',
+    category: 'Componentes Básicos',
     catalog: 'iot',
     library: 'both',
     icon: 'Image',
@@ -3821,7 +3185,7 @@ export const IOT_DASHBOARD_CATALOG: ComponentDefinition[] = [
   {
     type: 'input',
     name: 'Input (Parámetros / Config)',
-    category: '1. Primitivos Base (UI General)',
+    category: 'Componentes Básicos',
     catalog: 'iot',
     library: 'both',
     icon: 'Square',
@@ -3849,7 +3213,7 @@ export const IOT_DASHBOARD_CATALOG: ComponentDefinition[] = [
   {
     type: 'textarea',
     name: 'Textarea (Terminal / Logs)',
-    category: '1. Primitivos Base (UI General)',
+    category: 'Componentes Básicos',
     catalog: 'iot',
     library: 'both',
     icon: 'AlignLeft',
@@ -3875,7 +3239,7 @@ export const IOT_DASHBOARD_CATALOG: ComponentDefinition[] = [
   {
     type: 'checkbox',
     name: 'Checkbox (Flag / Habilitador)',
-    category: '1. Primitivos Base (UI General)',
+    category: 'Componentes Básicos',
     catalog: 'iot',
     library: 'both',
     icon: 'CheckSquare',
@@ -3902,7 +3266,7 @@ export const IOT_DASHBOARD_CATALOG: ComponentDefinition[] = [
   {
     type: 'radio',
     name: 'Radio (Modo de Operación)',
-    category: '1. Primitivos Base (UI General)',
+    category: 'Componentes Básicos',
     catalog: 'iot',
     library: 'both',
     icon: 'Radio',
@@ -3929,7 +3293,7 @@ export const IOT_DASHBOARD_CATALOG: ComponentDefinition[] = [
   {
     type: 'select',
     name: 'Select (Selector de Perfil / Sensor)',
-    category: '1. Primitivos Base (UI General)',
+    category: 'Componentes Básicos',
     catalog: 'iot',
     library: 'both',
     icon: 'ChevronDown',
@@ -3955,7 +3319,7 @@ export const IOT_DASHBOARD_CATALOG: ComponentDefinition[] = [
   {
     type: 'line_chart',
     name: 'LineChart (Telemetría en Vivo)',
-    category: '2. Gráficos & Visualización de Datos',
+    category: 'Componentes Básicos',
     catalog: 'iot',
     library: 'both',
     icon: 'LineChart',
@@ -3990,7 +3354,7 @@ export const IOT_DASHBOARD_CATALOG: ComponentDefinition[] = [
   {
     type: 'bar_chart',
     name: 'BarChart (Consumo / Niveles)',
-    category: '2. Gráficos & Visualización de Datos',
+    category: 'Componentes Básicos',
     catalog: 'iot',
     library: 'both',
     icon: 'BarChart3',
@@ -4023,7 +3387,7 @@ export const IOT_DASHBOARD_CATALOG: ComponentDefinition[] = [
   {
     type: 'pie_chart',
     name: 'PieChart (Distribución de Estados)',
-    category: '2. Gráficos & Visualización de Datos',
+    category: 'Componentes Básicos',
     catalog: 'iot',
     library: 'both',
     icon: 'PieChart',
@@ -4054,7 +3418,7 @@ export const IOT_DASHBOARD_CATALOG: ComponentDefinition[] = [
   {
     type: 'area_chart',
     name: 'AreaChart (Potencia & Señal)',
-    category: '2. Gráficos & Visualización de Datos',
+    category: 'Componentes Básicos',
     catalog: 'iot',
     library: 'both',
     icon: 'AreaChart',
@@ -4087,7 +3451,7 @@ export const IOT_DASHBOARD_CATALOG: ComponentDefinition[] = [
   {
     type: 'gauge_chart',
     name: 'GaugeChart (Medidor / Tacómetro)',
-    category: '2. Gráficos & Visualización de Datos',
+    category: 'Componentes Básicos',
     catalog: 'iot',
     library: 'both',
     icon: 'Gauge',
@@ -4123,7 +3487,7 @@ export const IOT_DASHBOARD_CATALOG: ComponentDefinition[] = [
   {
     type: 'metric_card',
     name: 'Telemetry Metric Card (Widget)',
-    category: '2. Gráficos & Visualización de Datos',
+    category: 'Componentes Básicos',
     catalog: 'iot',
     library: 'both',
     icon: 'Activity',
@@ -4160,7 +3524,7 @@ export const IOT_DASHBOARD_CATALOG: ComponentDefinition[] = [
   {
     type: 'status_badge',
     name: 'Status Badge (Conexión ESP32)',
-    category: '3. Control Físico & Hardware',
+    category: 'Componentes Básicos',
     catalog: 'iot',
     library: 'both',
     icon: 'Radio',
@@ -4189,7 +3553,7 @@ export const IOT_DASHBOARD_CATALOG: ComponentDefinition[] = [
   {
     type: 'relay_switch',
     name: 'Toggle Switch (Relay Control)',
-    category: '3. Control Físico & Hardware',
+    category: 'Componentes Básicos',
     catalog: 'iot',
     library: 'both',
     icon: 'Power',
@@ -4221,7 +3585,7 @@ export const IOT_DASHBOARD_CATALOG: ComponentDefinition[] = [
   {
     type: 'pwm_slider',
     name: 'Slider / Range (Control PWM / Analógico)',
-    category: '3. Control Físico & Hardware',
+    category: 'Componentes Básicos',
     catalog: 'iot',
     library: 'both',
     icon: 'Sliders',
@@ -4253,28 +3617,21 @@ export const IOT_DASHBOARD_CATALOG: ComponentDefinition[] = [
   },
 ];
 
-export type CatalogId = 'shadcn' | 'preline' | 'iot';
+// Alias para retrocompatibilidad
+export const IOT_DASHBOARD_CATALOG: ComponentDefinition[] = BASIC_COMPONENTS_CATALOG;
 
-export function getCatalogById(id: CatalogId): ComponentDefinition[] {
-  if (id === 'shadcn') return SHADCN_CATALOG;
-  if (id === 'preline') return PRELINE_CATALOG;
-  return IOT_DASHBOARD_CATALOG;
-}
-
-// Helper para obtener el catálogo dinámico según el tipo de proyecto
+// Helper para obtener el catálogo dinámico según el tipo de proyecto:
+// 'Componentes Básicos' es genérica para todos los proyectos, y luego se añaden
+// los componentes compuestos correspondientes (Shadcn para Frameworks, Preline para HTML/ESP32).
 export function getCatalogForProject(projectType: ProjectType): ComponentDefinition[] {
-  if (projectType === 'esp32') {
-    return IOT_DASHBOARD_CATALOG;
-  }
-  if (projectType === 'react' || projectType === 'framework') {
-    return SHADCN_CATALOG;
-  }
-  return PRELINE_CATALOG;
+  const isFramework = projectType === 'react' || projectType === 'framework';
+  const compositeCatalog = isFramework ? SHADCN_CATALOG : PRELINE_CATALOG;
+  return [...BASIC_COMPONENTS_CATALOG, ...compositeCatalog];
 }
 
-// Catálogo combinado para retrocompatibilidad
+// Catálogo combinado completo
 export const COMPONENT_CATALOG: ComponentDefinition[] = [
+  ...BASIC_COMPONENTS_CATALOG,
   ...SHADCN_CATALOG,
   ...PRELINE_CATALOG,
-  ...IOT_DASHBOARD_CATALOG,
 ];

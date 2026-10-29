@@ -23,7 +23,7 @@ import {
   GripVertical,
 } from 'lucide-react';
 import { CanvasNode, ProjectType, ComponentDefinition, DropPosition } from '../types';
-import { getCatalogForProject, getCatalogById, CatalogId } from '../data/componentCatalog';
+import { getCatalogForProject } from '../data/componentCatalog';
 import { Activity, Power, LineChart as LineChartIcon, Zap } from 'lucide-react';
 import { findNodeInTree } from '../utils/treeUtils';
 
@@ -59,7 +59,6 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   const [activeTab, setActiveTab] = useState<'layers' | 'assets'>('layers');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [selectedCatalogId, setSelectedCatalogId] = useState<CatalogId | 'auto'>('auto');
   const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>({
     hero_container: true,
     navbar_root: true,
@@ -176,18 +175,8 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
     }
   };
 
-  const effectiveCatalogId: CatalogId =
-    selectedCatalogId !== 'auto'
-      ? selectedCatalogId
-      : projectType === 'esp32'
-      ? 'iot'
-      : projectType === 'react' || projectType === 'framework'
-      ? 'shadcn'
-      : 'preline';
-
-  const isFramework = effectiveCatalogId === 'shadcn';
-  const isIotCatalog = effectiveCatalogId === 'iot';
-  const activeCatalog = getCatalogById(effectiveCatalogId);
+  const isFramework = projectType === 'react' || projectType === 'framework';
+  const activeCatalog = getCatalogForProject(projectType);
   const catalogCategories = ['All', ...Array.from(new Set(activeCatalog.map((c) => c.category)))];
 
   const toggleExpand = (id: string, e: React.MouseEvent) => {
@@ -419,58 +408,6 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Search & Library Filters */}
           <div className="p-2 border-b border-[#383838] space-y-2 bg-[#282829]">
-            {/* 3-Way Catalog Switcher: Shadcn / Preline / IoT Dashboard */}
-            <div className="flex items-center gap-1 bg-[#1e1e1e] p-1 rounded-md border border-[#383838]">
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedCatalogId('shadcn');
-                  setSelectedCategory('All');
-                }}
-                className={`flex-1 py-1 px-1 rounded text-[10px] font-medium transition-colors flex items-center justify-center gap-1 ${
-                  effectiveCatalogId === 'shadcn'
-                    ? 'bg-violet-600 text-white shadow-xs font-semibold'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-                title="Catálogo Shadcn/ui para React"
-              >
-                <Sparkles className="w-2.5 h-2.5 text-violet-300" />
-                <span>Shadcn</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedCatalogId('preline');
-                  setSelectedCategory('All');
-                }}
-                className={`flex-1 py-1 px-1 rounded text-[10px] font-medium transition-colors flex items-center justify-center gap-1 ${
-                  effectiveCatalogId === 'preline'
-                    ? 'bg-emerald-600 text-white shadow-xs font-semibold'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-                title="Catálogo Preline UI para HTML/Tailwind"
-              >
-                <Cpu className="w-2.5 h-2.5 text-emerald-300" />
-                <span>Preline</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedCatalogId('iot');
-                  setSelectedCategory('All');
-                }}
-                className={`flex-1 py-1 px-1 rounded text-[10px] font-medium transition-colors flex items-center justify-center gap-1 ${
-                  effectiveCatalogId === 'iot'
-                    ? 'bg-[#0d99ff] text-white shadow-xs font-semibold'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-                title="Catálogo IoT & Dashboard para ESP32 y Hardware"
-              >
-                <Zap className="w-2.5 h-2.5 text-amber-300" />
-                <span>IoT & ESP32</span>
-              </button>
-            </div>
-
             <div className="relative">
               <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-zinc-400" />
               <input
@@ -496,19 +433,12 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
             <div className="flex items-center justify-between text-[11px] pt-1">
               <span
                 className={`px-2 py-0.5 rounded text-[10px] font-semibold flex items-center gap-1 ${
-                  isIotCatalog
-                    ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                    : isFramework
+                  isFramework
                     ? 'bg-violet-500/20 text-violet-300 border border-violet-500/30'
                     : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
                 }`}
               >
-                {isIotCatalog ? (
-                  <>
-                    <Zap className="w-3 h-3 text-amber-400" />
-                    <span>Catálogo: IoT & ESP32</span>
-                  </>
-                ) : isFramework ? (
+                {isFramework ? (
                   <>
                     <Sparkles className="w-3 h-3 text-violet-400" />
                     <span>Catálogo: Shadcn/ui</span>
@@ -575,14 +505,14 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                         <div className="flex items-center justify-between">
                           <span
                             className={`text-[9px] font-mono px-1 py-0.5 rounded ${
-                              isIotCatalog || item.catalog === 'iot'
+                              item.category === 'Componentes Básicos'
                                 ? 'bg-blue-950/60 text-blue-300 border border-blue-500/20'
                                 : isFramework
                                 ? 'bg-violet-950/60 text-violet-300 border border-violet-500/20'
                                 : 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/20'
                             }`}
                           >
-                            {isIotCatalog || item.catalog === 'iot' ? 'IoT' : isFramework ? 'Shadcn' : 'Preline'}
+                            {item.category === 'Componentes Básicos' ? 'Básico' : isFramework ? 'Shadcn' : 'Preline'}
                           </span>
                           <Plus className="w-3 h-3 text-zinc-500 group-hover:text-[#0d99ff]" />
                         </div>
