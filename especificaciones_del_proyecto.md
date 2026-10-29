@@ -50,7 +50,8 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
          - "Paragraph" con icono `¶`
          - "Button" con icono de cursor de acción
          - "Input" con icono de cursor de entrada de texto
-         - "Icon", "Image", "Form", "Label", "Textarea", "Checkbox", "Radio", "Select", "Box", "Container", etc.
+         - "Container" con icono de recuadro de contenedor (`Square`)
+          - "Icon", "Image", "Label", "Textarea", "Checkbox", "Radio", "Select", "Container", etc.
        - **Guía Inferior "Drag to UI"**: Cada tarjeta incluye un pie sutil con el texto de guía `"Drag to UI"` y el tirador de arrastre `GripVertical`.
        - **Interacción Completa**: Soporte tanto para arrastre directo (Drag-and-Drop) al lienzo como para clic para inserción instantánea en el contenedor seleccionado o artboard.
    - Pestaña colapsable con atajo `Ctrl+\` / `Cmd+\` para maximizar el lienzo.
@@ -76,34 +77,31 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
      - **Inspect / Code (Inspección)**: Vista previa instantánea del código CSS / Tailwind generado del elemento seleccionado.
    - Colapsable para enfoque en pantalla completa.
 
-5. **Barra de Herramientas Flotante (`FloatingToolbox`) (Estilo Figma & Apple VisionOS)**:
-   - **Ubicación y Estructura Visual**:
-     - Posición inicial flotante centrada horizontalmente en la parte inferior de la pantalla (`bottom-6 left-1/2 -translate-x-1/2`).
-     - Diseño en cápsula/píldora (`rounded-full`), fondo oscuro semisólido/translúcido con efecto `backdrop-blur-2xl` (glassmorphism: `bg-[#18181b]/85 border border-white/10`), sombra flotante pronunciada (`shadow-2xl shadow-black/70`) y anillo sutil (`ring-1 ring-white/5`).
-     - Agarraderas discretas de puntos (`GripVertical`) en ambos extremos laterales para indicar capacidad de movimiento con cursor `cursor-grab / cursor-grabbing`.
+5. **Barra de Herramientas Flotante (`FloatingToolbox`) (Estilo Segmentado Modular Figma UI3)**:
+   - **Ubicación y Estructura Visual Modular (Segmented Capsule Islands)**:
+     - Posición inicial flotante centrada horizontalmente en la parte inferior de la pantalla (`bottom-6 left-1/2 -translate-x-1/2`), con arrastre fluido por el espacio de trabajo.
+     - Contenedor principal compacto y redondeado (`inline-flex items-center gap-1.5 bg-[#17181a]/95 backdrop-blur-2xl border border-white/[0.08] shadow-[0_16px_40px_rgba(0,0,0,0.7)] rounded-2xl p-1.5`).
+     - Distribución modular en 4 islas/segmentos estilizados con estética fiel a Figma UI3:
+       * **Isla 1 - Puntero de Selección (`Select / MousePointer2`)**: Botón independiente (`w-11 h-[38px] rounded-xl`) con el icono de puntero de flecha angulada outline `MousePointer2` en blanco; activo por defecto con fondo azul vibrante (`bg-[#0d99ff] shadow-[0_0_14px_rgba(13,153,255,0.5)]`).
+       * **Isla 2 - Cápsula de Navegación y Creación**: Contenedor oscuro unificado (`bg-[#25272a] rounded-xl px-1.5 h-[38px] border border-white/[0.04] flex items-center gap-1`) que agrupa 4 herramientas de acción con resaltado individual:
+         - **Pan / Hand (`H`)**: Desplazamiento y navegación panorámica por el lienzo.
+         - **Container / Frame (`F`)**: Icono de recuadro con 4 puntos de anclaje en las esquinas (`FrameIcon`) para dibujo y arrastre de contenedores Flexbox/Grid.
+         - **Heading (`T`)**: Tipografía con icono de letra mayúscula limpia `A` para inserción y arrastre de títulos.
+         - **Paragraph (`P`)**: Icono compuesto con líneas de texto horizontales y la letra 'T' lateral integrada (`ParagraphIcon`) para bloques de texto y párrafos.
+       * **Isla 3 - Mosaico Cluster de Iconos UI**: Cápsula interactiva (`bg-[#25272a] rounded-xl px-2.5 h-[38px] border border-white/[0.04]`) con un mosaico en 2 filas de mini iconos vectoriales representativos (Fila 1: `Bell`, `ShoppingCart`, `Ticket`, `Layers`; Fila 2: píldora de alternancia, `Heart`, `Image`). Al hacer clic despliega el popover de iconos UI flotante con buscador en vivo y drag-and-drop de iconos.
+       * **Isla 4 - Multimedia / Image (`I`)**: Botón independiente (`w-11 h-[38px] rounded-xl bg-[#25272a] border border-white/[0.04]`) con icono de imagen estilizada (`PhotoImageIcon`: marco con bordes redondeados, sol en la esquina superior derecha y cordillera de montañas).
    - **Funcionalidad de Movimiento Libre y Acoplamiento Inteligente (Smart Docking)**:
-     - Arrastre interactivo fluido mediante eventos globales de ratón.
+     - Arrastre interactivo fluido mediante eventos globales de ratón haciendo clic en cualquier área del contenedor base.
      - **Acoplamiento Inteligente (Smart Docking)**: Si el usuario arrastra la barra hacia la parte superior (`y < 110px`), se encaja suavemente en el top (`top-14`) con animación de transición; si se devuelve hacia el fondo (`y > window.innerHeight - 130px`), se acopla en la parte inferior (`bottom-6`); en cualquier otra posición, permanece flotando libremente en las coordenadas exactas de suelta (`dockPosition: 'free'`).
      - Guías visuales luminosas (`dockGuide` de neón azul pulsante) que anticipan el acoplamiento al acercarse a las zonas top o bottom.
-   - **Distribución de Herramientas (De izquierda a derecha con divisores verticales)**:
-     - **Bloque 1 (Navegación y Selección)**:
-       * **Select / Pointer (`V`)**: Herramienta de selección principal, activa y resaltada por defecto en azul brillante (`#0d99ff`).
-       * **Pan / Hand (`H`)**: Herramienta para desplazamiento y navegación panorámica del lienzo.
-      - **Bloque 2 (Estructura y Maquetación)**:
-        * **Container / Frame (`F`)**: Herramienta con icono de recuadro/marco de contenedor (`Square` estilo Figma Frame) para inserción, dibujo y arrastre de contenedores y cajas Flexbox/Grid.
-      - **Bloque 3 (Tipografía)**:
-        * **Heading (`T`)**: Inserción y arrastre de títulos y encabezados principales (`H1 / H2`).
-        * **Paragraph (`P`)**: Inserción y arrastre de párrafos y bloques de texto multilínea descriptivos.
-      - **Bloque 4 (Gráficos y Contenido)**:
-        * **Icons (Icon Set - 🔔 🛒 ♥)**: Acceso rápido a colección de iconos UI vectoriales con soporte para inserción al clic o arrastre directo al lienzo.
-        * **Image (`I`)**: Inserción y arrastre de contenedores de imágenes multimedia responsivas.
-    - **Comportamiento Interactivo, Arrastre y Colocación Libre (Drag & Placement)**:
-      - **Arrastre Directo desde el Toolbox (Drag-and-Drop)**: Cada botón de herramienta (Container, Heading, Paragraph, Image e iconos de la ventana emergente) es arrastrable de forma nativa (`draggable={true}`). El usuario puede arrastrar directamente desde la barra flotante a cualquier punto del lienzo artboard o soltarlo con precisión antes, dentro o después de cualquier contenedor.
-      - **Colocación Libre y Selección Inmediata para Mover**: Al seleccionar una herramienta de inserción (`container`, `heading`, `paragraph`, `image`), el lienzo muestra un banner informativo con el estado activo (`Modo inserción activo`) y activa guías hover con realce azul (`hover:ring-2 hover:ring-[#0d99ff] hover:bg-[#0d99ff]/10`). Al hacer clic en cualquier parte (espacio vacío del artboard o dentro de cualquier componente), el elemento se coloca instantáneamente en esa posición exacta y queda seleccionado automáticamente, retornando a la herramienta de selección (`select`) para que el usuario pueda moverlo, reordenarlo o personalizarlo de inmediato por toda la pantalla.
-      - **Selección Exclusiva (Radio-Group)**: Solo una herramienta puede estar activa a la vez. La herramienta activa cambia su fondo a un azul vibrante (`bg-[#0d99ff] text-white shadow-[0_0_14px_rgba(13,153,255,0.6)] scale-105`) y modifica en tiempo real el cursor del lienzo (`cursor-default`, `cursor-grab`, `cursor-crosshair`, `cursor-text`, `cursor-copy`).
-      - **Feedback Visual y Tooltips**: Tooltips emergentes flotantes con orientación adaptativa (arriba o abajo según el acoplamiento de la barra), etiquetas descriptivas ("Insertar o arrastrar...") y badges con atajos de teclado (`[V]`, `[H]`, `[F]`, `[T]`, `[P]`, `[I]`).
-      - **Menú Flotante de Iconos (Popover UI)**: Al hacer clic en la herramienta "Icons", despliega una ventana flotante translúcida encima/debajo del toolbox con buscador en tiempo real y cuadrícula de 32 iconos UI comunes con soporte para clic directo o arrastre individual de cada icono.
-      - **Atajos de Teclado Globales**: Escucha teclas `V`, `H`, `F`, `T`, `P`, `I` y `Escape` (siempre que el usuario no esté redactando en campos de texto).
+   - **Comportamiento Interactivo, Arrastre y Colocación Cómoda (Smart Placement & 1-Click Insert)**:
+     - **Inserción Instantánea Cómoda (1 Clic)**: Al pulsar cualquier herramienta del toolbox (`container`, `heading`, `paragraph`, `image` o iconos del popover), el elemento se coloca instantáneamente en el contenedor seleccionado (o como hermano si se seleccionó un nodo simple, o en la sección principal del artboard si no hay selección), seleccionándolo de inmediato para edición y mostrando un toast flotante de confirmación (ej. `✓ Título colocado en el lienzo`).
+     - **Arrastre Directo con Precisión (Drag-and-Drop)**: Cada botón de herramienta es arrastrable de forma nativa (`draggable={true}`) permitiendo arrastrar directamente desde la barra flotante a cualquier punto del lienzo artboard o soltarlo con precisión antes, dentro o después de cualquier contenedor gracias a las líneas y zonas de guía neón.
+     - **Modo Colocación Interactivo en Lienzo (Atajos de Teclado F, T, P, I)**: Al activar el modo mediante teclas rápidas, el cursor del lienzo muestra una insignia flotante dinámica (badge con icono y texto e.g. `➕ Clic para colocar Título | Esc`) y resalta en tiempo real el elemento o contenedor objetivo sobre el que se encuentra el cursor.
+     - **Selección Exclusiva (Radio-Group)**: Solo una herramienta puede estar activa a la vez. La herramienta activa cambia su fondo a un azul vibrante (`bg-[#0d99ff] text-white shadow-[0_0_14px_rgba(13,153,255,0.5)]`) y modifica en tiempo real el cursor del lienzo (`cursor-default`, `cursor-grab`, `cursor-crosshair`, `cursor-text`, `cursor-copy`).
+     - **Feedback Visual y Tooltips**: Tooltips emergentes flotantes con orientación adaptativa (arriba o abajo según el acoplamiento de la barra), etiquetas descriptivas ("Clic para colocar o arrastra") y badges con atajos de teclado (`[V]`, `[H]`, `[F]`, `[T]`, `[P]`, `[I]`).
+     - **Menú Flotante de Iconos (Popover UI)**: Al hacer clic en la Isla 3 de mosaico, despliega una ventana flotante translúcida encima/debajo del toolbox con buscador en tiempo real y cuadrícula de 32 iconos UI comunes con soporte para inserción al clic o arrastre individual de cada icono.
+     - **Atajos de Teclado Globales**: Escucha teclas `V`, `H`, `F`, `T`, `P`, `I` y `Escape` (siempre que el usuario no esté redactando en campos de texto).
 
 ---
 
@@ -115,33 +113,41 @@ El panel lateral de componentes (`LeftSidebar`) se adapta dinámicamente según 
 
 ### 2.0 CATEGORÍAS ESTÁNDAR COMUNES: COMPONENTES BÁSICOS (DISPONIBLES PARA TODOS LOS PROYECTOS)
 
-En **todos los proyectos sin excepción** (tanto Frameworks como HTML/CSS y ESP32), se incluyen de forma universal y prioritaria las 6 categorías de activos básicos y estándar, diseñados como átomos fundamentales reutilizables para construir cualquier sección o pantalla con soporte exhaustivo para propiedades, variantes y estados:
+En **todos los proyectos sin excepción** (tanto Frameworks como HTML/CSS y ESP32), se incluyen de forma universal y prioritaria las categorías de activos básicos y estándar, diseñados como átomos fundamentales reutilizables para construir cualquier sección o pantalla con soporte exhaustivo para propiedades, variantes y estados:
 
 1. **Text (Tipografía)**:
    - **Nivel y Tipo de Texto**: Selector semántico con soporte para títulos (`h1`, `h2`, `h3`, `h4`, `h5`, `h6`), párrafos estándar (`p`), subtítulos destacados (`subtitle`) y etiquetas (`label`).
    - **Propiedades de Estilo**: Tamaño (`fontSize`), peso de fuente (normal/bold con escalas numéricas 100-900), alineación (izquierda, centro, derecha, justificado), color cromático e itálica (`fontStyle: italic`).
 
 2. **Button / Link (Acción)**:
-   - **Button (Botón)**: Variantes de estilo (primario/CTA, secundario, outline, ghost, destructive, link), tamaños (pequeño `sm`, mediano `md`, grande `lg`), estados interactivos (loading con spinner animado, disabled con bloqueo de puntero, activo con foco Figma) y soporte integral para iconos vectoriales integrados (posición izquierda o derecha).
-   - **Link (Enlace)**: Componente para navegación interactiva que comparte los estilos base de acción, con soporte para destino `href`, `target` (`_self`, `_blank`), tamaño, estado deshabilitado e iconos.
+   - **Button (Botón)**: Componente estándar de acción (`isContainer: false`), con selector de tipo de botón (`button`, `submit`, `reset`). Cuenta con soporte completo en el panel de propiedades para añadir y personalizar de forma independiente iconos a la izquierda (`iconLeft`) y a la derecha (`iconRight`), con interruptores de visibilidad dedicados (`showIconLeft`, `showIconRight`). Variantes de estilo (primario/CTA, secundario, outline, ghost, destructive, link), tamaños (pequeño `sm`, mediano `md`, grande `lg`) y estados interactivos (loading, disabled).
+   - **Link (Enlace)**: Componente de enlace interactivo no contenedor (`isContainer: false`) para navegación web que comparte los estilos base de acción, con soporte para destino `href`, `target` (`_self`, `_blank`), tamaño, estado deshabilitado e iconos.
 
 3. **Icon (Gráfico)**:
    - Elemento universal para renderizar iconos vectoriales SVG con propiedades directas de tamaño (12px a 96px) y color (trazo `stroke` y relleno `fill`).
+   - Control de tamaño dinámico reactivo con slider continuo (12px - 128px), campo numérico directo (8px - 512px) y botones preset rápidos (16, 20, 24, 32, 40, 48, 64px) con sincronización atómica simultánea de `props.size` y `style.width/height/fontSize` para respuesta inmediata en tiempo real.
    - Puede utilizarse de forma independiente en el lienzo o integrarse dentro de botones y enlaces.
 
 4. **Image (Multimedia)**:
    - Contenedor para imágenes con control de proporciones (`aspectRatio`: 16:9, 4:3, 1:1, 21:9, auto), ajuste de contenido (`objectFit`: cover, contain, fill, none), carga diferida (`loading: lazy/eager`) y URL de fallback en caso de error.
 
 5. **Form Controls (Entradas de datos)**:
-   - **Form**: Contenedor agrupador de campos con soporte para endpoint de envío (`action`) y método (`method`).
-   - **Label**: Texto descriptivo vinculado a un campo mediante `htmlFor` y asterisco de obligatoriedad.
-   - **Input**: Campo de texto multiuso (variantes de tipo: `text`, `email`, `password`, `number`, `date`, `file`) con estados de error (`hasError`, `errorMessage`) y deshabilitado (`disabled`).
+   - **Configuración de Etiquetas (Labels)**: Los inputs (`Input`, `Textarea`, `Radio` y `Select`) disponen en el panel de propiedades de control total sobre su etiqueta:
+     * **Visibilidad**: Interruptor para mostrar u ocultar la etiqueta (`hasLabel: true/false`).
+     * **Posicionamiento Cuadrilateral**: Selector de 4 posiciones: Arriba (`top`), Abajo (`bottom`), Izquierda (`left`) y Derecha (`right`).
+     * **Conexión Semántica en Código Generado**: En los motores de exportación (React, HTML/Tailwind y Bootstrap), la etiqueta `<label>` queda conectada de forma estricta y accesible al control de entrada mediante el atributo `htmlFor` / `for` coincidiendo con el `id` asignado al campo (`${node.id}_input`, etc.).
+   - **Input (Textbox)**: Campo de texto multiuso (variantes de tipo: `text`, `email`, `password`, `number`, `date`, `file`) con estados de error y deshabilitado.
    - **Textarea**: Entrada de texto multilínea con control de filas (`rows`), estados de error y deshabilitado.
-   - **Checkbox y Radio**: Controles de selección múltiple (checkbox marcado/deshabilitado) o selección única (radio con lista de opciones y nombre de grupo).
-   - **Select / Combobox**: Lista desplegable de opciones configurables con placeholder y estado deshabilitado.
+   - **Radio (Radio Buttons)**: Control de selección única con gestor dinámico de opciones en el panel de propiedades que permite añadir opciones (`+ Agregar Opción`), editar el texto inline de cada opción y eliminar opciones con botón de papelera.
+   - **Select / Combobox**: Menú desplegable con gestor dinámico de opciones en el panel de propiedades para añadir, renombrar inline y eliminar ítems de selección.
+   - **Checkbox**: Control de selección múltiple con estado marcado o deshabilitado.
 
-6. **Box / Container (Layout)**:
-   - Contenedor base de maquetación con soporte para distribución en filas o columnas (Flexbox con `flexDirection` row/column) o cuadrícula (Grid), alineación (ejes horizontal y vertical), espaciados uniformes o independientes (padding/margin) y bordes (radio de curvatura, grosor y color).
+6. **Container (Layout & Form Container Unificado)**:
+   - **Contenedor Vacío por Defecto**: Se inicializa completamente vacío (`children: []`), mostrando en el lienzo una guía sutil con borde discontinuo ("Contenedor vacío — Arrastra componentes aquí") hasta que el usuario anide elementos en él.
+   - **Unificación de Box y Form**: Se elimina el elemento `Box` independiente del catálogo de assets y se unifica en el componente `Container`.
+   - **Conmutador de Tipo en Propiedades**: Permite alternar en cualquier momento entre:
+     * **Contenedor estándar (`<div>`)**: Contenedor base de maquetación con soporte para Flexbox y Grid, alineación, espaciados y bordes.
+     * **Contenedor de Formulario (`<form>`)**: Actúa como elemento semántico `<form>` con campos de configuración para `action` y `method`. Indica formalmente que los elementos contenidos actúan como campos de formulario y habilita que los botones envueltos puedan definirse como botones de envío (`type="submit"`).
 
 ---
 

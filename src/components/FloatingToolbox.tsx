@@ -1,17 +1,14 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
-  MousePointer,
+  MousePointer2,
   Hand,
-  Square,
-  Heading,
-  AlignLeft,
-  Sparkles,
-  Image as ImageIcon,
-  GripVertical,
+  Check,
   X,
   Search,
   Bell,
   ShoppingCart,
+  Ticket,
+  Layers,
   Heart,
   Star,
   CheckCircle2,
@@ -34,12 +31,14 @@ import {
   Wifi,
   Sliders,
   Share2,
+  Sparkles,
   Folder,
   Calendar,
   Clock,
   Lock,
   Tag,
   HelpCircle,
+  Image as LucideImage,
 } from 'lucide-react';
 import { ToolMode, ComponentDefinition } from '../types';
 
@@ -50,6 +49,59 @@ export interface FloatingToolboxProps {
   selectedId: string | null;
   className?: string;
 }
+
+// Icono personalizado para Contenedor / Frame (Cuadrado con 4 puntos de anclaje en las esquinas)
+const FrameIcon: React.FC<{ className?: string }> = ({ className = 'w-4.5 h-4.5' }) => (
+  <svg
+    viewBox="0 0 20 20"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    stroke="currentColor"
+  >
+    <rect x="3.5" y="3.5" width="13" height="13" strokeWidth="1.6" />
+    <circle cx="3.5" cy="3.5" r="1.6" fill="currentColor" stroke="none" />
+    <circle cx="16.5" cy="3.5" r="1.6" fill="currentColor" stroke="none" />
+    <circle cx="3.5" cy="16.5" r="1.6" fill="currentColor" stroke="none" />
+    <circle cx="16.5" cy="16.5" r="1.6" fill="currentColor" stroke="none" />
+  </svg>
+);
+
+// Icono personalizado de Párrafo / Texto (Líneas horizontales y 'T' lateral integrado estilo Figma)
+const ParagraphIcon: React.FC<{ className?: string }> = ({ className = 'w-4.5 h-4.5' }) => (
+  <svg
+    viewBox="0 0 20 20"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    stroke="currentColor"
+  >
+    <line x1="2.5" y1="4.5" x2="17.5" y2="4.5" strokeWidth="1.8" strokeLinecap="round" />
+    <line x1="2.5" y1="8.5" x2="11.5" y2="8.5" strokeWidth="1.8" strokeLinecap="round" />
+    <line x1="2.5" y1="12.5" x2="11.5" y2="12.5" strokeWidth="1.8" strokeLinecap="round" />
+    <line x1="2.5" y1="16.5" x2="11.5" y2="16.5" strokeWidth="1.8" strokeLinecap="round" />
+    <line x1="15.5" y1="4.5" x2="15.5" y2="16.5" strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
+
+// Icono personalizado para Imagen (Marco redondeado con sol a la derecha y montañas)
+const PhotoImageIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <rect x="2.5" y="2.5" width="19" height="19" rx="4" ry="4" strokeWidth="1.8" />
+    <circle cx="16.5" cy="7.5" r="1.5" fill="currentColor" stroke="none" />
+    <path d="M21 16.5l-5.2-5.2a1.4 1.4 0 0 0-2 0L4 21" />
+    <path d="M4 17l3.8-3.8a1.4 1.4 0 0 1 2 0l3.2 3.2" />
+  </svg>
+);
 
 const POPULAR_ICONS = [
   { name: 'Bell', label: 'Notificación', icon: Bell },
@@ -106,6 +158,16 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
   const [isIconsMenuOpen, setIsIconsMenuOpen] = useState(false);
   const [iconSearchQuery, setIconSearchQuery] = useState('');
 
+  // Toast flotante informativo de colocación cómoda
+  const [placementToast, setPlacementToast] = useState<string | null>(null);
+
+  const showPlacementToast = (msg: string) => {
+    setPlacementToast(msg);
+    setTimeout(() => {
+      setPlacementToast((prev) => (prev === msg ? null : prev));
+    }, 2200);
+  };
+
   // Iconos filtrados para la ventana flotante
   const filteredIcons = useMemo(() => {
     const q = iconSearchQuery.trim().toLowerCase();
@@ -116,9 +178,9 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
     );
   }, [iconSearchQuery]);
 
-  // Manejo de Arrastre con Mouse
+  // Manejo de Arrastre del Toolbox (al hacer clic en las áreas vacías o de fondo del contenedor)
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Si se hizo clic en un botón interactivo o dentro del popover, no iniciar arrastre
+    // Si se hizo clic en un botón interactivo o dentro del popover, no iniciar arrastre de la barra
     if ((e.target as HTMLElement).closest('button, input, [data-interactive="true"]')) {
       return;
     }
@@ -146,8 +208,8 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
       const newX = e.clientX - dragOffset.x;
       const newY = e.clientY - dragOffset.y;
 
-      const barWidth = toolboxRef.current?.offsetWidth || 440;
-      const barHeight = toolboxRef.current?.offsetHeight || 50;
+      const barWidth = toolboxRef.current?.offsetWidth || 360;
+      const barHeight = toolboxRef.current?.offsetHeight || 48;
 
       // Mantener dentro del viewport
       const clampedX = Math.max(12, Math.min(window.innerWidth - barWidth - 12, newX));
@@ -155,7 +217,7 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
 
       setFreeCoords({ x: clampedX, y: clampedY });
 
-      // Detección de zona de acoplamiento inteligente (Smart Docking Preview)
+      // Detección de zona de acoplamiento inteligente
       if (e.clientY < 110) {
         setDockGuide('top');
       } else if (e.clientY > window.innerHeight - 130) {
@@ -241,24 +303,27 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isIconsMenuOpen, setToolMode]);
 
-  // Manejador al hacer clic en herramientas
+  // Manejador al hacer clic en herramientas (1 clic directo para colocar en selección o lienzo)
   const handleToolClick = (tool: ToolMode) => {
-    // Si ya está activa y es una herramienta de inserción, inserta inmediatamente en el elemento seleccionado
-    if (toolMode === tool && ['container', 'heading', 'paragraph', 'image'].includes(tool)) {
-      triggerDirectInsertion(tool);
+    if (tool === 'select' || tool === 'hand') {
+      setToolMode(tool);
+      if (isIconsMenuOpen) {
+        setIsIconsMenuOpen(false);
+      }
       return;
     }
 
-    setToolMode(tool);
-    // Cierra el menú de iconos si estaba abierto
+    // Inserción directa cómoda e instantánea al hacer clic en la herramienta
+    triggerDirectInsertion(tool);
     if (isIconsMenuOpen) {
       setIsIconsMenuOpen(false);
     }
   };
 
-  // Inserción directa rápida cuando se hace clic repetido
+  // Inserción directa rápida
   const triggerDirectInsertion = (tool: ToolMode) => {
     let compDef: ComponentDefinition | null = null;
+    let label = '';
     if (tool === 'container') {
       compDef = {
         type: 'container',
@@ -277,9 +342,14 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
           border: '1px solid #27272a',
         },
         defaultProps: {
-          label: 'Contenedor Flexbox',
+          label: 'Contenedor',
+          containerType: 'container',
+          action: '#',
+          method: 'POST',
         },
+        defaultChildren: [],
       };
+      label = 'Contenedor';
     } else if (tool === 'heading') {
       compDef = {
         type: 'typography',
@@ -299,6 +369,7 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
           text: 'Título Principal',
         },
       };
+      label = 'Título';
     } else if (tool === 'paragraph') {
       compDef = {
         type: 'typography',
@@ -318,6 +389,7 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
           text: 'Párrafo de texto descriptivo adaptable para cualquier sección.',
         },
       };
+      label = 'Párrafo';
     } else if (tool === 'image') {
       compDef = {
         type: 'image',
@@ -339,11 +411,13 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
           loading: 'lazy',
         },
       };
+      label = 'Imagen';
     }
 
     if (compDef) {
       onInsertComponent(compDef);
       setToolMode('select');
+      showPlacementToast(`✓ ${label} colocado en el lienzo`);
     }
   };
 
@@ -373,6 +447,7 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
 
     onInsertComponent(compDef);
     setIsIconsMenuOpen(false);
+    showPlacementToast(`✓ Icono (${iconLabel}) colocado`);
   };
 
   // Cálculo de clases de posicionamiento y animación
@@ -403,73 +478,76 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
     <>
       {/* Guía visual de acoplamiento superior (Smart Docking Guide) */}
       {dockGuide === 'top' && (
-        <div className="fixed top-12 left-1/2 -translate-x-1/2 w-96 h-1.5 bg-[#0d99ff] rounded-full shadow-[0_0_16px_#0d99ff] pointer-events-none z-30 opacity-90 animate-pulse transition-all duration-200" />
+        <div className="fixed top-12 left-1/2 -translate-x-1/2 w-80 h-1.5 bg-[#0d99ff] rounded-full shadow-[0_0_16px_#0d99ff] pointer-events-none z-30 opacity-90 animate-pulse transition-all duration-200" />
       )}
 
       {/* Guía visual de acoplamiento inferior */}
       {dockGuide === 'bottom' && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-96 h-1.5 bg-[#0d99ff] rounded-full shadow-[0_0_16px_#0d99ff] pointer-events-none z-30 opacity-90 animate-pulse transition-all duration-200" />
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-80 h-1.5 bg-[#0d99ff] rounded-full shadow-[0_0_16px_#0d99ff] pointer-events-none z-30 opacity-90 animate-pulse transition-all duration-200" />
       )}
 
-      {/* Contenedor Principal Flotante (Glassmorphism Capsule) */}
+      {/* Contenedor Principal Flotante (Sleek Figma UI3 Segmented Capsule) */}
       <div
         ref={toolboxRef}
         onMouseDown={handleMouseDown}
         style={inlineStyles}
-        className={`group/toolbox select-none flex items-center bg-[#18181b]/85 backdrop-blur-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.7)] ring-1 ring-white/5 rounded-full px-2 py-1.5 ${positionClasses} ${
+        className={`group/toolbox select-none inline-flex items-center gap-1.5 bg-[#17181a]/95 backdrop-blur-2xl border border-white/[0.08] shadow-[0_16px_40px_rgba(0,0,0,0.7)] rounded-2xl p-1.5 ${positionClasses} ${
           isDragging ? 'cursor-grabbing transition-none' : 'cursor-grab transition-all duration-300 ease-out'
         } ${className}`}
-        title="Arrastra desde los extremos para mover por la pantalla"
+        title="Arrastra para mover la barra por la pantalla"
       >
-        {/* Agarradera de puntos izquierda (Drag Handle) */}
-        <div
-          className="flex items-center justify-center pl-1 pr-1.5 py-1 text-zinc-500 hover:text-zinc-200 cursor-grab active:cursor-grabbing select-none"
-          title="Arrastra para mover la barra flotante"
-        >
-          <GripVertical className="w-4 h-4 opacity-60 hover:opacity-100 transition-opacity" />
+        {/* Toast flotante informativo de colocación cómoda */}
+        {placementToast && (
+          <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-[#0d99ff] text-white text-[11px] font-medium shadow-xl backdrop-blur-md flex items-center gap-1.5 animate-in fade-in slide-in-from-bottom-2 duration-150 pointer-events-none whitespace-nowrap z-50">
+            <Check className="w-3.5 h-3.5" />
+            <span>{placementToast}</span>
+          </div>
+        )}
+
+        {/* ======================================================== */}
+        {/* ISLA 1: Puntero de Selección (Active Select / Pointer)   */}
+        {/* ======================================================== */}
+        <div className="relative group/btn">
+          <button
+            type="button"
+            onClick={() => handleToolClick('select')}
+            className={`w-11 h-[38px] rounded-xl flex items-center justify-center transition-all duration-150 cursor-pointer ${
+              toolMode === 'select'
+                ? 'bg-[#0d99ff] text-white shadow-[0_0_14px_rgba(13,153,255,0.5)] font-semibold'
+                : 'bg-[#25272a] text-zinc-300 hover:text-white hover:bg-[#2e3135] active:scale-95'
+            }`}
+            aria-label="Seleccionar (V)"
+          >
+            <MousePointer2 className="w-5 h-5 -rotate-2" strokeWidth={1.9} />
+          </button>
+          <div
+            className={`absolute ${
+              isDockedTop ? 'top-full mt-2.5' : 'bottom-full mb-2.5'
+            } left-1/2 -translate-x-1/2 opacity-0 group-hover/btn:opacity-100 pointer-events-none transition-all duration-150 transform scale-95 group-hover/btn:scale-100 z-50 whitespace-nowrap bg-[#18181b]/95 backdrop-blur-md text-white text-[10px] font-medium px-2 py-1 rounded-md border border-white/10 shadow-xl flex items-center gap-1.5`}
+          >
+            <span>Seleccionar</span>
+            <kbd className="px-1 py-0.2 rounded bg-white/15 text-zinc-300 font-mono text-[9px]">V</kbd>
+          </div>
         </div>
 
         {/* ======================================================== */}
-        {/* BLOQUE 1: Navegación y Selección                         */}
+        {/* ISLA 2: Cápsula de Navegación y Creación                 */}
+        {/* (Hand, Frame/Container, Heading 'A', Paragraph)          */}
         {/* ======================================================== */}
-        <div className="flex items-center gap-1">
-          {/* Puntero (Select / Pointer - ↖) */}
-          <div className="relative group/btn">
-            <button
-              type="button"
-              onClick={() => handleToolClick('select')}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 ${
-                toolMode === 'select'
-                  ? 'bg-[#0d99ff] text-white shadow-[0_0_14px_rgba(13,153,255,0.6)] font-semibold scale-105'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/10 active:scale-95'
-              }`}
-              aria-label="Seleccionar"
-            >
-              <MousePointer className="w-4 h-4" />
-            </button>
-            <div
-              className={`absolute ${
-                isDockedTop ? 'top-full mt-2.5' : 'bottom-full mb-2.5'
-              } left-1/2 -translate-x-1/2 opacity-0 group-hover/btn:opacity-100 pointer-events-none transition-all duration-150 transform scale-95 group-hover/btn:scale-100 z-50 whitespace-nowrap bg-[#18181b]/95 backdrop-blur-md text-white text-[10px] font-medium px-2 py-1 rounded-md border border-white/10 shadow-xl flex items-center gap-1.5`}
-            >
-              <span>Seleccionar</span>
-              <kbd className="px-1 py-0.2 rounded bg-white/15 text-zinc-300 font-mono text-[9px]">V</kbd>
-            </div>
-          </div>
-
+        <div className="flex items-center gap-1 bg-[#25272a] rounded-xl px-1.5 h-[38px] border border-white/[0.04]">
           {/* Manito (Pan / Hand - ✋) */}
           <div className="relative group/btn">
             <button
               type="button"
               onClick={() => handleToolClick('hand')}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 ${
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150 cursor-pointer ${
                 toolMode === 'hand'
-                  ? 'bg-[#0d99ff] text-white shadow-[0_0_14px_rgba(13,153,255,0.6)] font-semibold scale-105'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/10 active:scale-95'
+                  ? 'bg-[#0d99ff] text-white shadow-[0_0_10px_rgba(13,153,255,0.4)] font-semibold'
+                  : 'text-zinc-300 hover:text-white hover:bg-white/10 active:scale-95'
               }`}
-              aria-label="Mover lienzo"
+              aria-label="Mover lienzo (H)"
             >
-              <Hand className="w-4 h-4" />
+              <Hand className="w-4.5 h-4.5" strokeWidth={1.75} />
             </button>
             <div
               className={`absolute ${
@@ -480,16 +558,8 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
               <kbd className="px-1 py-0.2 rounded bg-white/15 text-zinc-300 font-mono text-[9px]">H</kbd>
             </div>
           </div>
-        </div>
 
-        {/* Divisor vertical sutil */}
-        <div className="w-px h-5 bg-white/10 mx-1" />
-
-        {/* ======================================================== */}
-        {/* BLOQUE 2: Estructura y Maquetación                       */}
-        {/* ======================================================== */}
-        <div className="flex items-center gap-1">
-          {/* Container (Box / Frame - ◻) */}
+          {/* Container / Frame (Recuadro con 4 puntos de anclaje) */}
           <div className="relative group/btn">
             <button
               type="button"
@@ -507,34 +577,26 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
                 e.dataTransfer.setData('text/plain', 'Container');
               }}
               onClick={() => handleToolClick('container')}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 cursor-pointer ${
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150 cursor-pointer ${
                 toolMode === 'container'
-                  ? 'bg-[#0d99ff] text-white shadow-[0_0_14px_rgba(13,153,255,0.6)] font-semibold scale-105'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/10 active:scale-95'
+                  ? 'bg-[#0d99ff] text-white shadow-[0_0_10px_rgba(13,153,255,0.4)] font-semibold'
+                  : 'text-zinc-300 hover:text-white hover:bg-white/10 active:scale-95'
               }`}
-              aria-label="Insertar o arrastrar Contenedor"
+              aria-label="Insertar o arrastrar Contenedor (F)"
             >
-              <Square className="w-4 h-4" strokeWidth={1.8} />
+              <FrameIcon className="w-4.5 h-4.5" />
             </button>
             <div
               className={`absolute ${
                 isDockedTop ? 'top-full mt-2.5' : 'bottom-full mb-2.5'
               } left-1/2 -translate-x-1/2 opacity-0 group-hover/btn:opacity-100 pointer-events-none transition-all duration-150 transform scale-95 group-hover/btn:scale-100 z-50 whitespace-nowrap bg-[#18181b]/95 backdrop-blur-md text-white text-[10px] font-medium px-2 py-1 rounded-md border border-white/10 shadow-xl flex items-center gap-1.5`}
             >
-              <span>Insertar o arrastrar Contenedor</span>
+              <span>Contenedor (Clic para colocar o arrastra)</span>
               <kbd className="px-1 py-0.2 rounded bg-white/15 text-zinc-300 font-mono text-[9px]">F</kbd>
             </div>
           </div>
-        </div>
 
-        {/* Divisor vertical sutil */}
-        <div className="w-px h-5 bg-white/10 mx-1" />
-
-        {/* ======================================================== */}
-        {/* BLOQUE 3: Tipografía                                     */}
-        {/* ======================================================== */}
-        <div className="flex items-center gap-1">
-          {/* Texto / Heading (A) */}
+          {/* Texto / Título (A) */}
           <div className="relative group/btn">
             <button
               type="button"
@@ -552,26 +614,26 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
                 e.dataTransfer.setData('text/plain', 'Heading');
               }}
               onClick={() => handleToolClick('heading')}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 cursor-pointer ${
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150 cursor-pointer ${
                 toolMode === 'heading'
-                  ? 'bg-[#0d99ff] text-white shadow-[0_0_14px_rgba(13,153,255,0.6)] font-semibold scale-105'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/10 active:scale-95'
+                  ? 'bg-[#0d99ff] text-white shadow-[0_0_10px_rgba(13,153,255,0.4)] font-semibold'
+                  : 'text-zinc-300 hover:text-white hover:bg-white/10 active:scale-95'
               }`}
-              aria-label="Insertar o arrastrar Título"
+              aria-label="Insertar o arrastrar Título (T)"
             >
-              <span className="font-bold text-xs tracking-tight font-sans">A</span>
+              <span className="font-sans font-normal text-base leading-none select-none">A</span>
             </button>
             <div
               className={`absolute ${
                 isDockedTop ? 'top-full mt-2.5' : 'bottom-full mb-2.5'
               } left-1/2 -translate-x-1/2 opacity-0 group-hover/btn:opacity-100 pointer-events-none transition-all duration-150 transform scale-95 group-hover/btn:scale-100 z-50 whitespace-nowrap bg-[#18181b]/95 backdrop-blur-md text-white text-[10px] font-medium px-2 py-1 rounded-md border border-white/10 shadow-xl flex items-center gap-1.5`}
             >
-              <span>Insertar o arrastrar Título</span>
+              <span>Título (Clic para colocar o arrastra)</span>
               <kbd className="px-1 py-0.2 rounded bg-white/15 text-zinc-300 font-mono text-[9px]">T</kbd>
             </div>
           </div>
 
-          {/* Párrafo / Paragraph (≡) */}
+          {/* Párrafo / Bloque de texto (Líneas con T) */}
           <div className="relative group/btn">
             <button
               type="button"
@@ -589,188 +651,196 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
                 e.dataTransfer.setData('text/plain', 'Paragraph');
               }}
               onClick={() => handleToolClick('paragraph')}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 cursor-pointer ${
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150 cursor-pointer ${
                 toolMode === 'paragraph'
-                  ? 'bg-[#0d99ff] text-white shadow-[0_0_14px_rgba(13,153,255,0.6)] font-semibold scale-105'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/10 active:scale-95'
+                  ? 'bg-[#0d99ff] text-white shadow-[0_0_10px_rgba(13,153,255,0.4)] font-semibold'
+                  : 'text-zinc-300 hover:text-white hover:bg-white/10 active:scale-95'
               }`}
-              aria-label="Insertar o arrastrar Párrafo"
+              aria-label="Insertar o arrastrar Párrafo (P)"
             >
-              <AlignLeft className="w-4 h-4" />
+              <ParagraphIcon className="w-4.5 h-4.5" />
             </button>
             <div
               className={`absolute ${
                 isDockedTop ? 'top-full mt-2.5' : 'bottom-full mb-2.5'
               } left-1/2 -translate-x-1/2 opacity-0 group-hover/btn:opacity-100 pointer-events-none transition-all duration-150 transform scale-95 group-hover/btn:scale-100 z-50 whitespace-nowrap bg-[#18181b]/95 backdrop-blur-md text-white text-[10px] font-medium px-2 py-1 rounded-md border border-white/10 shadow-xl flex items-center gap-1.5`}
             >
-              <span>Insertar o arrastrar Párrafo</span>
+              <span>Párrafo (Clic para colocar o arrastra)</span>
               <kbd className="px-1 py-0.2 rounded bg-white/15 text-zinc-300 font-mono text-[9px]">P</kbd>
             </div>
           </div>
         </div>
 
-        {/* Divisor vertical sutil */}
-        <div className="w-px h-5 bg-white/10 mx-1" />
+        {/* ======================================================== */}
+        {/* ISLA 3: Mosaico Cluster de Iconos UI                     */}
+        {/* (Bell, Cart, Ticket, Layers, Pill, Heart, Image)        */}
+        {/* ======================================================== */}
+        <div className="relative group/btn">
+          <button
+            type="button"
+            onClick={() => setIsIconsMenuOpen((prev) => !prev)}
+            className={`h-[38px] px-2.5 rounded-xl flex items-center justify-center transition-all duration-150 cursor-pointer border border-white/[0.04] ${
+              isIconsMenuOpen
+                ? 'bg-[#2f3236] text-white ring-1 ring-[#0d99ff] shadow-[0_0_12px_rgba(13,153,255,0.3)]'
+                : 'bg-[#25272a] text-zinc-300 hover:text-white hover:bg-[#2e3135] active:scale-95'
+            }`}
+            aria-label="Colección de Iconos UI"
+          >
+            {/* Mosaico exacto de 2 filas de mini iconos */}
+            <div className="flex flex-col gap-0.5 justify-center items-center py-0.5 pointer-events-none select-none">
+              <div className="flex items-center gap-1.5">
+                <Bell className="w-2.5 h-2.5 stroke-[1.8]" />
+                <ShoppingCart className="w-2.5 h-2.5 stroke-[1.8]" />
+                <Ticket className="w-2.5 h-2.5 stroke-[1.8]" />
+                <Layers className="w-2.5 h-2.5 stroke-[1.8]" />
+              </div>
+              <div className="flex items-center gap-1.5 pl-3">
+                <span className="w-2.5 h-1.5 rounded-full border border-current inline-block opacity-80" />
+                <Heart className="w-2.5 h-2.5 stroke-[1.8]" />
+                <LucideImage className="w-2.5 h-2.5 stroke-[1.8]" />
+              </div>
+            </div>
+          </button>
+          <div
+            className={`absolute ${
+              isDockedTop ? 'top-full mt-2.5' : 'bottom-full mb-2.5'
+            } left-1/2 -translate-x-1/2 opacity-0 group-hover/btn:opacity-100 pointer-events-none transition-all duration-150 transform scale-95 group-hover/btn:scale-100 z-50 whitespace-nowrap bg-[#18181b]/95 backdrop-blur-md text-white text-[10px] font-medium px-2 py-1 rounded-md border border-white/10 shadow-xl flex items-center gap-1.5`}
+          >
+            <span>Iconos UI y Gráficos</span>
+          </div>
 
-        {/* ======================================================== */}
-        {/* BLOQUE 4: Gráficos y Contenido                           */}
-        {/* ======================================================== */}
-        <div className="flex items-center gap-1">
-          {/* Icons (Icon Set - 🔔 🛒 ♥) */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setIsIconsMenuOpen((prev) => !prev)}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 ${
-                isIconsMenuOpen
-                  ? 'bg-violet-600 text-white shadow-[0_0_14px_rgba(147,51,234,0.6)] scale-105'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/10 active:scale-95'
-              }`}
-              aria-label="Colección de Iconos UI"
-              title="Colección de Iconos UI"
+          {/* Menú Popover Flotante de Iconos */}
+          {isIconsMenuOpen && (
+            <div
+              data-interactive="true"
+              className={`absolute ${
+                isDockedTop ? 'top-full mt-3' : 'bottom-full mb-3'
+              } left-1/2 -translate-x-1/2 w-80 bg-[#1e1e20]/95 backdrop-blur-2xl border border-white/15 rounded-2xl p-3 shadow-2xl shadow-black/80 z-50 flex flex-col gap-2.5 animate-in fade-in zoom-in-95 duration-150`}
             >
-              <Sparkles className="w-4 h-4 text-amber-300" />
-            </button>
+              {/* Cabecera del popover */}
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-[#0d99ff]" />
+                  <span className="font-semibold text-xs text-white">Iconos UI</span>
+                  <span className="text-[10px] text-zinc-500 font-mono bg-white/5 px-1.5 py-0.5 rounded border border-white/5">
+                    {filteredIcons.length}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsIconsMenuOpen(false)}
+                  className="p-1 rounded-md text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
 
-            {/* Menú Flotante de Iconos (Pop-up encima/debajo del toolbox) */}
-            {isIconsMenuOpen && (
-              <div
-                data-interactive="true"
-                className={`absolute ${
-                  isDockedTop ? 'top-full mt-3' : 'bottom-full mb-3'
-                } left-1/2 -translate-x-1/2 w-80 bg-[#1e1e1e]/95 backdrop-blur-2xl border border-white/15 rounded-2xl p-3 shadow-2xl shadow-black/80 z-50 flex flex-col gap-2.5 animate-in fade-in zoom-in-95 duration-150`}
-              >
-                {/* Cabecera del popover */}
-                <div className="flex items-center justify-between px-1">
-                  <div className="flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                    <span className="font-semibold text-xs text-white">Iconos UI</span>
-                    <span className="text-[10px] text-zinc-500 font-mono bg-white/5 px-1.5 py-0.5 rounded border border-white/5">
-                      {filteredIcons.length}
-                    </span>
-                  </div>
+              {/* Buscador de iconos */}
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-zinc-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar iconos..."
+                  value={iconSearchQuery}
+                  onChange={(e) => setIconSearchQuery(e.target.value)}
+                  className="w-full bg-[#141416] border border-white/10 rounded-lg pl-8 pr-7 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#0d99ff] focus:ring-1 focus:ring-[#0d99ff] transition-all"
+                  autoFocus
+                />
+                {iconSearchQuery && (
                   <button
                     type="button"
-                    onClick={() => setIsIconsMenuOpen(false)}
-                    className="p-1 rounded-md text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+                    onClick={() => setIconSearchQuery('')}
+                    className="absolute right-2 top-2 p-0.5 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-700 transition-colors"
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <X className="w-3 h-3" />
                   </button>
-                </div>
-
-                {/* Buscador de iconos */}
-                <div className="relative">
-                  <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-zinc-400" />
-                  <input
-                    type="text"
-                    placeholder="Buscar iconos..."
-                    value={iconSearchQuery}
-                    onChange={(e) => setIconSearchQuery(e.target.value)}
-                    className="w-full bg-[#141416] border border-white/10 rounded-lg pl-8 pr-7 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#0d99ff] focus:ring-1 focus:ring-[#0d99ff] transition-all"
-                    autoFocus
-                  />
-                  {iconSearchQuery && (
-                    <button
-                      type="button"
-                      onClick={() => setIconSearchQuery('')}
-                      className="absolute right-2 top-2 p-0.5 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-700 transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  )}
-                </div>
-
-                {/* Grid de iconos */}
-                <div className="grid grid-cols-4 gap-1.5 max-h-56 overflow-y-auto pr-0.5 scrollbar-thin">
-                  {filteredIcons.length === 0 ? (
-                    <div className="col-span-4 p-4 text-center text-xs text-zinc-500">
-                      No se encontraron iconos
-                    </div>
-                  ) : (
-                    filteredIcons.map((item) => {
-                      const IconComp = item.icon;
-                      return (
-                        <button
-                          key={item.name}
-                          type="button"
-                          draggable={true}
-                          onDragStart={(e) => {
-                            e.dataTransfer.effectAllowed = 'copy';
-                            e.dataTransfer.setData(
-                              'application/json',
-                              JSON.stringify({
-                                sourceType: 'catalog',
-                                componentType: 'svg_icon',
-                                componentName: 'Icon',
-                                props: {
-                                  iconName: `lucide:${item.name.toLowerCase()}`,
-                                  label: item.label,
-                                },
-                              })
-                            );
-                            e.dataTransfer.setData('text/plain', item.name);
-                          }}
-                          onClick={() => handleSelectIcon(item.name, item.label)}
-                          className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-[#0d99ff]/20 hover:border-[#0d99ff]/50 border border-transparent transition-all group/icon text-zinc-300 hover:text-white cursor-pointer"
-                          title={`Insertar o arrastrar ${item.label}`}
-                        >
-                          <IconComp className="w-5 h-5 group-hover/icon:scale-110 group-hover/icon:text-[#0d99ff] transition-transform" />
-                          <span className="text-[9px] font-medium truncate w-full text-center mt-1 text-zinc-400 group-hover/icon:text-zinc-200">
-                            {item.label}
-                          </span>
-                        </button>
-                      );
-                    })
-                  )}
-                </div>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* Image (🖼️) */}
-          <div className="relative group/btn">
-            <button
-              type="button"
-              draggable={true}
-              onDragStart={(e) => {
-                e.dataTransfer.effectAllowed = 'copy';
-                e.dataTransfer.setData(
-                  'application/json',
-                  JSON.stringify({
-                    sourceType: 'catalog',
-                    componentType: 'image',
-                    componentName: 'Image',
+              {/* Grid de iconos */}
+              <div className="grid grid-cols-4 gap-1.5 max-h-56 overflow-y-auto pr-0.5 scrollbar-thin">
+                {filteredIcons.length === 0 ? (
+                  <div className="col-span-4 p-4 text-center text-xs text-zinc-500">
+                    No se encontraron iconos
+                  </div>
+                ) : (
+                  filteredIcons.map((item) => {
+                    const IconComp = item.icon;
+                    return (
+                      <button
+                        key={item.name}
+                        type="button"
+                        draggable={true}
+                        onDragStart={(e) => {
+                          e.dataTransfer.effectAllowed = 'copy';
+                          e.dataTransfer.setData(
+                            'application/json',
+                            JSON.stringify({
+                              sourceType: 'catalog',
+                              componentType: 'svg_icon',
+                              componentName: 'Icon',
+                              props: {
+                                iconName: `lucide:${item.name.toLowerCase()}`,
+                                label: item.label,
+                              },
+                            })
+                          );
+                          e.dataTransfer.setData('text/plain', item.name);
+                        }}
+                        onClick={() => handleSelectIcon(item.name, item.label)}
+                        className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-[#0d99ff]/20 hover:border-[#0d99ff]/50 border border-transparent transition-all group/icon text-zinc-300 hover:text-white cursor-pointer"
+                        title={`Insertar o arrastrar ${item.label}`}
+                      >
+                        <IconComp className="w-5 h-5 group-hover/icon:scale-110 group-hover/icon:text-[#0d99ff] transition-transform" />
+                        <span className="text-[9px] font-medium truncate w-full text-center mt-1 text-zinc-400 group-hover/icon:text-zinc-200">
+                          {item.label}
+                        </span>
+                      </button>
+                    );
                   })
-                );
-                e.dataTransfer.setData('text/plain', 'Image');
-              }}
-              onClick={() => handleToolClick('image')}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 cursor-pointer ${
-                toolMode === 'image'
-                  ? 'bg-[#0d99ff] text-white shadow-[0_0_14px_rgba(13,153,255,0.6)] font-semibold scale-105'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/10 active:scale-95'
-              }`}
-              aria-label="Insertar o arrastrar Imagen"
-            >
-              <ImageIcon className="w-4 h-4" />
-            </button>
-            <div
-              className={`absolute ${
-                isDockedTop ? 'top-full mt-2.5' : 'bottom-full mb-2.5'
-              } left-1/2 -translate-x-1/2 opacity-0 group-hover/btn:opacity-100 pointer-events-none transition-all duration-150 transform scale-95 group-hover/btn:scale-100 z-50 whitespace-nowrap bg-[#18181b]/95 backdrop-blur-md text-white text-[10px] font-medium px-2 py-1 rounded-md border border-white/10 shadow-xl flex items-center gap-1.5`}
-            >
-              <span>Insertar o arrastrar Imagen</span>
-              <kbd className="px-1 py-0.2 rounded bg-white/15 text-zinc-300 font-mono text-[9px]">I</kbd>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* Agarradera de puntos derecha (Drag Handle) */}
-        <div
-          className="flex items-center justify-center pl-1.5 pr-1 py-1 text-zinc-500 hover:text-zinc-200 cursor-grab active:cursor-grabbing select-none"
-          title="Arrastra para mover la barra flotante"
-        >
-          <GripVertical className="w-4 h-4 opacity-60 hover:opacity-100 transition-opacity" />
+        {/* ======================================================== */}
+        {/* ISLA 4: Herramienta de Imagen (Multimedia)               */}
+        {/* ======================================================== */}
+        <div className="relative group/btn">
+          <button
+            type="button"
+            draggable={true}
+            onDragStart={(e) => {
+              e.dataTransfer.effectAllowed = 'copy';
+              e.dataTransfer.setData(
+                'application/json',
+                JSON.stringify({
+                  sourceType: 'catalog',
+                  componentType: 'image',
+                  componentName: 'Image',
+                })
+              );
+              e.dataTransfer.setData('text/plain', 'Image');
+            }}
+            onClick={() => handleToolClick('image')}
+            className={`w-11 h-[38px] rounded-xl flex items-center justify-center transition-all duration-150 cursor-pointer border border-white/[0.04] ${
+              toolMode === 'image'
+                ? 'bg-[#0d99ff] text-white shadow-[0_0_14px_rgba(13,153,255,0.5)] font-semibold'
+                : 'bg-[#25272a] text-zinc-300 hover:text-white hover:bg-[#2e3135] active:scale-95'
+            }`}
+            aria-label="Insertar o arrastrar Imagen (I)"
+          >
+            <PhotoImageIcon className="w-5 h-5" />
+          </button>
+          <div
+            className={`absolute ${
+              isDockedTop ? 'top-full mt-2.5' : 'bottom-full mb-2.5'
+            } left-1/2 -translate-x-1/2 opacity-0 group-hover/btn:opacity-100 pointer-events-none transition-all duration-150 transform scale-95 group-hover/btn:scale-100 z-50 whitespace-nowrap bg-[#18181b]/95 backdrop-blur-md text-white text-[10px] font-medium px-2 py-1 rounded-md border border-white/10 shadow-xl flex items-center gap-1.5`}
+          >
+            <span>Imagen (Clic para colocar o arrastra)</span>
+            <kbd className="px-1 py-0.2 rounded bg-white/15 text-zinc-300 font-mono text-[9px]">I</kbd>
+          </div>
         </div>
       </div>
     </>

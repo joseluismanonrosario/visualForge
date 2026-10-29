@@ -165,13 +165,16 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
   const renderChildren = () => {
     if (!node.children || node.children.length === 0) {
       if (node.isContainer && !isPreviewMode && !isHandMode) {
+        const isForm = props.containerType === 'form' || node.type === 'form';
         return (
           <div
             onDragOver={handleDragOver}
             onDrop={handleDrop}
-            className="w-full py-4 border border-dashed border-zinc-700/80 hover:border-violet-500/80 rounded-md flex items-center justify-center text-zinc-500 hover:text-violet-400 text-xs select-none transition-colors"
+            className="w-full py-6 border border-dashed border-zinc-700/80 hover:border-[#0d99ff]/80 rounded-md flex items-center justify-center text-zinc-500 hover:text-[#0d99ff] text-xs select-none transition-colors"
           >
-            Arrastra componentes aquí
+            {isForm
+              ? 'Formulario vacío — Arrastra campos o botones aquí'
+              : 'Contenedor vacío — Arrastra componentes aquí'}
           </div>
         );
       }
@@ -205,10 +208,35 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
       // 1. LAYOUT & CONTAINERS
       // ==========================================
       case 'container':
+      case 'form':
       case 'box':
       case 'stack':
       case 'columns':
-      case 'layout_splitter':
+      case 'layout_splitter': {
+        const isForm = props.containerType === 'form' || node.type === 'form';
+        const ContainerTag = isForm ? 'form' : 'div';
+        const formProps = isForm
+          ? {
+              action: props.action || '#',
+              method: props.method || 'POST',
+              onSubmit: (e: React.FormEvent) => e.preventDefault(),
+            }
+          : {};
+
+        return (
+          <ContainerTag
+            id={node.id}
+            style={style}
+            onClick={handleClick}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+            {...formProps}
+            className={`${selectionClasses} ${dropClasses} transition-all`}
+          >
+            {renderChildren()}
+          </ContainerTag>
+        );
+      }
       // ==========================================
       // IOT & DATA VISUALIZATION DASHBOARD
       // ==========================================
@@ -535,27 +563,18 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
       }
 
       case 'custom_scrollbar':
-      case 'form': {
-        const ContainerTag = node.type === 'form' ? 'form' : 'div';
-        const formProps = node.type === 'form' ? {
-          action: props.action || '#',
-          method: props.method || 'POST',
-          onSubmit: (e: React.FormEvent) => e.preventDefault(),
-        } : {};
         return (
-          <ContainerTag
+          <div
             id={node.id}
             style={style}
             onClick={handleClick}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
-            {...formProps}
             className={`${selectionClasses} ${dropClasses} transition-all`}
           >
             {renderChildren()}
-          </ContainerTag>
+          </div>
         );
-      }
 
       case 'grid':
         return (
@@ -674,6 +693,7 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
         const size = props.size || 'md';
         const disabled = Boolean(props.disabled || props.isLoading);
         const isActive = Boolean(props.isActive);
+        const buttonType = (props.buttonType || 'button') as 'button' | 'submit' | 'reset';
 
         let variantClasses = 'bg-[#0d99ff] hover:bg-blue-600 text-white';
         if (variant === 'secondary') {
@@ -698,13 +718,15 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
           iconSize = 18;
         }
 
-        const iconPosition = props.iconPosition || 'left';
-        const hasIcon = Boolean(props.iconName);
+        const leftIcon = props.iconLeft || (props.iconPosition === 'left' ? props.iconName : undefined);
+        const rightIcon = props.iconRight || (props.iconPosition === 'right' ? props.iconName : undefined);
+        const hasLeftIcon = Boolean(leftIcon);
+        const hasRightIcon = Boolean(rightIcon);
 
         return (
           <button
             id={node.id}
-            type="button"
+            type={buttonType}
             disabled={disabled}
             style={style}
             onClick={handleClick}
@@ -717,19 +739,18 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
             }`}
           >
             {props.isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-            {!props.isLoading && hasIcon && iconPosition === 'left' && (
-              <SvgIconRenderer iconId={props.iconName} size={iconSize} stroke="currentColor" fill="none" />
+            {!props.isLoading && hasLeftIcon && leftIcon && (
+              <SvgIconRenderer iconId={leftIcon} size={iconSize} stroke="currentColor" fill="none" />
             )}
-            <span>{props.label || 'Button'}</span>
-            {!props.isLoading && hasIcon && iconPosition === 'right' && (
-              <SvgIconRenderer iconId={props.iconName} size={iconSize} stroke="currentColor" fill="none" />
+            <span>{props.label || props.text || 'Botón'}</span>
+            {!props.isLoading && hasRightIcon && rightIcon && (
+              <SvgIconRenderer iconId={rightIcon} size={iconSize} stroke="currentColor" fill="none" />
             )}
             {props.gpio?.enabled && (
               <span className="ml-1 px-1 py-0.2 rounded bg-black/40 text-[9px] font-mono text-emerald-300">
                 GPIO {props.gpio.pin}
               </span>
             )}
-            {renderChildren()}
           </button>
         );
       }
@@ -757,16 +778,26 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
         const inputType = props.inputType || props.type || 'text';
         const hasError = Boolean(props.hasError);
         const disabled = Boolean(props.disabled);
+        const inputId = props.id || `field_${node.id}`;
+        const hasLabel = props.hasLabel !== false && Boolean(props.label);
+        const labelPosition = props.labelPosition || 'top';
 
-        return (
-          <div id={node.id} onClick={handleClick} className={`${selectionClasses} space-y-1 w-full`}>
-            {props.label && (
-              <label className="block text-xs font-medium text-zinc-300">
-                {props.label}
-                {props.required && <span className="text-red-400 ml-0.5">*</span>}
-              </label>
-            )}
+        const labelElement = hasLabel ? (
+          <label
+            htmlFor={inputId}
+            className={`text-xs font-medium text-zinc-300 select-none ${
+              labelPosition === 'left' || labelPosition === 'right' ? 'shrink-0' : 'block'
+            }`}
+          >
+            {props.label}
+            {props.required && <span className="text-red-400 ml-0.5">*</span>}
+          </label>
+        ) : null;
+
+        const inputElement = (
+          <div className={labelPosition === 'left' || labelPosition === 'right' ? 'flex-1 w-full' : 'w-full'}>
             <input
+              id={inputId}
               type={inputType}
               placeholder={props.placeholder || ''}
               defaultValue={props.value || undefined}
@@ -789,6 +820,30 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
                 <AlertCircle className="w-3 h-3 shrink-0" />
                 <span>{props.errorMessage}</span>
               </p>
+            )}
+          </div>
+        );
+
+        let layoutClass = 'space-y-1 w-full';
+        if (hasLabel) {
+          if (labelPosition === 'bottom') layoutClass = 'flex flex-col-reverse gap-1.5 w-full';
+          else if (labelPosition === 'left') layoutClass = 'flex flex-row items-center gap-3 w-full';
+          else if (labelPosition === 'right') layoutClass = 'flex flex-row-reverse items-center justify-end gap-3 w-full';
+          else layoutClass = 'flex flex-col gap-1.5 w-full';
+        }
+
+        return (
+          <div id={node.id} onClick={handleClick} className={`${selectionClasses} ${layoutClass}`}>
+            {labelPosition === 'bottom' || labelPosition === 'right' ? (
+              <>
+                {inputElement}
+                {labelElement}
+              </>
+            ) : (
+              <>
+                {labelElement}
+                {inputElement}
+              </>
             )}
           </div>
         );
@@ -870,34 +925,74 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
       case 'radio':
       case 'radio_group': {
         const disabled = Boolean(props.disabled);
+        const inputId = props.id || `field_${node.id}`;
+        const hasLabel = props.hasLabel !== false && Boolean(props.label);
+        const labelPosition = props.labelPosition || 'top';
         const options = Array.isArray(props.options)
           ? props.options
           : typeof props.options === 'string'
           ? props.options.split(',').map((s: string) => s.trim())
-          : ['Opción 1', 'Opción 2'];
+          : ['Opción A', 'Opción B', 'Opción C'];
+
+        const labelElement = hasLabel ? (
+          <label
+            htmlFor={`${inputId}_opt_0`}
+            className={`text-xs font-medium text-zinc-300 select-none ${
+              labelPosition === 'left' || labelPosition === 'right' ? 'shrink-0 self-start mt-0.5' : 'block mb-1'
+            }`}
+          >
+            {props.label}
+          </label>
+        ) : null;
+
+        const optionsElement = (
+          <div className={`space-y-1.5 ${labelPosition === 'left' || labelPosition === 'right' ? 'flex-1' : ''}`}>
+            {options.map((opt: string, i: number) => {
+              const optId = `${inputId}_opt_${i}`;
+              return (
+                <label
+                  key={i}
+                  htmlFor={optId}
+                  className={`flex items-center gap-2 text-xs text-zinc-300 ${
+                    disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                  }`}
+                >
+                  <input
+                    id={optId}
+                    type="radio"
+                    name={props.name || `radio_${node.id}`}
+                    disabled={disabled || !isPreviewMode}
+                    defaultChecked={props.value ? props.value === opt : i === 0}
+                    className="accent-[#0d99ff]"
+                  />
+                  <span>{opt}</span>
+                </label>
+              );
+            })}
+          </div>
+        );
+
+        let layoutClass = 'space-y-1.5';
+        if (hasLabel) {
+          if (labelPosition === 'bottom') layoutClass = 'flex flex-col-reverse gap-1.5';
+          else if (labelPosition === 'left') layoutClass = 'flex flex-row gap-3';
+          else if (labelPosition === 'right') layoutClass = 'flex flex-row-reverse justify-end gap-3';
+          else layoutClass = 'flex flex-col gap-1.5';
+        }
 
         return (
-          <div id={node.id} onClick={handleClick} className={`${selectionClasses} space-y-1.5`}>
-            {props.label && (
-              <span className="block text-xs font-medium text-zinc-300 mb-1">{props.label}</span>
+          <div id={node.id} onClick={handleClick} className={`${selectionClasses} ${layoutClass}`}>
+            {labelPosition === 'bottom' || labelPosition === 'right' ? (
+              <>
+                {optionsElement}
+                {labelElement}
+              </>
+            ) : (
+              <>
+                {labelElement}
+                {optionsElement}
+              </>
             )}
-            {options.map((opt: string, i: number) => (
-              <label
-                key={i}
-                className={`flex items-center gap-2 text-xs text-zinc-300 ${
-                  disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name={props.name || `radio_${node.id}`}
-                  disabled={disabled || !isPreviewMode}
-                  defaultChecked={props.value ? props.value === opt : i === 0}
-                  className="accent-[#0d99ff]"
-                />
-                <span>{opt}</span>
-              </label>
-            ))}
           </div>
         );
       }
@@ -907,41 +1002,73 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
       case 'combobox':
       case 'searchbox': {
         const disabled = Boolean(props.disabled);
+        const inputId = props.id || `field_${node.id}`;
+        const hasLabel = props.hasLabel !== false && Boolean(props.label);
+        const labelPosition = props.labelPosition || 'top';
         const options = Array.isArray(props.options)
           ? props.options
           : typeof props.options === 'string'
           ? props.options.split(',').map((s: string) => s.trim())
           : ['Opción 1', 'Opción 2', 'Opción 3'];
 
+        const labelElement = hasLabel ? (
+          <label
+            htmlFor={inputId}
+            className={`text-xs font-medium text-zinc-300 select-none ${
+              labelPosition === 'left' || labelPosition === 'right' ? 'shrink-0' : 'block'
+            }`}
+          >
+            {props.label}
+            {props.required && <span className="text-red-400 ml-0.5">*</span>}
+          </label>
+        ) : null;
+
+        const selectElement = (
+          <div className={`relative ${labelPosition === 'left' || labelPosition === 'right' ? 'flex-1 w-full' : 'w-full'}`}>
+            <select
+              id={inputId}
+              disabled={disabled || !isPreviewMode}
+              style={style}
+              className={`w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none appearance-none pr-8 ${
+                disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+              }`}
+            >
+              {props.placeholder && (
+                <option value="" disabled selected>
+                  {props.placeholder}
+                </option>
+              )}
+              {options.map((o: string, idx: number) => (
+                <option key={idx} value={o} className="bg-zinc-900">
+                  {o}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-2.5 pointer-events-none" />
+          </div>
+        );
+
+        let layoutClass = 'space-y-1 w-full';
+        if (hasLabel) {
+          if (labelPosition === 'bottom') layoutClass = 'flex flex-col-reverse gap-1.5 w-full';
+          else if (labelPosition === 'left') layoutClass = 'flex flex-row items-center gap-3 w-full';
+          else if (labelPosition === 'right') layoutClass = 'flex flex-row-reverse items-center justify-end gap-3 w-full';
+          else layoutClass = 'flex flex-col gap-1.5 w-full';
+        }
+
         return (
-          <div id={node.id} onClick={handleClick} className={`${selectionClasses} space-y-1 w-full`}>
-            {props.label && (
-              <label className="block text-xs font-medium text-zinc-400">
-                {props.label}
-                {props.required && <span className="text-red-400 ml-0.5">*</span>}
-              </label>
+          <div id={node.id} onClick={handleClick} className={`${selectionClasses} ${layoutClass}`}>
+            {labelPosition === 'bottom' || labelPosition === 'right' ? (
+              <>
+                {selectElement}
+                {labelElement}
+              </>
+            ) : (
+              <>
+                {labelElement}
+                {selectElement}
+              </>
             )}
-            <div className="relative">
-              <select
-                disabled={disabled || !isPreviewMode}
-                style={style}
-                className={`w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none appearance-none pr-8 ${
-                  disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                }`}
-              >
-                {props.placeholder && (
-                  <option value="" disabled selected>
-                    {props.placeholder}
-                  </option>
-                )}
-                {options.map((o: string, idx: number) => (
-                  <option key={idx} value={o} className="bg-zinc-900">
-                    {o}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-2.5 pointer-events-none" />
-            </div>
           </div>
         );
       }
@@ -993,16 +1120,26 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
       case 'textarea': {
         const hasError = Boolean(props.hasError);
         const disabled = Boolean(props.disabled);
+        const inputId = props.id || `field_${node.id}`;
+        const hasLabel = props.hasLabel !== false && Boolean(props.label);
+        const labelPosition = props.labelPosition || 'top';
 
-        return (
-          <div id={node.id} onClick={handleClick} className={`${selectionClasses} space-y-1 w-full`}>
-            {props.label && (
-              <label className="block text-xs font-medium text-zinc-300">
-                {props.label}
-                {props.required && <span className="text-red-400 ml-0.5">*</span>}
-              </label>
-            )}
+        const labelElement = hasLabel ? (
+          <label
+            htmlFor={inputId}
+            className={`text-xs font-medium text-zinc-300 select-none ${
+              labelPosition === 'left' || labelPosition === 'right' ? 'shrink-0 self-start mt-1.5' : 'block'
+            }`}
+          >
+            {props.label}
+            {props.required && <span className="text-red-400 ml-0.5">*</span>}
+          </label>
+        ) : null;
+
+        const textareaElement = (
+          <div className={labelPosition === 'left' || labelPosition === 'right' ? 'flex-1 w-full' : 'w-full'}>
             <textarea
+              id={inputId}
               placeholder={props.placeholder || ''}
               defaultValue={props.value || undefined}
               disabled={disabled || !isPreviewMode}
@@ -1025,6 +1162,30 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
                 <AlertCircle className="w-3 h-3 shrink-0" />
                 <span>{props.errorMessage}</span>
               </p>
+            )}
+          </div>
+        );
+
+        let layoutClass = 'space-y-1 w-full';
+        if (hasLabel) {
+          if (labelPosition === 'bottom') layoutClass = 'flex flex-col-reverse gap-1.5 w-full';
+          else if (labelPosition === 'left') layoutClass = 'flex flex-row gap-3 w-full';
+          else if (labelPosition === 'right') layoutClass = 'flex flex-row-reverse justify-end gap-3 w-full';
+          else layoutClass = 'flex flex-col gap-1.5 w-full';
+        }
+
+        return (
+          <div id={node.id} onClick={handleClick} className={`${selectionClasses} ${layoutClass}`}>
+            {labelPosition === 'bottom' || labelPosition === 'right' ? (
+              <>
+                {textareaElement}
+                {labelElement}
+              </>
+            ) : (
+              <>
+                {labelElement}
+                {textareaElement}
+              </>
             )}
           </div>
         );
@@ -1697,7 +1858,6 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
             {hasIcon && iconPosition === 'right' && (
               <SvgIconRenderer iconId={props.iconName} size={iconSize} stroke="currentColor" fill="none" />
             )}
-            {renderChildren()}
           </a>
         );
       }
@@ -1749,15 +1909,30 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
 
       case 'svg_icon':
       case 'fontawesome_icon': {
-        const effectiveSize = props.size || style.fontSize || style.width || 24;
+        const rawSize = props.size || style.fontSize || style.width || 24;
+        const effectiveSize =
+          typeof rawSize === 'number'
+            ? rawSize
+            : parseInt(rawSize.toString().replace('px', '')) || 24;
         const iconIdentifier = props.iconName || props.svgId || props.iconId || 'lucide:rocket';
 
         return (
-          <div id={node.id} onClick={handleClick} className={`${selectionClasses} inline-flex items-center justify-center`} style={style}>
+          <div
+            id={node.id}
+            onClick={handleClick}
+            className={`${selectionClasses} inline-flex items-center justify-center`}
+            style={{
+              ...style,
+              width: `${effectiveSize}px`,
+              height: `${effectiveSize}px`,
+            }}
+          >
             <SvgIconRenderer
               iconId={iconIdentifier}
               rawSvg={props.svgContent}
               size={effectiveSize}
+              width={effectiveSize}
+              height={effectiveSize}
               stroke={style.color || style.stroke || '#0d99ff'}
               fill={style.fill || props.fill || 'none'}
             />

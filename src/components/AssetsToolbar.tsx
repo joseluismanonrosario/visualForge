@@ -17,6 +17,7 @@ import {
   CheckSquare,
   Radio,
   Box,
+  Square,
   Columns,
   LineChart as LineChartIcon,
   BarChart3,
@@ -190,12 +191,9 @@ export const AssetsToolbar: React.FC<AssetsToolbarProps> = ({
       return <ChevronDown className="w-3.5 h-3.5 text-orange-400" />;
     }
 
-    // 15. Box & Container
-    if (type === 'box') {
-      return <Box className="w-3.5 h-3.5 text-blue-400" />;
-    }
+    // 15. Container
     if (type === 'container' || type === 'grid' || type === 'columns' || type === 'stack') {
-      return <Columns className="w-3.5 h-3.5 text-indigo-400" />;
+      return <Square className="w-3.5 h-3.5 text-indigo-400" />;
     }
 
     // 16. Charts

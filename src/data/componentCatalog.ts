@@ -3097,7 +3097,7 @@ export const BASIC_COMPONENTS_CATALOG: ComponentDefinition[] = [
     catalog: 'both',
     library: 'both',
     icon: 'MousePointerClick',
-    isContainer: true,
+    isContainer: false,
     defaultStyle: {
       display: 'inline-flex',
       alignItems: 'center',
@@ -3116,11 +3116,14 @@ export const BASIC_COMPONENTS_CATALOG: ComponentDefinition[] = [
       label: 'Botón de Acción',
       variant: 'primary',
       size: 'md',
+      buttonType: 'button',
       disabled: false,
       isLoading: false,
       isActive: false,
-      iconName: 'lucide:arrow-right',
-      iconPosition: 'right',
+      iconLeft: '',
+      iconRight: '',
+      showIconLeft: false,
+      showIconRight: false,
     },
   },
   {
@@ -3130,7 +3133,7 @@ export const BASIC_COMPONENTS_CATALOG: ComponentDefinition[] = [
     catalog: 'both',
     library: 'both',
     icon: 'Link',
-    isContainer: true,
+    isContainer: false,
     defaultStyle: {
       display: 'inline-flex',
       alignItems: 'center',
@@ -3148,7 +3151,8 @@ export const BASIC_COMPONENTS_CATALOG: ComponentDefinition[] = [
       variant: 'link',
       size: 'md',
       disabled: false,
-      iconPosition: 'right',
+      iconLeft: '',
+      iconRight: '',
     },
   },
 
@@ -3210,29 +3214,6 @@ export const BASIC_COMPONENTS_CATALOG: ComponentDefinition[] = [
   // 5. Form Controls (Entradas de datos)
   // ==================================================================
   {
-    type: 'form',
-    name: 'Form (Formulario)',
-    category: 'Form Controls (Entradas de datos)',
-    catalog: 'both',
-    library: 'both',
-    icon: 'FileText',
-    isContainer: true,
-    defaultStyle: {
-      width: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '16px',
-      padding: '16px',
-      borderRadius: '8px',
-      border: '1px solid #27272a',
-      backgroundColor: '#18181b',
-    },
-    defaultProps: {
-      action: '#',
-      method: 'POST',
-    },
-  },
-  {
     type: 'label',
     name: 'Label (Etiqueta)',
     category: 'Form Controls (Entradas de datos)',
@@ -3272,11 +3253,14 @@ export const BASIC_COMPONENTS_CATALOG: ComponentDefinition[] = [
     defaultProps: {
       type: 'text',
       inputType: 'text',
+      hasLabel: true,
       label: 'Campo de Entrada',
+      labelPosition: 'top',
       placeholder: 'Escribe aquí...',
       disabled: false,
       hasError: false,
       errorMessage: 'Este campo es obligatorio',
+      required: false,
     },
   },
   {
@@ -3298,12 +3282,15 @@ export const BASIC_COMPONENTS_CATALOG: ComponentDefinition[] = [
       color: '#ffffff',
     },
     defaultProps: {
+      hasLabel: true,
       label: 'Texto Multilínea',
+      labelPosition: 'top',
       placeholder: 'Escribe una descripción detallada...',
       rows: 3,
       disabled: false,
       hasError: false,
       errorMessage: 'Mensaje inválido',
+      required: false,
     },
   },
   {
@@ -3341,7 +3328,9 @@ export const BASIC_COMPONENTS_CATALOG: ComponentDefinition[] = [
     },
     defaultProps: {
       name: 'radio_group',
+      hasLabel: true,
       label: 'Opción seleccionable',
+      labelPosition: 'top',
       options: ['Opción A', 'Opción B', 'Opción C'],
       value: 'Opción A',
       disabled: false,
@@ -3365,10 +3354,13 @@ export const BASIC_COMPONENTS_CATALOG: ComponentDefinition[] = [
       color: '#ffffff',
     },
     defaultProps: {
+      hasLabel: true,
       label: 'Seleccionar Opción',
+      labelPosition: 'top',
       placeholder: 'Selecciona un elemento...',
       options: ['Opción 1', 'Opción 2', 'Opción 3'],
       disabled: false,
+      required: false,
     },
   },
 
@@ -3376,44 +3368,31 @@ export const BASIC_COMPONENTS_CATALOG: ComponentDefinition[] = [
   // 6. Box / Container (Layout)
   // ==================================================================
   {
-    type: 'box',
-    name: 'Box (Layout)',
-    category: 'Box / Container (Layout)',
-    catalog: 'both',
-    library: 'both',
-    icon: 'Box',
-    isContainer: true,
-    defaultStyle: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '16px',
-      padding: '16px',
-      width: '100%',
-      borderRadius: '8px',
-      backgroundColor: '#18181b',
-      border: '1px solid #27272a',
-    },
-    defaultProps: {
-      label: 'Box Container',
-    },
-  },
-  {
     type: 'container',
     name: 'Container',
     category: 'Box / Container (Layout)',
     catalog: 'both',
     library: 'both',
-    icon: 'Box',
+    icon: 'Square',
     isContainer: true,
     defaultStyle: {
       width: '100%',
-      maxWidth: '1200px',
-      margin: '0 auto',
+      minHeight: '120px',
       padding: '24px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '16px',
+      borderRadius: '8px',
+      border: '1px solid #27272a',
+      backgroundColor: '#18181b',
     },
     defaultProps: {
-      label: 'Contenedor Centrado',
+      label: 'Contenedor',
+      containerType: 'container',
+      action: '#',
+      method: 'POST',
     },
+    defaultChildren: [],
   },
 ];
 

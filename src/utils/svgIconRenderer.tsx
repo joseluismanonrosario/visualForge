@@ -77,6 +77,10 @@ export function customizeSvg(
   const w = options.width ? (typeof options.width === 'number' ? `${options.width}px` : options.width) : '100%';
   const h = options.height ? (typeof options.height === 'number' ? `${options.height}px` : options.height) : '100%';
 
+  // Strip existing width and height on root svg tag to avoid duplicate attributes
+  svg = svg.replace(/<svg([^>]*?)\s+width="[^"]*"/i, '<svg$1');
+  svg = svg.replace(/<svg([^>]*?)\s+height="[^"]*"/i, '<svg$1');
+
   // Inject width and height
   svg = svg.replace(/<svg\s+/i, `<svg width="${w}" height="${h}" `);
 
@@ -126,8 +130,13 @@ export const SvgIconRenderer: React.FC<SvgIconRendererProps> = ({
   className = '',
   style = {},
 }) => {
-  const effectiveWidth = size || width || style.width || style.fontSize || 24;
-  const effectiveHeight = size || height || style.height || style.fontSize || 24;
+  const numSize = size
+    ? typeof size === 'number'
+      ? size
+      : parseInt(size.toString().replace('px', '')) || undefined
+    : undefined;
+  const effectiveWidth = numSize || width || style.width || style.fontSize || 24;
+  const effectiveHeight = numSize || height || style.height || style.fontSize || 24;
   const effectiveStroke = stroke || (style.color as string) || 'currentColor';
   const effectiveFill = fill || (style.fill as string) || 'none';
 

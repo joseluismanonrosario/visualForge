@@ -212,6 +212,7 @@ export const Canvas: React.FC<CanvasProps> = ({
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
   const [dropPosition, setDropPosition] = useState<DropPosition | null>(null);
   const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
+  const [placementMousePos, setPlacementMousePos] = useState<{ x: number; y: number } | null>(null);
 
   // Viewport width calculation
   const getViewportWidth = () => {
@@ -248,6 +249,12 @@ export const Canvas: React.FC<CanvasProps> = ({
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
+    if (['container', 'heading', 'paragraph', 'image'].includes(toolMode)) {
+      setPlacementMousePos({ x: e.clientX, y: e.clientY });
+    } else if (placementMousePos) {
+      setPlacementMousePos(null);
+    }
+
     if (isPanning) {
       e.preventDefault();
       setPan({
@@ -390,6 +397,7 @@ export const Canvas: React.FC<CanvasProps> = ({
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
+      onMouseLeave={() => setPlacementMousePos(null)}
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleCanvasDrop}
       onClick={(e) => {
@@ -560,6 +568,26 @@ export const Canvas: React.FC<CanvasProps> = ({
             {pan.y !== 0 ? `${-pan.y > 0 ? `+${-pan.y}` : -pan.y}px` : ''}
           </span>
         </button>
+      )}
+
+      {/* Floating Cursor Guide in Placement Mode */}
+      {placementMousePos && ['container', 'heading', 'paragraph', 'image'].includes(toolMode) && (
+        <div
+          style={{
+            left: `${placementMousePos.x + 16}px`,
+            top: `${placementMousePos.y + 16}px`,
+          }}
+          className="fixed pointer-events-none z-50 px-2.5 py-1 rounded-full bg-[#0d99ff] text-white text-[11px] font-medium shadow-2xl flex items-center gap-1.5 backdrop-blur-md animate-in fade-in duration-100 whitespace-nowrap select-none"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+          <span>
+            {toolMode === 'container' && '➕ Clic para colocar Contenedor'}
+            {toolMode === 'heading' && '➕ Clic para colocar Título'}
+            {toolMode === 'paragraph' && '➕ Clic para colocar Párrafo'}
+            {toolMode === 'image' && '➕ Clic para colocar Imagen'}
+          </span>
+          <kbd className="bg-black/30 text-white/80 text-[9px] px-1 py-0.2 rounded font-mono ml-0.5">Esc</kbd>
+        </div>
       )}
     </main>
   );

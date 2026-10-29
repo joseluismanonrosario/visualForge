@@ -91,6 +91,7 @@ interface RightSidebarProps {
   projectType: ProjectType;
   onUpdateStyle: (styleUpdates: Record<string, any>) => void;
   onUpdateProps: (propUpdates: Record<string, any>) => void;
+  onUpdateNode?: (updates: { props?: Record<string, any>; style?: Record<string, any>; name?: string }) => void;
   isOpen: boolean;
   setIsOpen: (val: boolean) => void;
 }
@@ -122,6 +123,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   projectType,
   onUpdateStyle,
   onUpdateProps,
+  onUpdateNode,
   isOpen,
   setIsOpen,
 }) => {
@@ -349,12 +351,23 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
     const num = typeof newSize === 'number' ? newSize : parseInt(newSize.toString().replace('px', '')) || 24;
     const clamped = Math.max(8, Math.min(512, num));
     const px = `${clamped}px`;
-    onUpdateProps({ size: clamped });
-    onUpdateStyle({
-      width: px,
-      height: px,
-      fontSize: px,
-    });
+    if (onUpdateNode) {
+      onUpdateNode({
+        props: { size: clamped },
+        style: {
+          width: px,
+          height: px,
+          fontSize: px,
+        },
+      });
+    } else {
+      onUpdateProps({ size: clamped });
+      onUpdateStyle({
+        width: px,
+        height: px,
+        fontSize: px,
+      });
+    }
   };
 
   const getIconRotation = () => {
@@ -1271,10 +1284,34 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                   <label className="text-[10px] font-medium text-zinc-400">Texto del Botón</label>
                   <input
                     type="text"
-                    value={props.label || ''}
-                    onChange={(e) => onUpdateProps({ label: e.target.value })}
+                    value={props.label || props.text || ''}
+                    onChange={(e) => onUpdateProps({ label: e.target.value, text: e.target.value })}
                     className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2 py-1 text-white text-xs focus:outline-none"
                   />
+                </div>
+
+                {/* Button Type Selector */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400 flex items-center justify-between">
+                    <span>Tipo de Botón (HTML type)</span>
+                    <span className="font-mono text-[9px] text-[#0d99ff] uppercase">
+                      {props.buttonType || 'button'}
+                    </span>
+                  </label>
+                  <select
+                    value={props.buttonType || 'button'}
+                    onChange={(e) => onUpdateProps({ buttonType: e.target.value })}
+                    className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  >
+                    <option value="button" className="bg-[#1e1e1e]">Botón Estándar (button)</option>
+                    <option value="submit" className="bg-[#1e1e1e]">Envío de Formulario (submit)</option>
+                    <option value="reset" className="bg-[#1e1e1e]">Restablecer (reset)</option>
+                  </select>
+                  {props.buttonType === 'submit' && (
+                    <p className="text-[10px] text-purple-300 bg-purple-950/30 p-1.5 rounded border border-purple-500/20">
+                      Envía automáticamente el formulario contenedor al activarse.
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
@@ -1345,62 +1382,97 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                   </div>
                 </div>
 
-                {/* Icon in Button */}
+                {/* Left Icon in Button */}
                 <div className="space-y-1.5 pt-1 border-t border-[#383838]">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-zinc-400 font-medium">Icono Integrado</span>
-                    <button
-                      onClick={() => setShowIconModal(true)}
-                      className="text-[10px] text-[#0d99ff] hover:underline"
-                    >
-                      Explorar
-                    </button>
+                    <span className="text-[10px] text-zinc-300 font-medium flex items-center gap-1">
+                      <span>Icono a la Izquierda</span>
+                      {props.iconLeft && <span className="w-1.5 h-1.5 rounded-full bg-[#0d99ff]" />}
+                    </span>
+                    {props.iconLeft && (
+                      <button
+                        onClick={() => onUpdateProps({ iconLeft: '', showIconLeft: false })}
+                        className="text-[10px] text-zinc-400 hover:text-red-400"
+                      >
+                        Quitar
+                      </button>
+                    )}
                   </div>
                   <input
                     type="text"
-                    value={props.iconName || ''}
-                    onChange={(e) => onUpdateProps({ iconName: e.target.value })}
-                    placeholder="ej. lucide:arrow-right"
+                    value={props.iconLeft || ''}
+                    onChange={(e) => onUpdateProps({ iconLeft: e.target.value, showIconLeft: Boolean(e.target.value) })}
+                    placeholder="ej. lucide:plus o lucide:arrow-left"
                     className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2 py-1 text-white text-xs font-mono focus:outline-none"
                   />
                   <div className="flex items-center gap-1 flex-wrap">
                     {[
-                      { id: '', label: 'Sin Icono' },
-                      { id: 'lucide:arrow-right', label: '→' },
-                      { id: 'lucide:sparkles', label: '✨' },
                       { id: 'lucide:plus', label: '+' },
+                      { id: 'lucide:arrow-left', label: '←' },
                       { id: 'lucide:check', label: '✓' },
+                      { id: 'lucide:search', label: '🔍' },
+                      { id: 'lucide:sparkles', label: '✨' },
                     ].map((ic) => (
                       <button
                         key={ic.id}
-                        onClick={() => onUpdateProps({ iconName: ic.id })}
+                        type="button"
+                        onClick={() => onUpdateProps({ iconLeft: ic.id, showIconLeft: true })}
                         className={`px-1.5 py-0.5 rounded text-[10px] border ${
-                          (props.iconName || '') === ic.id
+                          props.iconLeft === ic.id
                             ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
-                            : 'bg-[#252526] text-zinc-400 border-[#383838]'
+                            : 'bg-[#252526] text-zinc-400 border-[#383838] hover:text-white'
                         }`}
                       >
                         {ic.label}
                       </button>
                     ))}
-                    <div className="ml-auto flex items-center bg-[#252526] p-0.5 rounded border border-[#383838]">
+                  </div>
+                </div>
+
+                {/* Right Icon in Button */}
+                <div className="space-y-1.5 pt-1 border-t border-[#383838]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-zinc-300 font-medium flex items-center gap-1">
+                      <span>Icono a la Derecha</span>
+                      {props.iconRight && <span className="w-1.5 h-1.5 rounded-full bg-[#0d99ff]" />}
+                    </span>
+                    {props.iconRight && (
                       <button
-                        onClick={() => onUpdateProps({ iconPosition: 'left' })}
-                        className={`px-1.5 py-0.5 text-[9px] rounded ${
-                          (props.iconPosition || 'left') === 'left' ? 'bg-[#0d99ff] text-white' : 'text-zinc-400'
+                        onClick={() => onUpdateProps({ iconRight: '', showIconRight: false })}
+                        className="text-[10px] text-zinc-400 hover:text-red-400"
+                      >
+                        Quitar
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="text"
+                    value={props.iconRight || ''}
+                    onChange={(e) => onUpdateProps({ iconRight: e.target.value, showIconRight: Boolean(e.target.value) })}
+                    placeholder="ej. lucide:arrow-right o lucide:chevron-right"
+                    className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2 py-1 text-white text-xs font-mono focus:outline-none"
+                  />
+                  <div className="flex items-center gap-1 flex-wrap">
+                    {[
+                      { id: 'lucide:arrow-right', label: '→' },
+                      { id: 'lucide:chevron-right', label: '›' },
+                      { id: 'lucide:external-link', label: '↗' },
+                      { id: 'lucide:download', label: '↓' },
+                      { id: 'lucide:sparkles', label: '✨' },
+                    ].map((ic) => (
+                      <button
+                        key={ic.id}
+                        type="button"
+                        onClick={() => onUpdateProps({ iconRight: ic.id, showIconRight: true })}
+                        className={`px-1.5 py-0.5 rounded text-[10px] border ${
+                          props.iconRight === ic.id
+                            ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                            : 'bg-[#252526] text-zinc-400 border-[#383838] hover:text-white'
                         }`}
                       >
-                        Izq
+                        {ic.label}
                       </button>
-                      <button
-                        onClick={() => onUpdateProps({ iconPosition: 'right' })}
-                        className={`px-1.5 py-0.5 text-[9px] rounded ${
-                          props.iconPosition === 'right' ? 'bg-[#0d99ff] text-white' : 'text-zinc-400'
-                        }`}
-                      >
-                        Der
-                      </button>
-                    </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -1655,10 +1727,62 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
 
             {/* INPUT PROPERTIES */}
             {(selectedNode.type === 'input' || selectedNode.type === 'searchbox') && (
-              <div className="space-y-2 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
-                <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-2.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                {/* Control de Etiqueta (Label) y Posición */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-medium text-zinc-300">Mostrar Etiqueta (Label)</span>
+                    <input
+                      type="checkbox"
+                      checked={props.hasLabel !== false}
+                      onChange={(e) => onUpdateProps({ hasLabel: e.target.checked })}
+                      className="accent-[#0d99ff]"
+                    />
+                  </div>
+
+                  {props.hasLabel !== false && (
+                    <>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-medium text-zinc-400">Texto del Label</label>
+                        <input
+                          type="text"
+                          value={props.label || ''}
+                          onChange={(e) => onUpdateProps({ label: e.target.value })}
+                          placeholder="Nombre del campo"
+                          className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-medium text-zinc-400">Posición del Label</label>
+                        <div className="grid grid-cols-4 gap-1">
+                          {[
+                            { id: 'top', label: 'Arriba' },
+                            { id: 'bottom', label: 'Abajo' },
+                            { id: 'left', label: 'Izq' },
+                            { id: 'right', label: 'Der' },
+                          ].map((pos) => (
+                            <button
+                              key={pos.id}
+                              type="button"
+                              onClick={() => onUpdateProps({ labelPosition: pos.id })}
+                              className={`py-1 text-[10px] rounded border transition-colors ${
+                                (props.labelPosition || 'top') === pos.id
+                                  ? 'bg-[#0d99ff] text-white border-[#0d99ff] font-semibold'
+                                  : 'bg-[#252526] text-zinc-400 border-[#383838] hover:bg-[#323232]'
+                              }`}
+                            >
+                              {pos.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div className="space-y-2 pt-1 border-t border-[#383838]">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-medium text-zinc-400">Tipo de Entrada</label>
+                    <label className="text-[10px] font-medium text-zinc-400">Tipo de Entrada (Type)</label>
                     <select
                       value={props.inputType || props.type || 'text'}
                       onChange={(e) => onUpdateProps({ inputType: e.target.value, type: e.target.value })}
@@ -1672,36 +1796,26 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                       <option value="file" className="bg-[#1e1e1e]">Archivo (file)</option>
                     </select>
                   </div>
+
                   <div className="space-y-1">
-                    <label className="text-[10px] font-medium text-zinc-400">Etiqueta (Label)</label>
+                    <label className="text-[10px] font-medium text-zinc-400">Placeholder</label>
                     <input
                       type="text"
-                      value={props.label || ''}
-                      onChange={(e) => onUpdateProps({ label: e.target.value })}
-                      placeholder="Nombre del campo"
+                      value={props.placeholder || ''}
+                      onChange={(e) => onUpdateProps({ placeholder: e.target.value })}
                       className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
                     />
                   </div>
-                </div>
 
-                <div className="space-y-1">
-                  <label className="text-[10px] font-medium text-zinc-400">Placeholder</label>
-                  <input
-                    type="text"
-                    value={props.placeholder || ''}
-                    onChange={(e) => onUpdateProps({ placeholder: e.target.value })}
-                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] font-medium text-zinc-400">Valor Inicial</label>
-                  <input
-                    type="text"
-                    value={props.value || ''}
-                    onChange={(e) => onUpdateProps({ value: e.target.value })}
-                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
-                  />
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Valor Inicial</label>
+                    <input
+                      type="text"
+                      value={props.value || ''}
+                      onChange={(e) => onUpdateProps({ value: e.target.value })}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                    />
+                  </div>
                 </div>
 
                 {/* State Toggles: Error & Disabled */}
@@ -1748,29 +1862,69 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
 
             {/* TEXTAREA PROPERTIES */}
             {selectedNode.type === 'textarea' && (
-              <div className="space-y-2 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-medium text-zinc-400">Etiqueta</label>
+              <div className="space-y-2.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                {/* Control de Etiqueta (Label) y Posición */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-medium text-zinc-300">Mostrar Etiqueta (Label)</span>
                     <input
-                      type="text"
-                      value={props.label || ''}
-                      onChange={(e) => onUpdateProps({ label: e.target.value })}
-                      placeholder="Mensaje"
-                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                      type="checkbox"
+                      checked={props.hasLabel !== false}
+                      onChange={(e) => onUpdateProps({ hasLabel: e.target.checked })}
+                      className="accent-[#0d99ff]"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-medium text-zinc-400">Filas (Rows)</label>
-                    <input
-                      type="number"
-                      value={props.rows || 3}
-                      onChange={(e) => onUpdateProps({ rows: Number(e.target.value) })}
-                      min={1}
-                      max={12}
-                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
-                    />
-                  </div>
+
+                  {props.hasLabel !== false && (
+                    <>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-medium text-zinc-400">Texto del Label</label>
+                        <input
+                          type="text"
+                          value={props.label || ''}
+                          onChange={(e) => onUpdateProps({ label: e.target.value })}
+                          placeholder="Etiqueta descriptiva"
+                          className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-medium text-zinc-400">Posición del Label</label>
+                        <div className="grid grid-cols-4 gap-1">
+                          {[
+                            { id: 'top', label: 'Arriba' },
+                            { id: 'bottom', label: 'Abajo' },
+                            { id: 'left', label: 'Izq' },
+                            { id: 'right', label: 'Der' },
+                          ].map((pos) => (
+                            <button
+                              key={pos.id}
+                              type="button"
+                              onClick={() => onUpdateProps({ labelPosition: pos.id })}
+                              className={`py-1 text-[10px] rounded border transition-colors ${
+                                (props.labelPosition || 'top') === pos.id
+                                  ? 'bg-[#0d99ff] text-white border-[#0d99ff] font-semibold'
+                                  : 'bg-[#252526] text-zinc-400 border-[#383838] hover:bg-[#323232]'
+                              }`}
+                            >
+                              {pos.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div className="space-y-1 pt-1 border-t border-[#383838]">
+                  <label className="text-[10px] font-medium text-zinc-400">Filas (Rows)</label>
+                  <input
+                    type="number"
+                    value={props.rows || 3}
+                    onChange={(e) => onUpdateProps({ rows: Number(e.target.value) })}
+                    min={1}
+                    max={12}
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-medium text-zinc-400">Placeholder</label>
@@ -1848,18 +2002,60 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
 
             {/* RADIO PROPERTIES */}
             {(selectedNode.type === 'radio' || selectedNode.type === 'radio_group') && (
-              <div className="space-y-2 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-medium text-zinc-400">Etiqueta de Grupo</label>
-                  <input
-                    type="text"
-                    value={props.label || ''}
-                    onChange={(e) => onUpdateProps({ label: e.target.value })}
-                    placeholder="Elige una opción"
-                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
-                  />
+              <div className="space-y-2.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                {/* Control de Etiqueta (Label) y Posición */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-medium text-zinc-300">Mostrar Etiqueta de Grupo</span>
+                    <input
+                      type="checkbox"
+                      checked={props.hasLabel !== false}
+                      onChange={(e) => onUpdateProps({ hasLabel: e.target.checked })}
+                      className="accent-[#0d99ff]"
+                    />
+                  </div>
+
+                  {props.hasLabel !== false && (
+                    <>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-medium text-zinc-400">Texto de Etiqueta</label>
+                        <input
+                          type="text"
+                          value={props.label || ''}
+                          onChange={(e) => onUpdateProps({ label: e.target.value })}
+                          placeholder="Elige una opción"
+                          className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-medium text-zinc-400">Posición de Etiqueta</label>
+                        <div className="grid grid-cols-4 gap-1">
+                          {[
+                            { id: 'top', label: 'Arriba' },
+                            { id: 'bottom', label: 'Abajo' },
+                            { id: 'left', label: 'Izq' },
+                            { id: 'right', label: 'Der' },
+                          ].map((pos) => (
+                            <button
+                              key={pos.id}
+                              type="button"
+                              onClick={() => onUpdateProps({ labelPosition: pos.id })}
+                              className={`py-1 text-[10px] rounded border transition-colors ${
+                                (props.labelPosition || 'top') === pos.id
+                                  ? 'bg-[#0d99ff] text-white border-[#0d99ff] font-semibold'
+                                  : 'bg-[#252526] text-zinc-400 border-[#383838] hover:bg-[#323232]'
+                              }`}
+                            >
+                              {pos.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
-                <div className="space-y-1">
+
+                <div className="space-y-1 pt-1 border-t border-[#383838]">
                   <label className="text-[10px] font-medium text-zinc-400">Nombre de Grupo (name)</label>
                   <input
                     type="text"
@@ -1869,25 +2065,75 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                     className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs font-mono focus:outline-none"
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-medium text-zinc-400">Opciones (separadas por coma)</label>
-                  <input
-                    type="text"
-                    value={
-                      Array.isArray(props.options)
-                        ? props.options.join(', ')
-                        : typeof props.options === 'string'
-                        ? props.options
-                        : 'Opción 1, Opción 2'
-                    }
-                    onChange={(e) =>
-                      onUpdateProps({
-                        options: e.target.value.split(',').map((s) => s.trim()),
-                      })
-                    }
-                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
-                  />
+
+                {/* Administrador de Opciones dinámico (Agregar / Eliminar) */}
+                <div className="space-y-1.5 pt-1 border-t border-[#383838]">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-medium text-zinc-300">
+                      Opciones ({Array.isArray(props.options) ? props.options.length : 0})
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const currentOpts = Array.isArray(props.options)
+                          ? [...props.options]
+                          : typeof props.options === 'string'
+                          ? props.options.split(',').map((s) => s.trim())
+                          : ['Opción A', 'Opción B'];
+                        const newOpt = `Opción ${String.fromCharCode(65 + currentOpts.length)}`;
+                        onUpdateProps({ options: [...currentOpts, newOpt] });
+                      }}
+                      className="text-[10px] text-[#0d99ff] hover:underline flex items-center gap-0.5"
+                    >
+                      + Añadir opción
+                    </button>
+                  </div>
+
+                  <div className="space-y-1 max-h-48 overflow-y-auto pr-0.5">
+                    {(Array.isArray(props.options)
+                      ? props.options
+                      : typeof props.options === 'string'
+                      ? props.options.split(',').map((s) => s.trim())
+                      : ['Opción A', 'Opción B']
+                    ).map((opt: string, idx: number) => (
+                      <div key={idx} className="flex items-center gap-1">
+                        <input
+                          type="text"
+                          value={opt}
+                          onChange={(e) => {
+                            const currentOpts = Array.isArray(props.options)
+                              ? [...props.options]
+                              : typeof props.options === 'string'
+                              ? props.options.split(',').map((s) => s.trim())
+                              : ['Opción A', 'Opción B'];
+                            currentOpts[idx] = e.target.value;
+                            onUpdateProps({ options: currentOpts });
+                          }}
+                          className="flex-1 bg-[#252526] border border-[#383838] rounded px-2 py-0.5 text-white text-xs focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          title="Eliminar opción"
+                          onClick={() => {
+                            const currentOpts = Array.isArray(props.options)
+                              ? [...props.options]
+                              : typeof props.options === 'string'
+                              ? props.options.split(',').map((s) => s.trim())
+                              : ['Opción A', 'Opción B'];
+                            if (currentOpts.length > 1) {
+                              currentOpts.splice(idx, 1);
+                              onUpdateProps({ options: currentOpts });
+                            }
+                          }}
+                          className="p-1 rounded text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+
                 <div className="flex items-center justify-between pt-1 border-t border-[#383838]">
                   <span className="text-[10px] text-zinc-400">Deshabilitado</span>
                   <input
@@ -1902,18 +2148,60 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
 
             {/* SELECT / COMBOBOX PROPERTIES */}
             {(selectedNode.type === 'select' || selectedNode.type === 'combobox' || selectedNode.type === 'advanced_select') && (
-              <div className="space-y-2 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-medium text-zinc-400">Etiqueta</label>
-                  <input
-                    type="text"
-                    value={props.label || ''}
-                    onChange={(e) => onUpdateProps({ label: e.target.value })}
-                    placeholder="Seleccione..."
-                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
-                  />
+              <div className="space-y-2.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                {/* Control de Etiqueta (Label) y Posición */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-medium text-zinc-300">Mostrar Etiqueta (Label)</span>
+                    <input
+                      type="checkbox"
+                      checked={props.hasLabel !== false}
+                      onChange={(e) => onUpdateProps({ hasLabel: e.target.checked })}
+                      className="accent-[#0d99ff]"
+                    />
+                  </div>
+
+                  {props.hasLabel !== false && (
+                    <>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-medium text-zinc-400">Texto del Label</label>
+                        <input
+                          type="text"
+                          value={props.label || ''}
+                          onChange={(e) => onUpdateProps({ label: e.target.value })}
+                          placeholder="Seleccionar Opción"
+                          className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-medium text-zinc-400">Posición del Label</label>
+                        <div className="grid grid-cols-4 gap-1">
+                          {[
+                            { id: 'top', label: 'Arriba' },
+                            { id: 'bottom', label: 'Abajo' },
+                            { id: 'left', label: 'Izq' },
+                            { id: 'right', label: 'Der' },
+                          ].map((pos) => (
+                            <button
+                              key={pos.id}
+                              type="button"
+                              onClick={() => onUpdateProps({ labelPosition: pos.id })}
+                              className={`py-1 text-[10px] rounded border transition-colors ${
+                                (props.labelPosition || 'top') === pos.id
+                                  ? 'bg-[#0d99ff] text-white border-[#0d99ff] font-semibold'
+                                  : 'bg-[#252526] text-zinc-400 border-[#383838] hover:bg-[#323232]'
+                              }`}
+                            >
+                              {pos.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
-                <div className="space-y-1">
+
+                <div className="space-y-1 pt-1 border-t border-[#383838]">
                   <label className="text-[10px] font-medium text-zinc-400">Placeholder</label>
                   <input
                     type="text"
@@ -1922,25 +2210,75 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                     className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-medium text-zinc-400">Opciones (separadas por coma)</label>
-                  <textarea
-                    rows={2}
-                    value={
-                      Array.isArray(props.options)
-                        ? props.options.join(', ')
-                        : typeof props.options === 'string'
-                        ? props.options
-                        : 'Opción 1, Opción 2, Opción 3'
-                    }
-                    onChange={(e) =>
-                      onUpdateProps({
-                        options: e.target.value.split(',').map((s) => s.trim()),
-                      })
-                    }
-                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none resize-none"
-                  />
+
+                {/* Administrador de Opciones dinámico (Agregar / Eliminar) */}
+                <div className="space-y-1.5 pt-1 border-t border-[#383838]">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-medium text-zinc-300">
+                      Opciones ({Array.isArray(props.options) ? props.options.length : 0})
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const currentOpts = Array.isArray(props.options)
+                          ? [...props.options]
+                          : typeof props.options === 'string'
+                          ? props.options.split(',').map((s) => s.trim())
+                          : ['Opción 1', 'Opción 2', 'Opción 3'];
+                        const newOpt = `Opción ${currentOpts.length + 1}`;
+                        onUpdateProps({ options: [...currentOpts, newOpt] });
+                      }}
+                      className="text-[10px] text-[#0d99ff] hover:underline flex items-center gap-0.5"
+                    >
+                      + Añadir opción
+                    </button>
+                  </div>
+
+                  <div className="space-y-1 max-h-48 overflow-y-auto pr-0.5">
+                    {(Array.isArray(props.options)
+                      ? props.options
+                      : typeof props.options === 'string'
+                      ? props.options.split(',').map((s) => s.trim())
+                      : ['Opción 1', 'Opción 2', 'Opción 3']
+                    ).map((opt: string, idx: number) => (
+                      <div key={idx} className="flex items-center gap-1">
+                        <input
+                          type="text"
+                          value={opt}
+                          onChange={(e) => {
+                            const currentOpts = Array.isArray(props.options)
+                              ? [...props.options]
+                              : typeof props.options === 'string'
+                              ? props.options.split(',').map((s) => s.trim())
+                              : ['Opción 1', 'Opción 2', 'Opción 3'];
+                            currentOpts[idx] = e.target.value;
+                            onUpdateProps({ options: currentOpts });
+                          }}
+                          className="flex-1 bg-[#252526] border border-[#383838] rounded px-2 py-0.5 text-white text-xs focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          title="Eliminar opción"
+                          onClick={() => {
+                            const currentOpts = Array.isArray(props.options)
+                              ? [...props.options]
+                              : typeof props.options === 'string'
+                              ? props.options.split(',').map((s) => s.trim())
+                              : ['Opción 1', 'Opción 2', 'Opción 3'];
+                            if (currentOpts.length > 1) {
+                              currentOpts.splice(idx, 1);
+                              onUpdateProps({ options: currentOpts });
+                            }
+                          }}
+                          className="p-1 rounded text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+
                 <div className="flex items-center justify-between pt-1 border-t border-[#383838]">
                   <span className="text-[10px] text-zinc-400">Deshabilitado</span>
                   <input
@@ -1953,115 +2291,188 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
               </div>
             )}
 
-            {/* BOX / CONTAINER PROPERTIES */}
-            {(selectedNode.type === 'box' || selectedNode.type === 'container' || selectedNode.type === 'stack') && (
-              <div className="space-y-2 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
-                <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-medium text-zinc-400 flex items-center gap-1">
-                    <LayoutGrid className="w-3 h-3 text-[#0d99ff]" />
-                    <span>Distribución (Layout)</span>
+            {/* CONTAINER & FORM CONTAINER PROPERTIES */}
+            {(selectedNode.type === 'container' || selectedNode.type === 'box' || selectedNode.type === 'form' || selectedNode.type === 'stack') && (
+              <div className="space-y-2.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                {/* Selector de Tipo: Contenedor vs Formulario */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400 flex items-center justify-between">
+                    <span>Tipo de Contenedor</span>
+                    <span className="font-mono text-[9px] text-[#0d99ff] uppercase">
+                      {props.containerType === 'form' || selectedNode.type === 'form' ? '<form>' : '<div>'}
+                    </span>
                   </label>
-                  <span className="text-[10px] font-mono text-zinc-500">
-                    {style.display || 'flex'}: {style.flexDirection || (style.display === 'grid' ? 'grid' : 'column')}
-                  </span>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => onUpdateProps({ containerType: 'container' })}
+                      className={`py-1.5 px-2 text-xs rounded border transition-colors flex items-center justify-center gap-1.5 ${
+                        props.containerType !== 'form' && selectedNode.type !== 'form'
+                          ? 'bg-[#0d99ff] text-white border-[#0d99ff] font-medium'
+                          : 'bg-[#252526] text-zinc-400 border-[#383838] hover:text-white'
+                      }`}
+                    >
+                      <Square className="w-3.5 h-3.5" />
+                      <span>Contenedor</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onUpdateProps({ containerType: 'form' })}
+                      className={`py-1.5 px-2 text-xs rounded border transition-colors flex items-center justify-center gap-1.5 ${
+                        props.containerType === 'form' || selectedNode.type === 'form'
+                          ? 'bg-purple-600 text-white border-purple-500 font-medium'
+                          : 'bg-[#252526] text-zinc-400 border-[#383838] hover:text-white'
+                      }`}
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>Formulario</span>
+                    </button>
+                  </div>
                 </div>
-                <div className="grid grid-cols-3 gap-1">
-                  <button
-                    onClick={() =>
-                      onUpdateStyle({
-                        display: 'flex',
-                        flexDirection: 'row',
-                        gridTemplateColumns: undefined,
-                      })
-                    }
-                    className={`py-1 text-[10px] rounded border transition-colors ${
-                      style.display === 'flex' && style.flexDirection === 'row'
-                        ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
-                        : 'bg-[#252526] text-zinc-400 border-[#383838] hover:bg-[#323232]'
-                    }`}
-                  >
-                    Fila (Row)
-                  </button>
-                  <button
-                    onClick={() =>
-                      onUpdateStyle({
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gridTemplateColumns: undefined,
-                      })
-                    }
-                    className={`py-1 text-[10px] rounded border transition-colors ${
-                      (style.display === 'flex' && style.flexDirection === 'column') || (!style.display && !style.flexDirection)
-                        ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
-                        : 'bg-[#252526] text-zinc-400 border-[#383838] hover:bg-[#323232]'
-                    }`}
-                  >
-                    Col (Stack)
-                  </button>
-                  <button
-                    onClick={() =>
-                      onUpdateStyle({
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                        flexDirection: undefined,
-                      })
-                    }
-                    className={`py-1 text-[10px] rounded border transition-colors ${
-                      style.display === 'grid' && style.gridTemplateColumns?.includes('2')
-                        ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
-                        : 'bg-[#252526] text-zinc-400 border-[#383838] hover:bg-[#323232]'
-                    }`}
-                  >
-                    Grid 2
-                  </button>
-                  <button
-                    onClick={() =>
-                      onUpdateStyle({
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                        flexDirection: undefined,
-                      })
-                    }
-                    className={`py-1 text-[10px] rounded border transition-colors ${
-                      style.display === 'grid' && style.gridTemplateColumns?.includes('3')
-                        ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
-                        : 'bg-[#252526] text-zinc-400 border-[#383838] hover:bg-[#323232]'
-                    }`}
-                  >
-                    Grid 3
-                  </button>
-                  <button
-                    onClick={() =>
-                      onUpdateStyle({
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-                        flexDirection: undefined,
-                      })
-                    }
-                    className={`py-1 text-[10px] rounded border transition-colors ${
-                      style.display === 'grid' && style.gridTemplateColumns?.includes('4')
-                        ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
-                        : 'bg-[#252526] text-zinc-400 border-[#383838] hover:bg-[#323232]'
-                    }`}
-                  >
-                    Grid 4
-                  </button>
-                  <button
-                    onClick={() =>
-                      onUpdateStyle({
-                        display: 'block',
-                        flexDirection: undefined,
-                        gridTemplateColumns: undefined,
-                      })
-                    }
-                    className={`py-1 text-[10px] rounded border transition-colors ${
-                      style.display === 'block'
-                        ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
-                        : 'bg-[#252526] text-zinc-400 border-[#383838] hover:bg-[#323232]'
-                    }`}
-                  >
-                    Bloque
-                  </button>
+
+                {/* Propiedades de Formulario si está activo */}
+                {(props.containerType === 'form' || selectedNode.type === 'form') && (
+                  <div className="space-y-2 pt-2 border-t border-[#383838] bg-purple-950/20 p-2 rounded border border-purple-500/20">
+                    <div className="flex items-center gap-1 text-[10px] text-purple-300 font-medium">
+                      <Sparkles className="w-3 h-3 text-purple-400" />
+                      <span>Form Container activo</span>
+                    </div>
+                    <p className="text-[10px] text-zinc-400 leading-tight">
+                      Los elementos contenidos actúan como campos de formulario y los botones pueden configurarse como tipo <strong>submit</strong>.
+                    </p>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-medium text-zinc-400">Acción (URL / Endpoint)</label>
+                      <input
+                        type="text"
+                        value={props.action || '#'}
+                        onChange={(e) => onUpdateProps({ action: e.target.value })}
+                        placeholder="/api/submit"
+                        className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-medium text-zinc-400">Método HTTP</label>
+                      <select
+                        value={props.method || 'POST'}
+                        onChange={(e) => onUpdateProps({ method: e.target.value })}
+                        className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                      >
+                        <option value="POST" className="bg-[#1e1e1e]">POST</option>
+                        <option value="GET" className="bg-[#1e1e1e]">GET</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                {/* Distribución Layout */}
+                <div className="space-y-1 pt-1 border-t border-[#383838]">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-medium text-zinc-400 flex items-center gap-1">
+                      <LayoutGrid className="w-3 h-3 text-[#0d99ff]" />
+                      <span>Distribución (Layout)</span>
+                    </label>
+                    <span className="text-[10px] font-mono text-zinc-500">
+                      {style.display || 'flex'}: {style.flexDirection || (style.display === 'grid' ? 'grid' : 'column')}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1">
+                    <button
+                      onClick={() =>
+                        onUpdateStyle({
+                          display: 'flex',
+                          flexDirection: 'row',
+                          gridTemplateColumns: undefined,
+                        })
+                      }
+                      className={`py-1 text-[10px] rounded border transition-colors ${
+                        style.display === 'flex' && style.flexDirection === 'row'
+                          ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                          : 'bg-[#252526] text-zinc-400 border-[#383838] hover:bg-[#323232]'
+                      }`}
+                    >
+                      Fila (Row)
+                    </button>
+                    <button
+                      onClick={() =>
+                        onUpdateStyle({
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gridTemplateColumns: undefined,
+                        })
+                      }
+                      className={`py-1 text-[10px] rounded border transition-colors ${
+                        (style.display === 'flex' && style.flexDirection === 'column') || (!style.display && !style.flexDirection)
+                          ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                          : 'bg-[#252526] text-zinc-400 border-[#383838] hover:bg-[#323232]'
+                      }`}
+                    >
+                      Col (Stack)
+                    </button>
+                    <button
+                      onClick={() =>
+                        onUpdateStyle({
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                          flexDirection: undefined,
+                        })
+                      }
+                      className={`py-1 text-[10px] rounded border transition-colors ${
+                        style.display === 'grid' && style.gridTemplateColumns?.includes('2')
+                          ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                          : 'bg-[#252526] text-zinc-400 border-[#383838] hover:bg-[#323232]'
+                      }`}
+                    >
+                      Grid 2
+                    </button>
+                    <button
+                      onClick={() =>
+                        onUpdateStyle({
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                          flexDirection: undefined,
+                        })
+                      }
+                      className={`py-1 text-[10px] rounded border transition-colors ${
+                        style.display === 'grid' && style.gridTemplateColumns?.includes('3')
+                          ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                          : 'bg-[#252526] text-zinc-400 border-[#383838] hover:bg-[#323232]'
+                      }`}
+                    >
+                      Grid 3
+                    </button>
+                    <button
+                      onClick={() =>
+                        onUpdateStyle({
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+                          flexDirection: undefined,
+                        })
+                      }
+                      className={`py-1 text-[10px] rounded border transition-colors ${
+                        style.display === 'grid' && style.gridTemplateColumns?.includes('4')
+                          ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                          : 'bg-[#252526] text-zinc-400 border-[#383838] hover:bg-[#323232]'
+                      }`}
+                    >
+                      Grid 4
+                    </button>
+                    <button
+                      onClick={() =>
+                        onUpdateStyle({
+                          display: 'block',
+                          flexDirection: undefined,
+                          gridTemplateColumns: undefined,
+                        })
+                      }
+                      className={`py-1 text-[10px] rounded border transition-colors ${
+                        style.display === 'block'
+                          ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                          : 'bg-[#252526] text-zinc-400 border-[#383838] hover:bg-[#323232]'
+                      }`}
+                    >
+                      Bloque
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

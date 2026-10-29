@@ -125,6 +125,29 @@ function toComponentName(id: string): string {
 export function extractUsedCatalogSvgs(nodes: CanvasNode[]): Map<string, { id: string; name: string; componentName: string; rawSvg: string }> {
   const map = new Map<string, { id: string; name: string; componentName: string; rawSvg: string }>();
 
+  function registerIcon(iconKey?: string) {
+    if (!iconKey) return;
+    const syncSvg = getIconSvgSync(iconKey);
+    if (syncSvg && !map.has(iconKey)) {
+      map.set(iconKey, {
+        id: iconKey,
+        name: iconKey,
+        componentName: toComponentName(iconKey.replace(/[: -]/g, '_')),
+        rawSvg: syncSvg,
+      });
+    } else {
+      const catalogItem = findCatalogIcon(iconKey);
+      if (catalogItem && !map.has(catalogItem.id)) {
+        map.set(catalogItem.id, {
+          id: catalogItem.id,
+          name: catalogItem.name,
+          componentName: toComponentName(catalogItem.id),
+          rawSvg: catalogItem.svgContent,
+        });
+      }
+    }
+  }
+
   function traverse(list: CanvasNode[]) {
     for (const node of list) {
       if (node.type === 'fontawesome_icon' || node.type === 'svg_icon' || node.type === 'styled_icon') {
@@ -147,6 +170,14 @@ export function extractUsedCatalogSvgs(nodes: CanvasNode[]): Map<string, { id: s
               rawSvg: catalogItem.svgContent,
             });
           }
+        }
+      }
+      if (node.type === 'button') {
+        if (node.props.showIconLeft && node.props.iconLeft) {
+          registerIcon(node.props.iconLeft);
+        }
+        if (node.props.showIconRight && node.props.iconRight) {
+          registerIcon(node.props.iconRight);
         }
       }
       if (node.children && node.children.length > 0) {
@@ -445,8 +476,13 @@ function generateReactShadcn(nodes: CanvasNode[], usedSvgs: Map<string, any>, in
       switch (node.type) {
         // Layout & Structure (Catálogo A: Shadcn)
         case 'box':
-        case 'container':
+        case 'container': {
+          const isForm = node.props.containerType === 'form';
+          if (isForm) {
+            return `${indent}<form action="${node.props.action || '#'}" method="${node.props.method || 'POST'}" className="space-y-4 w-full" id="${node.id}"${styleAttr}>${childrenCode}</form>`;
+          }
           return `${indent}<div className="vf-container max-w-5xl w-full mx-auto" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
+        }
         case 'aspect_ratio':
           return `${indent}<AspectRatio ratio={16 / 9} className="bg-zinc-900 rounded-lg overflow-hidden" id="${node.id}"${styleAttr}>\n${indent}  <div className="flex items-center justify-center h-full w-full">${childrenCode || 'Aspect Ratio 16:9'}</div>\n${indent}</AspectRatio>`;
         case 'collapsible':
@@ -461,29 +497,115 @@ function generateReactShadcn(nodes: CanvasNode[], usedSvgs: Map<string, any>, in
           return `${indent}<Skeleton className="w-full h-12 rounded-lg" id="${node.id}"${styleAttr} />`;
 
         // Forms & Inputs (Catálogo A: Shadcn)
-        case 'button':
-          return `${indent}<Button variant="${node.props.variant || 'default'}" id="${node.id}"${styleAttr}>${node.props.label || 'Button'}</Button>`;
+        case 'button': {
+          const bType = node.props.buttonType || 'button';
+          let leftIconEl = '';
+          let rightIconEl = '';
+          if (node.props.showIconLeft && node.props.iconLeft) {
+            const compName = toComponentName(node.props.iconLeft.replace(/[: -]/g, '_'));
+            leftIconEl = `<${compName} width={16} height={16} className="inline mr-2" />`;
+          }
+          if (node.props.showIconRight && node.props.iconRight) {
+            const compName = toComponentName(node.props.iconRight.replace(/[: -]/g, '_'));
+            rightIconEl = `<${compName} width={16} height={16} className="inline ml-2" />`;
+          }
+          return `${indent}<Button type="${bType}" variant="${node.props.variant || 'default'}" id="${node.id}"${styleAttr}>${leftIconEl}${node.props.label || 'Button'}${rightIconEl}</Button>`;
+        }
         case 'checkbox':
           return `${indent}<div className="flex items-center space-x-2" id="${node.id}"${styleAttr}>\n${indent}  <Checkbox id="${node.id}_cb" defaultChecked={${node.props.checked ? 'true' : 'false'}} />\n${indent}  <Label htmlFor="${node.id}_cb">${node.props.label || 'Checkbox option'}</Label>\n${indent}</div>`;
         case 'form':
           return `${indent}<form className="space-y-4 w-full" id="${node.id}"${styleAttr}>${childrenCode}</form>`;
-        case 'input':
-          return `${indent}<div className="w-full space-y-1.5" id="${node.id}">\n${indent}  <Label htmlFor="${node.id}_input">${node.props.label || 'Input Label'}</Label>\n${indent}  <Input id="${node.id}_input" placeholder="${node.props.placeholder || 'Type here...'}"${styleAttr} />\n${indent}</div>`;
+        case 'input': {
+          const hasLabel = node.props.hasLabel !== false;
+          const pos = node.props.labelPosition || 'top';
+          const inputId = `${node.id}_input`;
+          const inputType = node.props.inputType || node.props.type || 'text';
+          const inputEl = `<Input id="${inputId}" type="${inputType}" placeholder="${node.props.placeholder || ''}"${styleAttr} />`;
+          if (!hasLabel) {
+            return `${indent}${inputEl}`;
+          }
+          const labelEl = `<Label htmlFor="${inputId}">${node.props.label || 'Input'}</Label>`;
+          const isRow = pos === 'left' || pos === 'right';
+          const flexClass = isRow ? 'flex flex-row items-center gap-2 w-full' : 'flex flex-col gap-1.5 w-full';
+          const first = (pos === 'top' || pos === 'left') ? labelEl : inputEl;
+          const second = (pos === 'top' || pos === 'left') ? inputEl : labelEl;
+          return `${indent}<div className="${flexClass}" id="${node.id}">\n${indent}  ${first}\n${indent}  ${second}\n${indent}</div>`;
+        }
         case 'input_otp':
         case 'otp_input':
           return `${indent}<InputOTP maxLength={6} id="${node.id}">\n${indent}  <InputOTPGroup>\n${indent}    <InputOTPSlot index={0} />\n${indent}    <InputOTPSlot index={1} />\n${indent}    <InputOTPSlot index={2} />\n${indent}    <InputOTPSeparator />\n${indent}    <InputOTPSlot index={3} />\n${indent}    <InputOTPSlot index={4} />\n${indent}    <InputOTPSlot index={5} />\n${indent}  </InputOTPGroup>\n${indent}</InputOTP>`;
         case 'label':
           return `${indent}<Label htmlFor="${node.id}"${styleAttr}>${node.props.label || node.props.text || 'Label'}</Label>`;
-        case 'radio_group':
-          return `${indent}<RadioGroup defaultValue="opt1" id="${node.id}" className="space-y-2">\n${indent}  <div className="flex items-center space-x-2"><RadioGroupItem value="opt1" id="${node.id}_1" /><Label htmlFor="${node.id}_1">Option 1</Label></div>\n${indent}  <div className="flex items-center space-x-2"><RadioGroupItem value="opt2" id="${node.id}_2" /><Label htmlFor="${node.id}_2">Option 2</Label></div>\n${indent}</RadioGroup>`;
-        case 'select':
-          return `${indent}<Select id="${node.id}">\n${indent}  <SelectTrigger className="w-full"><SelectValue placeholder="${node.props.placeholder || 'Select an option'}" /></SelectTrigger>\n${indent}  <SelectContent>\n${indent}    <SelectItem value="opt1">Option 1</SelectItem>\n${indent}    <SelectItem value="opt2">Option 2</SelectItem>\n${indent}  </SelectContent>\n${indent}</Select>`;
+        case 'radio':
+        case 'radio_group': {
+          const hasLabel = node.props.hasLabel !== false;
+          const pos = node.props.labelPosition || 'top';
+          const inputId = `${node.id}_radio`;
+          const rawOpts = Array.isArray(node.props.options)
+            ? node.props.options
+            : typeof node.props.options === 'string'
+            ? node.props.options.split(',').map((s: string) => s.trim())
+            : ['Opción 1', 'Opción 2'];
+          const radioItems = rawOpts
+            .map((opt: string, i: number) => {
+              const optId = `${node.id}_opt_${i}`;
+              return `${indent}  <div className="flex items-center space-x-2"><RadioGroupItem value="val_${i}" id="${optId}" /><Label htmlFor="${optId}">${opt}</Label></div>`;
+            })
+            .join('\n');
+          const groupEl = `<RadioGroup defaultValue="val_0" id="${inputId}" className="space-y-2">\n${radioItems}\n${indent}</RadioGroup>`;
+          if (!hasLabel) {
+            return `${indent}${groupEl}`;
+          }
+          const labelEl = `<Label htmlFor="${inputId}" className="font-semibold">${node.props.label || 'Opciones'}</Label>`;
+          const isRow = pos === 'left' || pos === 'right';
+          const flexClass = isRow ? 'flex flex-row items-start gap-3' : 'flex flex-col gap-1.5';
+          const first = (pos === 'top' || pos === 'left') ? labelEl : groupEl;
+          const second = (pos === 'top' || pos === 'left') ? groupEl : labelEl;
+          return `${indent}<div className="${flexClass}" id="${node.id}">\n${indent}  ${first}\n${indent}  ${second}\n${indent}</div>`;
+        }
+        case 'select': {
+          const hasLabel = node.props.hasLabel !== false;
+          const pos = node.props.labelPosition || 'top';
+          const inputId = `${node.id}_select`;
+          const rawOpts = Array.isArray(node.props.options)
+            ? node.props.options
+            : typeof node.props.options === 'string'
+            ? node.props.options.split(',').map((s: string) => s.trim())
+            : ['Opción 1', 'Opción 2'];
+          const itemsCode = rawOpts
+            .map((opt: string, i: number) => `${indent}    <SelectItem value="opt_${i}">${opt}</SelectItem>`)
+            .join('\n');
+          const selectEl = `<Select id="${inputId}">\n${indent}  <SelectTrigger className="w-full"><SelectValue placeholder="${node.props.placeholder || 'Selecciona una opción'}" /></SelectTrigger>\n${indent}  <SelectContent>\n${itemsCode}\n${indent}  </SelectContent>\n${indent}</Select>`;
+          if (!hasLabel) {
+            return `${indent}${selectEl}`;
+          }
+          const labelEl = `<Label htmlFor="${inputId}">${node.props.label || 'Seleccionar'}</Label>`;
+          const isRow = pos === 'left' || pos === 'right';
+          const flexClass = isRow ? 'flex flex-row items-center gap-2 w-full' : 'flex flex-col gap-1.5 w-full';
+          const first = (pos === 'top' || pos === 'left') ? labelEl : selectEl;
+          const second = (pos === 'top' || pos === 'left') ? selectEl : labelEl;
+          return `${indent}<div className="${flexClass}" id="${node.id}">\n${indent}  ${first}\n${indent}  ${second}\n${indent}</div>`;
+        }
         case 'slider':
           return `${indent}<Slider defaultValue={[${node.props.value ?? 50}]} max={${node.props.max ?? 100}} step={1} id="${node.id}"${styleAttr} />`;
         case 'switch':
           return `${indent}<div className="flex items-center space-x-2" id="${node.id}">\n${indent}  <Switch id="${node.id}_sw" defaultChecked={${node.props.checked ? 'true' : 'false'}} />\n${indent}  <Label htmlFor="${node.id}_sw">${node.props.label || 'Toggle'}</Label>\n${indent}</div>`;
-        case 'textarea':
-          return `${indent}<Textarea placeholder="${node.props.placeholder || 'Type your message here.'}" id="${node.id}"${styleAttr} />`;
+        case 'textarea': {
+          const hasLabel = node.props.hasLabel !== false;
+          const pos = node.props.labelPosition || 'top';
+          const inputId = `${node.id}_textarea`;
+          const rows = node.props.rows || 3;
+          const textareaEl = `<Textarea id="${inputId}" rows={${rows}} placeholder="${node.props.placeholder || ''}"${styleAttr} />`;
+          if (!hasLabel) {
+            return `${indent}${textareaEl}`;
+          }
+          const labelEl = `<Label htmlFor="${inputId}">${node.props.label || 'Mensaje'}</Label>`;
+          const isRow = pos === 'left' || pos === 'right';
+          const flexClass = isRow ? 'flex flex-row items-start gap-2 w-full' : 'flex flex-col gap-1.5 w-full';
+          const first = (pos === 'top' || pos === 'left') ? labelEl : textareaEl;
+          const second = (pos === 'top' || pos === 'left') ? textareaEl : labelEl;
+          return `${indent}<div className="${flexClass}" id="${node.id}">\n${indent}  ${first}\n${indent}  ${second}\n${indent}</div>`;
+        }
         case 'toggle':
         case 'toggle_group':
           return `${indent}<Toggle id="${node.id}" aria-label="Toggle">${node.props.label || 'Toggle'}</Toggle>`;
@@ -715,8 +837,13 @@ function generateHtmlInlineSvg(nodes: CanvasNode[], indent = '      ', isEsp32 =
       switch (node.type) {
         // Layout & Content (Catálogo B: Preline UI)
         case 'box':
-        case 'container':
+        case 'container': {
+          const isForm = node.props.containerType === 'form';
+          if (isForm) {
+            return `${indent}<form action="${node.props.action || '#'}" method="${node.props.method || 'POST'}" class="w-full flex flex-col gap-4" id="${node.id}"${styleAttr}>${childrenCode}</form>`;
+          }
           return `${indent}<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
+        }
         case 'columns':
           return `${indent}<div class="grid grid-cols-1 md:grid-cols-${node.props.columns || 2} gap-4" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
         case 'grid':
@@ -759,6 +886,7 @@ function generateHtmlInlineSvg(nodes: CanvasNode[], indent = '      ', isEsp32 =
         case 'blockquote':
           return `${indent}<blockquote class="border-l-4 border-blue-500 pl-4 py-1 italic text-zinc-300 text-sm" id="${node.id}"${styleAttr}>"${node.props.text || 'Cita destacada'}"</blockquote>`;
         case 'button': {
+          const bType = node.props.buttonType || 'button';
           const gpio = isEsp32 && node.props?.gpio?.enabled ? node.props.gpio : null;
           let clickAttr = '';
           if (gpio) {
@@ -768,7 +896,23 @@ function generateHtmlInlineSvg(nodes: CanvasNode[], indent = '      ', isEsp32 =
               clickAttr = ` onclick="updateGPIO(${gpio.pin}, '${gpio.action}')"`;
             }
           }
-          return `${indent}<button type="button" class="py-2.5 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50" id="${node.id}"${clickAttr}${styleAttr}>${node.props.label || 'Button'}</button>`;
+          let leftSvg = '';
+          let rightSvg = '';
+          if (node.props.showIconLeft && node.props.iconLeft) {
+            const iconKey = node.props.iconLeft;
+            const item = findCatalogIcon(iconKey);
+            const svgContent = getIconSvgSync(iconKey, { width: 16, height: 16, stroke: 'currentColor' }) ||
+              (item ? customizeSvg(item.svgContent, { width: 16, height: 16, stroke: 'currentColor' }) : '');
+            if (svgContent) leftSvg = `${svgContent} `;
+          }
+          if (node.props.showIconRight && node.props.iconRight) {
+            const iconKey = node.props.iconRight;
+            const item = findCatalogIcon(iconKey);
+            const svgContent = getIconSvgSync(iconKey, { width: 16, height: 16, stroke: 'currentColor' }) ||
+              (item ? customizeSvg(item.svgContent, { width: 16, height: 16, stroke: 'currentColor' }) : '');
+            if (svgContent) rightSvg = ` ${svgContent}`;
+          }
+          return `${indent}<button type="${bType}" class="py-2.5 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50" id="${node.id}"${clickAttr}${styleAttr}>${leftSvg}${node.props.label || 'Button'}${rightSvg}</button>`;
         }
         case 'button_group':
           return `${indent}<div class="inline-flex rounded-lg shadow-sm" role="group" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
@@ -849,12 +993,40 @@ ${indent}</header>`;
           return `${indent}<div class="flex items-center gap-2 text-xs font-medium" id="${node.id}"><span class="size-6 rounded-full bg-blue-600 text-white flex items-center justify-center">1</span><span class="text-zinc-300">Paso 1</span><div class="h-0.5 w-8 bg-zinc-800"></div><span class="size-6 rounded-full bg-zinc-800 text-zinc-400 flex items-center justify-center">2</span></div>`;
 
         // Basic Forms (Catálogo B: Preline UI)
-        case 'input':
-          return `${indent}<div class="space-y-1 w-full" id="${node.id}">\n${indent}  <label class="block text-xs font-medium text-zinc-400">${node.props.label || 'Input'}</label>\n${indent}  <input type="text" class="py-2 px-3 block w-full bg-zinc-900 border border-zinc-700 rounded-lg text-sm text-zinc-200 placeholder:text-zinc-500" placeholder="${node.props.placeholder || ''}"${styleAttr}>\n${indent}</div>`;
+        case 'input': {
+          const hasLabel = node.props.hasLabel !== false;
+          const pos = node.props.labelPosition || 'top';
+          const inputId = `${node.id}_input`;
+          const inputType = node.props.inputType || node.props.type || 'text';
+          const inputEl = `<input type="${inputType}" id="${inputId}" class="py-2 px-3 block w-full bg-zinc-900 border border-zinc-700 rounded-lg text-sm text-zinc-200 placeholder:text-zinc-500" placeholder="${node.props.placeholder || ''}"${styleAttr}>`;
+          if (!hasLabel) {
+            return `${indent}${inputEl}`;
+          }
+          const labelEl = `<label for="${inputId}" class="block text-xs font-medium text-zinc-400">${node.props.label || 'Input'}</label>`;
+          const isRow = pos === 'left' || pos === 'right';
+          const flexClass = isRow ? 'flex flex-row items-center gap-2 w-full' : 'flex flex-col gap-1 w-full';
+          const first = (pos === 'top' || pos === 'left') ? labelEl : inputEl;
+          const second = (pos === 'top' || pos === 'left') ? inputEl : labelEl;
+          return `${indent}<div class="${flexClass}" id="${node.id}">\n${indent}  ${first}\n${indent}  ${second}\n${indent}</div>`;
+        }
         case 'input_group':
           return `${indent}<div class="flex rounded-lg shadow-sm" id="${node.id}">\n${indent}  <span class="px-3 inline-flex items-center min-w-fit rounded-s-md border border-e-0 border-zinc-700 bg-zinc-800 text-xs text-zinc-400">https://</span>\n${indent}  <input type="text" class="py-2 px-3 block w-full border-zinc-700 rounded-e-lg text-sm bg-zinc-900 text-zinc-200" placeholder="dominio.com">\n${indent}</div>`;
-        case 'textarea':
-          return `${indent}<textarea class="py-2 px-3 block w-full bg-zinc-900 border border-zinc-700 rounded-lg text-sm text-zinc-200 placeholder:text-zinc-500" rows="3" placeholder="${node.props.placeholder || 'Escribe tu mensaje...'}" id="${node.id}"${styleAttr}></textarea>`;
+        case 'textarea': {
+          const hasLabel = node.props.hasLabel !== false;
+          const pos = node.props.labelPosition || 'top';
+          const inputId = `${node.id}_textarea`;
+          const rows = node.props.rows || 3;
+          const textareaEl = `<textarea id="${inputId}" class="py-2 px-3 block w-full bg-zinc-900 border border-zinc-700 rounded-lg text-sm text-zinc-200 placeholder:text-zinc-500" rows="${rows}" placeholder="${node.props.placeholder || 'Escribe tu mensaje...'}"${styleAttr}></textarea>`;
+          if (!hasLabel) {
+            return `${indent}${textareaEl}`;
+          }
+          const labelEl = `<label for="${inputId}" class="block text-xs font-medium text-zinc-400">${node.props.label || 'Mensaje'}</label>`;
+          const isRow = pos === 'left' || pos === 'right';
+          const flexClass = isRow ? 'flex flex-row items-start gap-2 w-full' : 'flex flex-col gap-1 w-full';
+          const first = (pos === 'top' || pos === 'left') ? labelEl : textareaEl;
+          const second = (pos === 'top' || pos === 'left') ? textareaEl : labelEl;
+          return `${indent}<div class="${flexClass}" id="${node.id}">\n${indent}  ${first}\n${indent}  ${second}\n${indent}</div>`;
+        }
         case 'file_input':
           return `${indent}<input type="file" class="block w-full text-xs text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-zinc-800 file:text-zinc-200 hover:file:bg-zinc-700" id="${node.id}">`;
         case 'checkbox': {
@@ -863,14 +1035,60 @@ ${indent}</header>`;
           return `${indent}<label class="inline-flex items-center gap-2 cursor-pointer select-none" id="${node.id}"${styleAttr}>\n${indent}  <input type="checkbox" class="shrink-0 size-4 border-zinc-700 rounded text-blue-600 focus:ring-blue-500 bg-zinc-900"${node.props.checked ? ' checked' : ''}${eventAttr}>\n${indent}  <span class="text-sm text-zinc-300">${node.props.label || 'Checkbox'}</span>\n${indent}</label>`;
         }
         case 'radio':
-          return `${indent}<div class="flex items-center gap-2" id="${node.id}"><input type="radio" class="shrink-0 border-zinc-700 rounded-full text-blue-600 focus:ring-blue-500 bg-zinc-900" id="${node.id}_r"><label for="${node.id}_r" class="text-sm text-zinc-300">${node.props.label || 'Opción de radio'}</label></div>`;
+        case 'radio_group': {
+          const hasLabel = node.props.hasLabel !== false;
+          const pos = node.props.labelPosition || 'top';
+          const groupName = `${node.id}_rg`;
+          const rawOpts = Array.isArray(node.props.options)
+            ? node.props.options
+            : typeof node.props.options === 'string'
+            ? node.props.options.split(',').map((s: string) => s.trim())
+            : ['Opción 1', 'Opción 2'];
+          const radioItems = rawOpts
+            .map((opt: string, i: number) => {
+              const optId = `${node.id}_opt_${i}`;
+              return `${indent}  <div class="flex items-center gap-2"><input type="radio" id="${optId}" name="${groupName}" value="opt_${i}" class="shrink-0 border-zinc-700 rounded-full text-blue-600 focus:ring-blue-500 bg-zinc-900"${i === 0 ? ' checked' : ''}><label for="${optId}" class="text-sm text-zinc-300">${opt}</label></div>`;
+            })
+            .join('\n');
+          const groupEl = `<div class="space-y-1.5" id="${node.id}">\n${radioItems}\n${indent}</div>`;
+          if (!hasLabel) {
+            return `${indent}${groupEl}`;
+          }
+          const labelEl = `<label class="block text-xs font-medium text-zinc-400">${node.props.label || 'Opciones'}</label>`;
+          const isRow = pos === 'left' || pos === 'right';
+          const flexClass = isRow ? 'flex flex-row items-start gap-3' : 'flex flex-col gap-1.5';
+          const first = (pos === 'top' || pos === 'left') ? labelEl : groupEl;
+          const second = (pos === 'top' || pos === 'left') ? groupEl : labelEl;
+          return `${indent}<div class="${flexClass}">\n${indent}  ${first}\n${indent}  ${second}\n${indent}</div>`;
+        }
         case 'switch': {
           const gpio = isEsp32 && node.props?.gpio?.enabled ? node.props.gpio : null;
           const eventAttr = gpio ? ` onchange="updateGPIO(${gpio.pin}, this.checked ? 'SET_HIGH' : 'SET_LOW')"` : '';
           return `${indent}<label class="inline-flex items-center gap-3 cursor-pointer select-none" id="${node.id}"${styleAttr}>\n${indent}  <input type="checkbox" class="sr-only peer"${node.props.checked ? ' checked' : ''}${eventAttr}>\n${indent}  <div class="relative w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>\n${indent}  <span class="text-sm font-medium text-zinc-300">${node.props.label || 'Switch'}</span>\n${indent}</label>`;
         }
-        case 'select':
-          return `${indent}<select class="py-2 px-3 pe-9 block w-full bg-zinc-900 border border-zinc-700 rounded-lg text-sm text-zinc-200 focus:border-blue-500" id="${node.id}"${styleAttr}><option selected>Opción 1</option><option>Opción 2</option></select>`;
+        case 'select': {
+          const hasLabel = node.props.hasLabel !== false;
+          const pos = node.props.labelPosition || 'top';
+          const inputId = `${node.id}_select`;
+          const rawOpts = Array.isArray(node.props.options)
+            ? node.props.options
+            : typeof node.props.options === 'string'
+            ? node.props.options.split(',').map((s: string) => s.trim())
+            : ['Opción 1', 'Opción 2'];
+          const optionsHtml = rawOpts
+            .map((opt: string, i: number) => `${indent}    <option value="opt_${i}"${i === 0 ? ' selected' : ''}>${opt}</option>`)
+            .join('\n');
+          const selectEl = `<select id="${inputId}" class="py-2 px-3 pe-9 block w-full bg-zinc-900 border border-zinc-700 rounded-lg text-sm text-zinc-200 focus:border-blue-500"${styleAttr}>\n${optionsHtml}\n${indent}  </select>`;
+          if (!hasLabel) {
+            return `${indent}${selectEl}`;
+          }
+          const labelEl = `<label for="${inputId}" class="block text-xs font-medium text-zinc-400">${node.props.label || 'Seleccionar'}</label>`;
+          const isRow = pos === 'left' || pos === 'right';
+          const flexClass = isRow ? 'flex flex-row items-center gap-2 w-full' : 'flex flex-col gap-1 w-full';
+          const first = (pos === 'top' || pos === 'left') ? labelEl : selectEl;
+          const second = (pos === 'top' || pos === 'left') ? selectEl : labelEl;
+          return `${indent}<div class="${flexClass}" id="${node.id}">\n${indent}  ${first}\n${indent}  ${second}\n${indent}</div>`;
+        }
         case 'slider':
         case 'range_slider': {
           const gpio = isEsp32 && node.props?.gpio?.enabled ? node.props.gpio : null;
@@ -1105,8 +1323,14 @@ function generateHtmlBootstrap(nodes: CanvasNode[], indent = '      '): string {
           : '';
 
       switch (node.type) {
-        case 'container':
+        case 'box':
+        case 'container': {
+          const isForm = node.props.containerType === 'form';
+          if (isForm) {
+            return `${indent}<form action="${node.props.action || '#'}" method="${node.props.method || 'POST'}" class="p-4 w-full" id="${node.id}"${styleAttr}>${childrenCode}</form>`;
+          }
           return `${indent}<div class="container-fluid p-4" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
+        }
         case 'grid':
           return `${indent}<div class="row g-3" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
         case 'stack':
@@ -1121,13 +1345,26 @@ ${indent}    </ul>
 ${indent}    <div class="d-flex">${childrenCode}</div>
 ${indent}  </div>
 ${indent}</nav>`;
-        case 'button':
-          return `${indent}<button type="button" class="btn btn-primary" id="${node.id}"${styleAttr}>${node.props.label || 'Button'}</button>`;
-        case 'input':
-          return `${indent}<div class="mb-3">
-${indent}  <label for="${node.id}" class="form-label">${node.props.label || 'Input'}</label>
-${indent}  <input type="text" class="form-control" id="${node.id}" placeholder="${node.props.placeholder || ''}"${styleAttr}>
-${indent}</div>`;
+        case 'button': {
+          const bType = node.props.buttonType || 'button';
+          return `${indent}<button type="${bType}" class="btn btn-primary" id="${node.id}"${styleAttr}>${node.props.label || 'Button'}</button>`;
+        }
+        case 'input': {
+          const hasLabel = node.props.hasLabel !== false;
+          const pos = node.props.labelPosition || 'top';
+          const inputId = `${node.id}_input`;
+          const inputType = node.props.inputType || node.props.type || 'text';
+          const inputEl = `<input type="${inputType}" class="form-control" id="${inputId}" placeholder="${node.props.placeholder || ''}"${styleAttr}>`;
+          if (!hasLabel) {
+            return `${indent}${inputEl}`;
+          }
+          const labelEl = `<label for="${inputId}" class="form-label">${node.props.label || 'Input'}</label>`;
+          const isRow = pos === 'left' || pos === 'right';
+          const flexClass = isRow ? 'd-flex align-items-center gap-2 mb-3' : 'mb-3';
+          const first = (pos === 'top' || pos === 'left') ? labelEl : inputEl;
+          const second = (pos === 'top' || pos === 'left') ? inputEl : labelEl;
+          return `${indent}<div class="${flexClass}" id="${node.id}">\n${indent}  ${first}\n${indent}  ${second}\n${indent}</div>`;
+        }
         case 'badge':
           return `${indent}<span class="badge bg-primary rounded-pill" id="${node.id}"${styleAttr}>${node.props.label || 'Badge'}</span>`;
         case 'card':

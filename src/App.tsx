@@ -111,13 +111,19 @@ export function App() {
       const effectiveTargetId = targetId !== undefined ? targetId : selectedId;
 
       if (!effectiveTargetId) {
-        newTree = [...tree, newNode];
+        // Si no hay elemento seleccionado, buscar el contenedor principal activo o añadir a la raíz
+        const mainContainer = tree.find((n) => n.isContainer && n.id !== 'navbar_root');
+        if (mainContainer && position === 'inside') {
+          newTree = insertChildInTree(tree, mainContainer.id, newNode);
+        } else {
+          newTree = [...tree, newNode];
+        }
       } else {
         const targetNode = findNodeInTree(tree, effectiveTargetId);
         if (targetNode?.isContainer && position === 'inside') {
           newTree = insertChildInTree(tree, effectiveTargetId, newNode);
         } else {
-          newTree = insertNodeRelative(tree, effectiveTargetId, newNode, position);
+          newTree = insertNodeRelative(tree, effectiveTargetId, newNode, targetNode?.isContainer ? position : 'after');
         }
       }
 
@@ -149,8 +155,12 @@ export function App() {
             border: '1px solid #27272a',
           },
           defaultProps: {
-            label: 'Contenedor Flexbox',
+            label: 'Contenedor',
+            containerType: 'container',
+            action: '#',
+            method: 'POST',
           },
+          defaultChildren: [],
         };
       } else if (tool === 'heading') {
         compDef = {
@@ -219,6 +229,21 @@ export function App() {
       }
     },
     [handleInsertComponent, selectedId]
+  );
+
+  // Update Node (Props, Style, Name, etc.) atomically in a single state mutation
+  const handleUpdateNode = useCallback(
+    (updates: { props?: Record<string, any>; style?: Record<string, any>; name?: string }) => {
+      if (!selectedId) return;
+      const newTree = mutateNodeInTree(tree, selectedId, (node) => ({
+        ...node,
+        ...(updates.name ? { name: updates.name } : {}),
+        props: updates.props ? { ...node.props, ...updates.props } : node.props,
+        style: updates.style ? { ...node.style, ...updates.style } : node.style,
+      }));
+      updateTreeWithHistory(newTree);
+    },
+    [tree, selectedId, updateTreeWithHistory]
   );
 
   // Update Style of Selected Node
@@ -489,6 +514,7 @@ export function App() {
           projectType={projectType}
           onUpdateStyle={handleUpdateStyle}
           onUpdateProps={handleUpdateProps}
+          onUpdateNode={handleUpdateNode}
           isOpen={isRightOpen}
           setIsOpen={setIsRightOpen}
         />
