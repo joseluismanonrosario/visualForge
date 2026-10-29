@@ -3418,14 +3418,14 @@ export const BASIC_COMPONENTS_CATALOG: ComponentDefinition[] = [
 ];
 
 // ====================================================================
-// COMPONENTES IOT & TELEMETRÍA (EXCLUSIVOS PARA PROYECTOS ESP32)
+// COMPONENTES GRÁFICOS Y VISUALIZACIÓN DE DATOS (CHARTS)
 // ====================================================================
-export const ESP32_IOT_CATALOG: ComponentDefinition[] = [
+export const CHARTS_CATALOG: ComponentDefinition[] = [
   {
     type: 'line_chart',
-    name: 'LineChart (Telemetría en Vivo)',
-    category: 'IoT & Telemetría (ESP32)',
-    catalog: 'iot',
+    name: 'LineChart',
+    category: 'Charts',
+    catalog: 'both',
     library: 'both',
     icon: 'LineChart',
     isContainer: false,
@@ -3458,9 +3458,9 @@ export const ESP32_IOT_CATALOG: ComponentDefinition[] = [
   },
   {
     type: 'bar_chart',
-    name: 'BarChart (Consumo / Niveles)',
-    category: 'IoT & Telemetría (ESP32)',
-    catalog: 'iot',
+    name: 'BarChart',
+    category: 'Charts',
+    catalog: 'both',
     library: 'both',
     icon: 'BarChart3',
     isContainer: false,
@@ -3493,9 +3493,9 @@ export const ESP32_IOT_CATALOG: ComponentDefinition[] = [
   },
   {
     type: 'pie_chart',
-    name: 'PieChart (Distribución de Estados)',
-    category: 'IoT & Telemetría (ESP32)',
-    catalog: 'iot',
+    name: 'PieChart',
+    category: 'Charts',
+    catalog: 'both',
     library: 'both',
     icon: 'PieChart',
     isContainer: false,
@@ -3508,7 +3508,7 @@ export const ESP32_IOT_CATALOG: ComponentDefinition[] = [
       padding: '16px',
     },
     defaultProps: {
-      title: 'Memoria Flash & Heap ESP32',
+      title: 'Distribución de Estados',
       data: [65, 25, 10],
       labels: ['Flash Libre (65%)', 'Heap Usado (25%)', 'SPIFFS (10%)'],
       colors: ['#0d99ff', '#8b5cf6', '#10b981'],
@@ -3527,9 +3527,9 @@ export const ESP32_IOT_CATALOG: ComponentDefinition[] = [
   },
   {
     type: 'area_chart',
-    name: 'AreaChart (Potencia & Señal)',
-    category: 'IoT & Telemetría (ESP32)',
-    catalog: 'iot',
+    name: 'AreaChart',
+    category: 'Charts',
+    catalog: 'both',
     library: 'both',
     icon: 'Activity',
     isContainer: false,
@@ -3561,9 +3561,9 @@ export const ESP32_IOT_CATALOG: ComponentDefinition[] = [
   },
   {
     type: 'gauge_chart',
-    name: 'GaugeChart (Medidor / Tacómetro)',
-    category: 'IoT & Telemetría (ESP32)',
-    catalog: 'iot',
+    name: 'GaugeChart',
+    category: 'Charts',
+    catalog: 'both',
     library: 'both',
     icon: 'Gauge',
     isContainer: false,
@@ -3597,9 +3597,9 @@ export const ESP32_IOT_CATALOG: ComponentDefinition[] = [
   },
   {
     type: 'metric_card',
-    name: 'Telemetry Metric Card (Widget)',
-    category: 'IoT & Telemetría (ESP32)',
-    catalog: 'iot',
+    name: 'Metric Card',
+    category: 'Charts',
+    catalog: 'both',
     library: 'both',
     icon: 'Activity',
     isContainer: true,
@@ -3630,6 +3630,12 @@ export const ESP32_IOT_CATALOG: ComponentDefinition[] = [
       },
     },
   },
+];
+
+// ====================================================================
+// COMPONENTES DE HARDWARE & IOT (EXCLUSIVOS PARA PROYECTOS ESP32)
+// ====================================================================
+export const ESP32_HARDWARE_CATALOG: ComponentDefinition[] = [
   {
     type: 'status_badge',
     name: 'Status Badge (Conexión ESP32)',
@@ -3726,26 +3732,33 @@ export const ESP32_IOT_CATALOG: ComponentDefinition[] = [
   },
 ];
 
+// Catálogo combinado para ESP32
+export const ESP32_IOT_CATALOG: ComponentDefinition[] = [
+  ...CHARTS_CATALOG,
+  ...ESP32_HARDWARE_CATALOG,
+];
+
 // Alias para retrocompatibilidad
 export const IOT_DASHBOARD_CATALOG: ComponentDefinition[] = ESP32_IOT_CATALOG;
 
 // Helper para obtener el catálogo dinámico según el tipo de proyecto:
-// - Para todos los proyectos: BASIC_COMPONENTS_CATALOG (las 6 categorías estándar comunes).
-// - Si es ESP32: añade además ESP32_IOT_CATALOG (IoT y telemetría de hardware).
+// - Para todos los proyectos: BASIC_COMPONENTS_CATALOG (primitivos) y CHARTS_CATALOG (gráficos).
+// - Si es ESP32: añade además ESP32_HARDWARE_CATALOG (indicadores y controles de hardware).
 // - Si es Framework (React/Vue): añade SHADCN_CATALOG (componentes compuestos).
 // - Si es HTML/ESP32: añade PRELINE_CATALOG (componentes compuestos).
 export function getCatalogForProject(projectType: ProjectType): ComponentDefinition[] {
   const isFramework = projectType === 'react' || projectType === 'framework';
   const isEsp32 = projectType === 'esp32';
   const compositeCatalog = isFramework ? SHADCN_CATALOG : PRELINE_CATALOG;
-  const esp32Catalog = isEsp32 ? ESP32_IOT_CATALOG : [];
-  return [...BASIC_COMPONENTS_CATALOG, ...esp32Catalog, ...compositeCatalog];
+  const esp32Catalog = isEsp32 ? ESP32_HARDWARE_CATALOG : [];
+  return [...BASIC_COMPONENTS_CATALOG, ...CHARTS_CATALOG, ...esp32Catalog, ...compositeCatalog];
 }
 
 // Catálogo combinado completo
 export const COMPONENT_CATALOG: ComponentDefinition[] = [
   ...BASIC_COMPONENTS_CATALOG,
-  ...ESP32_IOT_CATALOG,
+  ...CHARTS_CATALOG,
+  ...ESP32_HARDWARE_CATALOG,
   ...SHADCN_CATALOG,
   ...PRELINE_CATALOG,
 ];

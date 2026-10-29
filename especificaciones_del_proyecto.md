@@ -43,10 +43,20 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
        - **Botones de Movimiento Rápido de Capa**: Controles dedicados "Subir capa" (`ArrowUp`) y "Bajar capa" (`ArrowDown`) en cada fila de capa al pasar el cursor.
        - Indicadores de visibilidad (icono de ojo para ocultar/mostrar) y candado (bloquear edición).
        - Acceso rápido para eliminar capas.
-     - **Assets (Componentes & Catálogo)**:
-       - Catálogo de componentes adaptado dinámicamente al tipo de proyecto (**Shadcn/ui** para Frameworks o **Preline UI** para HTML/ESP32), encabezado siempre por la categoría genérica universal **Componentes Básicos**.
-       - Barra de búsqueda en tiempo real y selector de filtrado por categoría (*All*, *Componentes Básicos*, y categorías compuestas de la biblioteca activa).
-       - Vistas en tarjeta compacta con indicación de origen (*Básico*, *Shadcn*, *Preline*) arrastrables directamente al lienzo o al árbol de capas.
+     - **Assets (`AssetsToolbar`) (Componentes & Catálogo)**:
+       - Componente dedicado `AssetsToolbar` integrado en el panel lateral con fondo oscuro y estética de editor moderno (`bg-[#1e1e1e] / bg-[#252526]`).
+       - **Cabecera General**: Título principal visible y limpio **"Assets"** en la parte superior, acompañado del contador total de elementos y badge de origen (*Shadcn UI*, *Preline UI* o *ESP32 IoT*).
+       - **Barra de Búsqueda y Filtro**: Búsqueda en tiempo real con botón para limpiar (`X`) y chips de categoría rápida (*All*, *Primitives*, *Charts*, *Hardware & IoT*, *Composite*).
+       - **Bloques Colapsables con Flechas Indicadoras**: Secciones organizadas en bloques colapsables (*Primitives*, *Charts*, *Hardware & IoT (ESP32)*, y categorías de la biblioteca compuesta) con flechas indicadoras de expansión (`ChevronDown` desplegado, `ChevronRight` colapsado) y contador numérico por bloque. Auto-expansión de bloques coincidentes al buscar.
+       - **Diseño Compacto de Tarjetas**: Cuadrícula de 2 columnas con bordes redondeados y sutiles (`rounded-lg bg-[#252526] border border-[#383838] hover:border-[#0d99ff] hover:bg-[#2c2c2e]`).
+       - **Alineación Interna**: Icono representativo a la izquierda en contenedor estilizado seguido del nombre limpio del componente:
+         - "Heading" con icono `T`
+         - "Paragraph" con icono `¶`
+         - "Button" con icono de cursor de acción
+         - "Input" con icono de cursor de entrada de texto
+         - "Icon", "Image", "Form", "Label", "Textarea", "Checkbox", "Radio", "Select", "Box", "Container", etc.
+       - **Guía Inferior "Drag to UI"**: Cada tarjeta incluye un pie sutil con el texto de guía `"Drag to UI"` y el tirador de arrastre `GripVertical`.
+       - **Interacción Completa**: Soporte tanto para arrastre directo (Drag-and-Drop) al lienzo como para clic para inserción instantánea en el contenedor seleccionado o artboard.
    - Pestaña colapsable con atajo `Ctrl+\` / `Cmd+\` para maximizar el lienzo.
 
 3. **Lienzo Central (Infinite Canvas & Artboard Viewport)**:
