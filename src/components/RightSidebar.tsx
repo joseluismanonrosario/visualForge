@@ -53,6 +53,12 @@ import {
   RotateCw,
   FlipHorizontal,
   FlipVertical,
+  Italic,
+  AlertCircle,
+  Loader2,
+  CheckSquare,
+  FileText,
+  LayoutGrid,
 } from 'lucide-react';
 import { CanvasNode, ProjectType, GpioConfig, GpioAction, GpioCommMode } from '../types';
 import {
@@ -1135,12 +1141,12 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
             </div>
 
             {/* Typography / Headings Tag & Content Control */}
-            {selectedNode.type === 'typography' && (
-              <div className="space-y-2 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+            {(selectedNode.type === 'typography' || selectedNode.type === 'text') && (
+              <div className="space-y-2.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
                 <div className="flex items-center justify-between">
                   <label className="text-[10px] font-medium text-zinc-400 flex items-center gap-1">
                     <Heading className="w-3 h-3 text-[#0d99ff]" />
-                    <span>Tipo de Elemento HTML</span>
+                    <span>Nivel o Tipo de Texto</span>
                   </label>
                   <span className="text-[10px] font-mono text-[#0d99ff] font-semibold">
                     &lt;{props.as || 'p'}&gt;
@@ -1161,8 +1167,10 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                     <option value="h5" className="bg-[#1e1e1e] text-white">h5 — Encabezado H5 (16px SemiBold)</option>
                     <option value="h6" className="bg-[#1e1e1e] text-white">h6 — Encabezado Menor H6 (14px SemiBold)</option>
                   </optgroup>
-                  <optgroup label="Texto & Bloques" className="bg-[#1e1e1e] text-zinc-400">
+                  <optgroup label="Texto & Semántica" className="bg-[#1e1e1e] text-zinc-400">
+                    <option value="subtitle" className="bg-[#1e1e1e] text-white">subtitle — Subtítulo Destacado (18px Medium)</option>
                     <option value="p" className="bg-[#1e1e1e] text-white">p — Párrafo Estándar (15px)</option>
+                    <option value="label" className="bg-[#1e1e1e] text-white">label — Etiqueta de Formulario (13px)</option>
                     <option value="span" className="bg-[#1e1e1e] text-white">span — Texto en Línea (Inline)</option>
                     <option value="blockquote" className="bg-[#1e1e1e] text-white">blockquote — Cita en Bloque (Italic)</option>
                     <option value="div" className="bg-[#1e1e1e] text-white">div — Bloque Genérico (div)</option>
@@ -1171,13 +1179,15 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                 </select>
 
                 {/* Quick Heading Selector Pills */}
-                <div className="flex items-center gap-1 pt-1 flex-wrap">
+                <div className="flex items-center gap-1 pt-0.5 flex-wrap">
                   {[
                     { tag: 'h1', label: 'H1' },
                     { tag: 'h2', label: 'H2' },
                     { tag: 'h3', label: 'H3' },
                     { tag: 'h4', label: 'H4' },
+                    { tag: 'subtitle', label: 'Sub' },
                     { tag: 'p', label: 'P' },
+                    { tag: 'label', label: 'Label' },
                     { tag: 'span', label: 'Span' },
                     { tag: 'blockquote', label: 'Quote' },
                   ].map((item) => (
@@ -1206,27 +1216,53 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                     className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2 py-1.5 text-white focus:outline-none resize-none text-xs"
                   />
                 </div>
+
+                {/* Quick Style Controls for Text */}
+                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#383838]">
+                  <div>
+                    <span className="text-[10px] text-zinc-400 font-medium block mb-1">Peso (Bold/Normal)</span>
+                    <div className="flex items-center gap-1 bg-[#252526] p-0.5 rounded border border-[#383838]">
+                      <button
+                        onClick={() => onUpdateStyle({ fontWeight: '400' })}
+                        className={`flex-1 py-0.5 text-[10px] rounded ${
+                          (style.fontWeight || '400') === '400' ? 'bg-[#0d99ff] text-white' : 'text-zinc-400'
+                        }`}
+                      >
+                        Normal
+                      </button>
+                      <button
+                        onClick={() => onUpdateStyle({ fontWeight: '700' })}
+                        className={`flex-1 py-0.5 text-[10px] font-bold rounded ${
+                          (style.fontWeight || '400') === '700' || style.fontWeight === 'bold' ? 'bg-[#0d99ff] text-white' : 'text-zinc-400'
+                        }`}
+                      >
+                        Bold
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-zinc-400 font-medium block mb-1">Estilo Cursiva</span>
+                    <button
+                      onClick={() => onUpdateStyle({ fontStyle: style.fontStyle === 'italic' ? 'normal' : 'italic' })}
+                      className={`w-full py-1 text-xs rounded border transition-colors flex items-center justify-center gap-1.5 ${
+                        style.fontStyle === 'italic'
+                          ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                          : 'bg-[#252526] text-zinc-300 border-[#383838] hover:bg-[#323232]'
+                      }`}
+                    >
+                      <Italic className="w-3 h-3" />
+                      <span>{style.fontStyle === 'italic' ? 'Itálica activa' : 'Normal'}</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
 
-            {/* Other Component Text / Content if applicable */}
-            {!isIcon && selectedNode.type !== 'typography' && (props.text !== undefined || selectedNode.type === 'blockquote' || selectedNode.type === 'label') && (
-              <div className="space-y-1.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
-                <label className="text-[10px] font-medium text-zinc-400">Texto del Elemento</label>
-                <textarea
-                  value={props.text || ''}
-                  onChange={(e) => onUpdateProps({ text: e.target.value })}
-                  rows={2}
-                  className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2 py-1.5 text-white focus:outline-none resize-none text-xs"
-                />
-              </div>
-            )}
-
-            {/* If Button or Badge */}
+            {/* BUTTON COMPONENT PROPERTIES */}
             {(selectedNode.type === 'button' || selectedNode.type === 'badge') && (
-              <div className="space-y-2 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+              <div className="space-y-2.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-medium text-zinc-400">Texto del Botón / Badge</label>
+                  <label className="text-[10px] font-medium text-zinc-400">Texto del Botón</label>
                   <input
                     type="text"
                     value={props.label || ''}
@@ -1234,25 +1270,137 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                     className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2 py-1 text-white text-xs focus:outline-none"
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-medium text-zinc-400">Variante Visual</label>
-                  <select
-                    value={props.variant || 'default'}
-                    onChange={(e) => onUpdateProps({ variant: e.target.value })}
-                    className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2 py-1 text-white text-xs focus:outline-none"
-                  >
-                    <option value="default" className="bg-[#1e1e1e]">Default (Primario)</option>
-                    <option value="secondary" className="bg-[#1e1e1e]">Secondary</option>
-                    <option value="outline" className="bg-[#1e1e1e]">Outline (Borde)</option>
-                    <option value="destructive" className="bg-[#1e1e1e]">Destructive (Rojo)</option>
-                    <option value="ghost" className="bg-[#1e1e1e]">Ghost (Transparente)</option>
-                    <option value="link" className="bg-[#1e1e1e]">Link (Enlace)</option>
-                  </select>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Variante Visual</label>
+                    <select
+                      value={props.variant || 'primary'}
+                      onChange={(e) => onUpdateProps({ variant: e.target.value })}
+                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                    >
+                      <option value="primary" className="bg-[#1e1e1e]">Primario (CTA)</option>
+                      <option value="secondary" className="bg-[#1e1e1e]">Secundario</option>
+                      <option value="outline" className="bg-[#1e1e1e]">Outline</option>
+                      <option value="ghost" className="bg-[#1e1e1e]">Ghost</option>
+                      <option value="destructive" className="bg-[#1e1e1e]">Destructive</option>
+                      <option value="link" className="bg-[#1e1e1e]">Link</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Tamaño</label>
+                    <select
+                      value={props.size || 'md'}
+                      onChange={(e) => onUpdateProps({ size: e.target.value })}
+                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                    >
+                      <option value="sm" className="bg-[#1e1e1e]">Pequeño (sm)</option>
+                      <option value="md" className="bg-[#1e1e1e]">Mediano (md)</option>
+                      <option value="lg" className="bg-[#1e1e1e]">Grande (lg)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Button States */}
+                <div className="space-y-1 pt-1 border-t border-[#383838]">
+                  <span className="text-[10px] text-zinc-400 font-medium block">Estados del Botón</span>
+                  <div className="grid grid-cols-3 gap-1">
+                    <button
+                      onClick={() => onUpdateProps({ isLoading: !props.isLoading })}
+                      className={`py-1 text-[10px] rounded border transition-colors flex items-center justify-center gap-1 ${
+                        props.isLoading
+                          ? 'bg-amber-600/40 text-amber-200 border-amber-500'
+                          : 'bg-[#252526] hover:bg-[#323232] text-zinc-400 border-[#383838]'
+                      }`}
+                    >
+                      <Loader2 className={`w-2.5 h-2.5 ${props.isLoading ? 'animate-spin text-amber-300' : ''}`} />
+                      <span>Loading</span>
+                    </button>
+                    <button
+                      onClick={() => onUpdateProps({ disabled: !props.disabled })}
+                      className={`py-1 text-[10px] rounded border transition-colors ${
+                        props.disabled
+                          ? 'bg-red-600/40 text-red-200 border-red-500'
+                          : 'bg-[#252526] hover:bg-[#323232] text-zinc-400 border-[#383838]'
+                      }`}
+                    >
+                      Disabled
+                    </button>
+                    <button
+                      onClick={() => onUpdateProps({ isActive: !props.isActive })}
+                      className={`py-1 text-[10px] rounded border transition-colors ${
+                        props.isActive
+                          ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                          : 'bg-[#252526] hover:bg-[#323232] text-zinc-400 border-[#383838]'
+                      }`}
+                    >
+                      Activo
+                    </button>
+                  </div>
+                </div>
+
+                {/* Icon in Button */}
+                <div className="space-y-1.5 pt-1 border-t border-[#383838]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-zinc-400 font-medium">Icono Integrado</span>
+                    <button
+                      onClick={() => setShowIconModal(true)}
+                      className="text-[10px] text-[#0d99ff] hover:underline"
+                    >
+                      Explorar
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    value={props.iconName || ''}
+                    onChange={(e) => onUpdateProps({ iconName: e.target.value })}
+                    placeholder="ej. lucide:arrow-right"
+                    className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2 py-1 text-white text-xs font-mono focus:outline-none"
+                  />
+                  <div className="flex items-center gap-1 flex-wrap">
+                    {[
+                      { id: '', label: 'Sin Icono' },
+                      { id: 'lucide:arrow-right', label: '→' },
+                      { id: 'lucide:sparkles', label: '✨' },
+                      { id: 'lucide:plus', label: '+' },
+                      { id: 'lucide:check', label: '✓' },
+                    ].map((ic) => (
+                      <button
+                        key={ic.id}
+                        onClick={() => onUpdateProps({ iconName: ic.id })}
+                        className={`px-1.5 py-0.5 rounded text-[10px] border ${
+                          (props.iconName || '') === ic.id
+                            ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                            : 'bg-[#252526] text-zinc-400 border-[#383838]'
+                        }`}
+                      >
+                        {ic.label}
+                      </button>
+                    ))}
+                    <div className="ml-auto flex items-center bg-[#252526] p-0.5 rounded border border-[#383838]">
+                      <button
+                        onClick={() => onUpdateProps({ iconPosition: 'left' })}
+                        className={`px-1.5 py-0.5 text-[9px] rounded ${
+                          (props.iconPosition || 'left') === 'left' ? 'bg-[#0d99ff] text-white' : 'text-zinc-400'
+                        }`}
+                      >
+                        Izq
+                      </button>
+                      <button
+                        onClick={() => onUpdateProps({ iconPosition: 'right' })}
+                        className={`px-1.5 py-0.5 text-[9px] rounded ${
+                          props.iconPosition === 'right' ? 'bg-[#0d99ff] text-white' : 'text-zinc-400'
+                        }`}
+                      >
+                        Der
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* If Link */}
+            {/* LINK COMPONENT PROPERTIES */}
             {selectedNode.type === 'link' && (
               <div className="space-y-2 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
                 <div className="space-y-1">
@@ -1274,25 +1422,50 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                     className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-medium text-zinc-400">Destino (Target)</label>
-                  <select
-                    value={props.target || '_self'}
-                    onChange={(e) => onUpdateProps({ target: e.target.value })}
-                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
-                  >
-                    <option value="_self" className="bg-[#1e1e1e]">Misma pestaña (_self)</option>
-                    <option value="_blank" className="bg-[#1e1e1e]">Nueva pestaña (_blank)</option>
-                  </select>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Variante Visual</label>
+                    <select
+                      value={props.variant || 'link'}
+                      onChange={(e) => onUpdateProps({ variant: e.target.value })}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                    >
+                      <option value="link" className="bg-[#1e1e1e]">Texto (Enlace)</option>
+                      <option value="primary" className="bg-[#1e1e1e]">Botón Primario</option>
+                      <option value="secondary" className="bg-[#1e1e1e]">Botón Secundario</option>
+                      <option value="outline" className="bg-[#1e1e1e]">Outline</option>
+                      <option value="ghost" className="bg-[#1e1e1e]">Ghost</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Destino (Target)</label>
+                    <select
+                      value={props.target || '_self'}
+                      onChange={(e) => onUpdateProps({ target: e.target.value })}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                    >
+                      <option value="_self" className="bg-[#1e1e1e]">Misma pestaña (_self)</option>
+                      <option value="_blank" className="bg-[#1e1e1e]">Nueva pestaña (_blank)</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between pt-1 border-t border-[#383838]">
+                  <span className="text-[10px] text-zinc-400">Deshabilitar enlace</span>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(props.disabled)}
+                    onChange={(e) => onUpdateProps({ disabled: e.target.checked })}
+                    className="accent-[#0d99ff]"
+                  />
                 </div>
               </div>
             )}
 
-            {/* If Image */}
+            {/* IMAGE COMPONENT PROPERTIES */}
             {selectedNode.type === 'image' && (
-              <div className="space-y-2 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+              <div className="space-y-2.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-medium text-zinc-400">URL de Imagen</label>
+                  <label className="text-[10px] font-medium text-zinc-400">URL de la Imagen</label>
                   <input
                     type="text"
                     value={props.src || ''}
@@ -1310,28 +1483,430 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                     className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
                   />
                 </div>
+
+                {/* Aspect Ratio */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-medium text-zinc-400">Ajuste (Object Fit)</label>
-                  <select
-                    value={props.objectFit || style.objectFit || 'cover'}
-                    onChange={(e) => {
-                      onUpdateProps({ objectFit: e.target.value });
-                      onUpdateStyle({ objectFit: e.target.value });
-                    }}
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-medium text-zinc-400">Proporción (Aspect Ratio)</label>
+                    <span className="text-[10px] font-mono text-[#0d99ff]">
+                      {props.aspectRatio || style.aspectRatio || 'auto'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-5 gap-1">
+                    {['auto', '16/9', '4/3', '1/1', '21/9'].map((ratio) => (
+                      <button
+                        key={ratio}
+                        onClick={() => {
+                          onUpdateProps({ aspectRatio: ratio });
+                          onUpdateStyle({ aspectRatio: ratio });
+                        }}
+                        className={`py-0.5 rounded text-[10px] font-mono border ${
+                          (props.aspectRatio || style.aspectRatio || 'auto') === ratio
+                            ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                            : 'bg-[#252526] text-zinc-400 border-[#383838] hover:bg-[#323232]'
+                        }`}
+                      >
+                        {ratio === 'auto' ? 'Auto' : ratio}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Object Fit & Loading */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Ajuste (Object Fit)</label>
+                    <select
+                      value={props.objectFit || style.objectFit || 'cover'}
+                      onChange={(e) => {
+                        onUpdateProps({ objectFit: e.target.value });
+                        onUpdateStyle({ objectFit: e.target.value });
+                      }}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                    >
+                      <option value="cover" className="bg-[#1e1e1e]">Cover (Recorte)</option>
+                      <option value="contain" className="bg-[#1e1e1e]">Contain (Completa)</option>
+                      <option value="fill" className="bg-[#1e1e1e]">Fill (Estirar)</option>
+                      <option value="none" className="bg-[#1e1e1e]">None (Original)</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Carga Diferida</label>
+                    <select
+                      value={props.loading || 'lazy'}
+                      onChange={(e) => onUpdateProps({ loading: e.target.value })}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                    >
+                      <option value="lazy" className="bg-[#1e1e1e]">Lazy (Diferida)</option>
+                      <option value="eager" className="bg-[#1e1e1e]">Eager (Inmediata)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Fallback Image */}
+                <div className="space-y-1 pt-1 border-t border-[#383838]">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-medium text-zinc-400">Fallback en Caso de Error</label>
+                    <button
+                      onClick={() =>
+                        onUpdateProps({
+                          fallbackSrc:
+                            'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800&auto=format&fit=crop&q=80',
+                        })
+                      }
+                      className="text-[9px] text-zinc-400 hover:text-white"
+                    >
+                      Por defecto
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    value={props.fallbackSrc || ''}
+                    onChange={(e) => onUpdateProps({ fallbackSrc: e.target.value })}
+                    placeholder="URL de imagen de respaldo..."
                     className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
-                  >
-                    <option value="cover" className="bg-[#1e1e1e]">Cover (Llenar y recortar)</option>
-                    <option value="contain" className="bg-[#1e1e1e]">Contain (Ajustar dentro)</option>
-                    <option value="fill" className="bg-[#1e1e1e]">Fill (Estirar)</option>
-                    <option value="none" className="bg-[#1e1e1e]">None (Original)</option>
-                  </select>
+                  />
                 </div>
               </div>
             )}
 
-            {/* If Input or Textarea */}
-            {(selectedNode.type === 'input' || selectedNode.type === 'textarea' || selectedNode.type === 'searchbox') && (
+            {/* FORM CONTAINER PROPERTIES */}
+            {selectedNode.type === 'form' && (
               <div className="space-y-2 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Acción (URL / Endpoint)</label>
+                  <input
+                    type="text"
+                    value={props.action || '#'}
+                    onChange={(e) => onUpdateProps({ action: e.target.value })}
+                    placeholder="/api/submit"
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Método HTTP</label>
+                    <select
+                      value={props.method || 'POST'}
+                      onChange={(e) => onUpdateProps({ method: e.target.value })}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                    >
+                      <option value="POST" className="bg-[#1e1e1e]">POST</option>
+                      <option value="GET" className="bg-[#1e1e1e]">GET</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Disposición</label>
+                    <button
+                      onClick={() =>
+                        onUpdateStyle({
+                          flexDirection: style.flexDirection === 'row' ? 'column' : 'row',
+                          display: 'flex',
+                        })
+                      }
+                      className="w-full py-1 text-xs rounded border border-[#383838] bg-[#252526] text-zinc-300 hover:bg-[#323232]"
+                    >
+                      {style.flexDirection === 'row' ? 'Fila (Row)' : 'Columna (Stack)'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* LABEL PROPERTIES */}
+            {selectedNode.type === 'label' && (
+              <div className="space-y-2 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Texto de la Etiqueta</label>
+                  <input
+                    type="text"
+                    value={props.text || props.label || ''}
+                    onChange={(e) => onUpdateProps({ text: e.target.value, label: e.target.value })}
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">ID Vinculado (htmlFor)</label>
+                  <input
+                    type="text"
+                    value={props.htmlFor || ''}
+                    onChange={(e) => onUpdateProps({ htmlFor: e.target.value })}
+                    placeholder="input_id_1"
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs font-mono focus:outline-none"
+                  />
+                </div>
+                <div className="flex items-center justify-between pt-1 border-t border-[#383838]">
+                  <span className="text-[10px] text-zinc-400">Campo Obligatorio (*)</span>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(props.required)}
+                    onChange={(e) => onUpdateProps({ required: e.target.checked })}
+                    className="accent-[#0d99ff]"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* INPUT PROPERTIES */}
+            {(selectedNode.type === 'input' || selectedNode.type === 'searchbox') && (
+              <div className="space-y-2 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Tipo de Entrada</label>
+                    <select
+                      value={props.inputType || props.type || 'text'}
+                      onChange={(e) => onUpdateProps({ inputType: e.target.value, type: e.target.value })}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                    >
+                      <option value="text" className="bg-[#1e1e1e]">Texto (text)</option>
+                      <option value="email" className="bg-[#1e1e1e]">Correo (email)</option>
+                      <option value="password" className="bg-[#1e1e1e]">Contraseña (password)</option>
+                      <option value="number" className="bg-[#1e1e1e]">Número (number)</option>
+                      <option value="date" className="bg-[#1e1e1e]">Fecha (date)</option>
+                      <option value="file" className="bg-[#1e1e1e]">Archivo (file)</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Etiqueta (Label)</label>
+                    <input
+                      type="text"
+                      value={props.label || ''}
+                      onChange={(e) => onUpdateProps({ label: e.target.value })}
+                      placeholder="Nombre del campo"
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Placeholder</label>
+                  <input
+                    type="text"
+                    value={props.placeholder || ''}
+                    onChange={(e) => onUpdateProps({ placeholder: e.target.value })}
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Valor Inicial</label>
+                  <input
+                    type="text"
+                    value={props.value || ''}
+                    onChange={(e) => onUpdateProps({ value: e.target.value })}
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
+                </div>
+
+                {/* State Toggles: Error & Disabled */}
+                <div className="space-y-1.5 pt-1 border-t border-[#383838]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-zinc-400">Estado de Error</span>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(props.hasError)}
+                      onChange={(e) => onUpdateProps({ hasError: e.target.checked })}
+                      className="accent-red-500"
+                    />
+                  </div>
+                  {props.hasError && (
+                    <input
+                      type="text"
+                      value={props.errorMessage || ''}
+                      onChange={(e) => onUpdateProps({ errorMessage: e.target.value })}
+                      placeholder="Mensaje de error visible..."
+                      className="w-full bg-[#252526] border border-red-500/50 rounded px-2 py-1 text-red-200 text-xs focus:outline-none"
+                    />
+                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-zinc-400">Deshabilitado (Disabled)</span>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(props.disabled)}
+                      onChange={(e) => onUpdateProps({ disabled: e.target.checked })}
+                      className="accent-[#0d99ff]"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-zinc-400">Campo Obligatorio (*)</span>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(props.required)}
+                      onChange={(e) => onUpdateProps({ required: e.target.checked })}
+                      className="accent-[#0d99ff]"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TEXTAREA PROPERTIES */}
+            {selectedNode.type === 'textarea' && (
+              <div className="space-y-2 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Etiqueta</label>
+                    <input
+                      type="text"
+                      value={props.label || ''}
+                      onChange={(e) => onUpdateProps({ label: e.target.value })}
+                      placeholder="Mensaje"
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Filas (Rows)</label>
+                    <input
+                      type="number"
+                      value={props.rows || 3}
+                      onChange={(e) => onUpdateProps({ rows: Number(e.target.value) })}
+                      min={1}
+                      max={12}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Placeholder</label>
+                  <input
+                    type="text"
+                    value={props.placeholder || ''}
+                    onChange={(e) => onUpdateProps({ placeholder: e.target.value })}
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1.5 pt-1 border-t border-[#383838]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-zinc-400">Estado de Error</span>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(props.hasError)}
+                      onChange={(e) => onUpdateProps({ hasError: e.target.checked })}
+                      className="accent-red-500"
+                    />
+                  </div>
+                  {props.hasError && (
+                    <input
+                      type="text"
+                      value={props.errorMessage || ''}
+                      onChange={(e) => onUpdateProps({ errorMessage: e.target.value })}
+                      placeholder="Mensaje de error..."
+                      className="w-full bg-[#252526] border border-red-500/50 rounded px-2 py-1 text-red-200 text-xs focus:outline-none"
+                    />
+                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-zinc-400">Deshabilitado (Disabled)</span>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(props.disabled)}
+                      onChange={(e) => onUpdateProps({ disabled: e.target.checked })}
+                      className="accent-[#0d99ff]"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* CHECKBOX PROPERTIES */}
+            {selectedNode.type === 'checkbox' && (
+              <div className="space-y-2 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Texto de la Casilla</label>
+                  <input
+                    type="text"
+                    value={props.label || ''}
+                    onChange={(e) => onUpdateProps({ label: e.target.value })}
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="flex items-center justify-between pt-1 border-t border-[#383838]">
+                  <span className="text-[10px] text-zinc-400">Marcado por defecto</span>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(props.checked)}
+                    onChange={(e) => onUpdateProps({ checked: e.target.checked })}
+                    className="accent-[#0d99ff]"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-zinc-400">Deshabilitado</span>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(props.disabled)}
+                    onChange={(e) => onUpdateProps({ disabled: e.target.checked })}
+                    className="accent-[#0d99ff]"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* RADIO PROPERTIES */}
+            {(selectedNode.type === 'radio' || selectedNode.type === 'radio_group') && (
+              <div className="space-y-2 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Etiqueta de Grupo</label>
+                  <input
+                    type="text"
+                    value={props.label || ''}
+                    onChange={(e) => onUpdateProps({ label: e.target.value })}
+                    placeholder="Elige una opción"
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Nombre de Grupo (name)</label>
+                  <input
+                    type="text"
+                    value={props.name || ''}
+                    onChange={(e) => onUpdateProps({ name: e.target.value })}
+                    placeholder="radio_group_1"
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs font-mono focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Opciones (separadas por coma)</label>
+                  <input
+                    type="text"
+                    value={
+                      Array.isArray(props.options)
+                        ? props.options.join(', ')
+                        : typeof props.options === 'string'
+                        ? props.options
+                        : 'Opción 1, Opción 2'
+                    }
+                    onChange={(e) =>
+                      onUpdateProps({
+                        options: e.target.value.split(',').map((s) => s.trim()),
+                      })
+                    }
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="flex items-center justify-between pt-1 border-t border-[#383838]">
+                  <span className="text-[10px] text-zinc-400">Deshabilitado</span>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(props.disabled)}
+                    onChange={(e) => onUpdateProps({ disabled: e.target.checked })}
+                    className="accent-[#0d99ff]"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* SELECT / COMBOBOX PROPERTIES */}
+            {(selectedNode.type === 'select' || selectedNode.type === 'combobox' || selectedNode.type === 'advanced_select') && (
+              <div className="space-y-2 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Etiqueta</label>
+                  <input
+                    type="text"
+                    value={props.label || ''}
+                    onChange={(e) => onUpdateProps({ label: e.target.value })}
+                    placeholder="Seleccione..."
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
+                </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-medium text-zinc-400">Placeholder</label>
                   <input
@@ -1342,16 +1917,167 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-medium text-zinc-400">Valor por Defecto</label>
+                  <label className="text-[10px] font-medium text-zinc-400">Opciones (separadas por coma)</label>
+                  <textarea
+                    rows={2}
+                    value={
+                      Array.isArray(props.options)
+                        ? props.options.join(', ')
+                        : typeof props.options === 'string'
+                        ? props.options
+                        : 'Opción 1, Opción 2, Opción 3'
+                    }
+                    onChange={(e) =>
+                      onUpdateProps({
+                        options: e.target.value.split(',').map((s) => s.trim()),
+                      })
+                    }
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none resize-none"
+                  />
+                </div>
+                <div className="flex items-center justify-between pt-1 border-t border-[#383838]">
+                  <span className="text-[10px] text-zinc-400">Deshabilitado</span>
                   <input
-                    type="text"
-                    value={props.value || ''}
-                    onChange={(e) => onUpdateProps({ value: e.target.value })}
-                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                    type="checkbox"
+                    checked={Boolean(props.disabled)}
+                    onChange={(e) => onUpdateProps({ disabled: e.target.checked })}
+                    className="accent-[#0d99ff]"
                   />
                 </div>
               </div>
             )}
+
+            {/* BOX / CONTAINER PROPERTIES */}
+            {(selectedNode.type === 'box' || selectedNode.type === 'container' || selectedNode.type === 'stack') && (
+              <div className="space-y-2 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-medium text-zinc-400 flex items-center gap-1">
+                    <LayoutGrid className="w-3 h-3 text-[#0d99ff]" />
+                    <span>Distribución (Layout)</span>
+                  </label>
+                  <span className="text-[10px] font-mono text-zinc-500">
+                    {style.display || 'flex'}: {style.flexDirection || (style.display === 'grid' ? 'grid' : 'column')}
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-1">
+                  <button
+                    onClick={() =>
+                      onUpdateStyle({
+                        display: 'flex',
+                        flexDirection: 'row',
+                        gridTemplateColumns: undefined,
+                      })
+                    }
+                    className={`py-1 text-[10px] rounded border transition-colors ${
+                      style.display === 'flex' && style.flexDirection === 'row'
+                        ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                        : 'bg-[#252526] text-zinc-400 border-[#383838] hover:bg-[#323232]'
+                    }`}
+                  >
+                    Fila (Row)
+                  </button>
+                  <button
+                    onClick={() =>
+                      onUpdateStyle({
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gridTemplateColumns: undefined,
+                      })
+                    }
+                    className={`py-1 text-[10px] rounded border transition-colors ${
+                      (style.display === 'flex' && style.flexDirection === 'column') || (!style.display && !style.flexDirection)
+                        ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                        : 'bg-[#252526] text-zinc-400 border-[#383838] hover:bg-[#323232]'
+                    }`}
+                  >
+                    Col (Stack)
+                  </button>
+                  <button
+                    onClick={() =>
+                      onUpdateStyle({
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                        flexDirection: undefined,
+                      })
+                    }
+                    className={`py-1 text-[10px] rounded border transition-colors ${
+                      style.display === 'grid' && style.gridTemplateColumns?.includes('2')
+                        ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                        : 'bg-[#252526] text-zinc-400 border-[#383838] hover:bg-[#323232]'
+                    }`}
+                  >
+                    Grid 2
+                  </button>
+                  <button
+                    onClick={() =>
+                      onUpdateStyle({
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                        flexDirection: undefined,
+                      })
+                    }
+                    className={`py-1 text-[10px] rounded border transition-colors ${
+                      style.display === 'grid' && style.gridTemplateColumns?.includes('3')
+                        ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                        : 'bg-[#252526] text-zinc-400 border-[#383838] hover:bg-[#323232]'
+                    }`}
+                  >
+                    Grid 3
+                  </button>
+                  <button
+                    onClick={() =>
+                      onUpdateStyle({
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+                        flexDirection: undefined,
+                      })
+                    }
+                    className={`py-1 text-[10px] rounded border transition-colors ${
+                      style.display === 'grid' && style.gridTemplateColumns?.includes('4')
+                        ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                        : 'bg-[#252526] text-zinc-400 border-[#383838] hover:bg-[#323232]'
+                    }`}
+                  >
+                    Grid 4
+                  </button>
+                  <button
+                    onClick={() =>
+                      onUpdateStyle({
+                        display: 'block',
+                        flexDirection: undefined,
+                        gridTemplateColumns: undefined,
+                      })
+                    }
+                    className={`py-1 text-[10px] rounded border transition-colors ${
+                      style.display === 'block'
+                        ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                        : 'bg-[#252526] text-zinc-400 border-[#383838] hover:bg-[#323232]'
+                    }`}
+                  >
+                    Bloque
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Other Component Text / Content if applicable */}
+            {!isIcon &&
+              selectedNode.type !== 'typography' &&
+              selectedNode.type !== 'text' &&
+              selectedNode.type !== 'button' &&
+              selectedNode.type !== 'link' &&
+              selectedNode.type !== 'label' &&
+              (props.text !== undefined || selectedNode.type === 'blockquote') && (
+                <div className="space-y-1.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                  <label className="text-[10px] font-medium text-zinc-400">Texto del Elemento</label>
+                  <textarea
+                    value={props.text || ''}
+                    onChange={(e) => onUpdateProps({ text: e.target.value })}
+                    rows={2}
+                    className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2 py-1.5 text-white focus:outline-none resize-none text-xs"
+                  />
+                </div>
+              )}
 
             {/* If Card, Alert or Collapsible */}
             {(selectedNode.type === 'card' || selectedNode.type === 'alert' || selectedNode.type === 'collapsible') && (
@@ -1448,7 +2174,6 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                 />
               </div>
             )}
-
             {/* If Vector Icon Component (Iconify Universal Offline) */}
             {isIcon && (
               <div className="space-y-3 bg-[#1e1e1e] p-3 rounded-lg border border-[#383838]">
@@ -1876,21 +2601,32 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                 </div>
               </div>
 
-              {/* Decoration */}
+              {/* Decoration & Italic */}
               <div className="space-y-1">
-                <span className="text-[10px] text-zinc-500 font-medium block">Decoración</span>
-                <div className="grid grid-cols-3 gap-0.5 bg-[#1e1e1e] p-0.5 rounded border border-[#383838]">
+                <span className="text-[10px] text-zinc-500 font-medium block">Decoración & Estilo</span>
+                <div className="grid grid-cols-4 gap-0.5 bg-[#1e1e1e] p-0.5 rounded border border-[#383838]">
                   {[
                     { val: 'none', label: '—', title: 'Ninguna' },
                     { val: 'underline', icon: Underline, title: 'Subrayado' },
                     { val: 'line-through', icon: Strikethrough, title: 'Tachado' },
+                    { val: 'italic', icon: Italic, title: 'Itálica (Cursiva)', isItalic: true },
                   ].map((d) => {
                     const Icon = d.icon;
-                    const isActive = (style.textDecoration || 'none') === d.val;
+                    const isActive = d.isItalic
+                      ? style.fontStyle === 'italic'
+                      : (style.textDecoration || 'none') === d.val;
                     return (
                       <button
                         key={d.val}
-                        onClick={() => onUpdateStyle({ textDecoration: d.val })}
+                        onClick={() => {
+                          if (d.isItalic) {
+                            onUpdateStyle({
+                              fontStyle: style.fontStyle === 'italic' ? 'normal' : 'italic',
+                            });
+                          } else {
+                            onUpdateStyle({ textDecoration: d.val });
+                          }
+                        }}
                         title={d.title}
                         className={`py-1 flex items-center justify-center text-[10px] rounded transition-colors ${
                           isActive

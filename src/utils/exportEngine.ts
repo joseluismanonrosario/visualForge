@@ -410,6 +410,7 @@ function generateReactShadcn(nodes: CanvasNode[], usedSvgs: Map<string, any>, in
 
       switch (node.type) {
         // Layout & Structure (Catálogo A: Shadcn)
+        case 'box':
         case 'container':
           return `${indent}<div className="vf-container max-w-5xl w-full mx-auto" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
         case 'aspect_ratio':
@@ -530,9 +531,12 @@ ${(node.props.links || []).map((l: any) => `${indent}    <a href="${l.href}" cla
 ${indent}  </nav>
 ${indent}  <div className="flex items-center gap-2">${childrenCode}</div>
 ${indent}</header>`;
-        case 'typography':
-          const Tag = node.props.as || 'p';
+        case 'text':
+        case 'typography': {
+          const asTag = node.props.as || 'p';
+          const Tag = asTag === 'subtitle' ? 'p' : asTag === 'label' ? 'label' : asTag;
           return `${indent}<${Tag} id="${node.id}"${styleAttr}>${node.props.text || ''}</${Tag}>`;
+        }
         case 'svg_icon':
         case 'fontawesome_icon':
         case 'styled_icon': {
@@ -545,8 +549,10 @@ ${indent}</header>`;
           }
           return `${indent}<${compName} width={${sizeVal}} height={${sizeVal}} id="${node.id}"${styleAttr} />`;
         }
+        case 'link':
+          return `${indent}<a href="${node.props.href || '#'}" target="${node.props.target || '_self'}" className="text-blue-500 hover:underline inline-flex items-center gap-1.5" id="${node.id}"${styleAttr}>${node.props.label || 'Link'}</a>`;
         case 'image':
-          return `${indent}<img src="${node.props.src}" alt="${node.props.alt || ''}" id="${node.id}" className="rounded-lg object-cover"${styleAttr} />`;
+          return `${indent}<img src="${node.props.src}" alt="${node.props.alt || ''}" loading="${node.props.loading || 'lazy'}" id="${node.id}" className="rounded-lg object-cover w-full"${styleAttr} />`;
 
         default:
           return `${indent}<div id="${node.id}"${styleAttr}>${childrenCode || node.props.label || node.type}</div>`;
@@ -568,6 +574,7 @@ function generateHtmlInlineSvg(nodes: CanvasNode[], indent = '      ', isEsp32 =
 
       switch (node.type) {
         // Layout & Content (Catálogo B: Preline UI)
+        case 'box':
         case 'container':
           return `${indent}<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
         case 'columns':
@@ -576,8 +583,12 @@ function generateHtmlInlineSvg(nodes: CanvasNode[], indent = '      ', isEsp32 =
           return `${indent}<div class="grid grid-cols-${node.props.columns || 2} gap-4" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
         case 'layout_splitter':
           return `${indent}<div class="flex flex-col md:flex-row gap-4 border border-zinc-800 rounded-xl p-4 bg-zinc-900/40" id="${node.id}"${styleAttr}>${childrenCode}</div>`;
+        case 'form':
+          return `${indent}<form action="${node.props.action || '#'}" method="${node.props.method || 'POST'}" class="w-full flex flex-col gap-4" id="${node.id}"${styleAttr}>${childrenCode}</form>`;
+        case 'text':
         case 'typography': {
-          const Tag = node.props.as || 'p';
+          const asTag = node.props.as || 'p';
+          const Tag = asTag === 'subtitle' ? 'p' : asTag === 'label' ? 'label' : asTag;
           return `${indent}<${Tag} class="text-zinc-200" id="${node.id}"${styleAttr}>${node.props.text || ''}</${Tag}>`;
         }
         case 'image':

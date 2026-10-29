@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { CanvasNode, DropPosition, ProjectType, ToolMode } from '../types';
 import { SvgIconRenderer } from '../utils/svgIconRenderer';
 import {
+  Loader2,
+  AlertCircle,
   Maximize2,
   Minimize2,
   Check,
@@ -194,23 +196,32 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
       // 1. LAYOUT & CONTAINERS
       // ==========================================
       case 'container':
+      case 'box':
       case 'stack':
       case 'columns':
       case 'layout_splitter':
       case 'custom_scrollbar':
-      case 'form':
+      case 'form': {
+        const ContainerTag = node.type === 'form' ? 'form' : 'div';
+        const formProps = node.type === 'form' ? {
+          action: props.action || '#',
+          method: props.method || 'POST',
+          onSubmit: (e: React.FormEvent) => e.preventDefault(),
+        } : {};
         return (
-          <div
+          <ContainerTag
             id={node.id}
             style={style}
             onClick={handleClick}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
+            {...formProps}
             className={`${selectionClasses} ${dropClasses} transition-all`}
           >
             {renderChildren()}
-          </div>
+          </ContainerTag>
         );
+      }
 
       case 'grid':
         return (
@@ -324,29 +335,70 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
       // ==========================================
       // 2. FORMS & INPUTS
       // ==========================================
-      case 'button':
+      case 'button': {
+        const variant = props.variant || 'primary';
+        const size = props.size || 'md';
+        const disabled = Boolean(props.disabled || props.isLoading);
+        const isActive = Boolean(props.isActive);
+
+        let variantClasses = 'bg-[#0d99ff] hover:bg-blue-600 text-white';
+        if (variant === 'secondary') {
+          variantClasses = 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700';
+        } else if (variant === 'outline') {
+          variantClasses = 'bg-transparent hover:bg-zinc-800/60 text-zinc-200 border border-zinc-600';
+        } else if (variant === 'ghost') {
+          variantClasses = 'bg-transparent hover:bg-zinc-800/60 text-zinc-300';
+        } else if (variant === 'destructive') {
+          variantClasses = 'bg-red-600 hover:bg-red-500 text-white';
+        } else if (variant === 'link') {
+          variantClasses = 'bg-transparent text-[#0d99ff] hover:underline p-0 h-auto';
+        }
+
+        let sizeClasses = 'px-4 py-2 text-xs';
+        let iconSize = 16;
+        if (size === 'sm') {
+          sizeClasses = 'px-2.5 py-1 text-[11px]';
+          iconSize = 13;
+        } else if (size === 'lg') {
+          sizeClasses = 'px-6 py-2.5 text-sm';
+          iconSize = 18;
+        }
+
+        const iconPosition = props.iconPosition || 'left';
+        const hasIcon = Boolean(props.iconName);
+
         return (
           <button
             id={node.id}
+            type="button"
+            disabled={disabled}
             style={style}
             onClick={handleClick}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
-            className={`${selectionClasses} ${dropClasses} transition-all active:scale-[0.98] ${
-              isFramework
-                ? 'rounded-md font-medium text-xs shadow-xs'
-                : 'rounded-lg font-semibold text-xs shadow-sm'
+            className={`${selectionClasses} ${dropClasses} inline-flex items-center justify-center gap-2 transition-all active:scale-[0.98] ${variantClasses} ${sizeClasses} ${
+              disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'cursor-pointer'
+            } ${isActive ? 'ring-2 ring-[#0d99ff] ring-offset-2 ring-offset-zinc-900' : ''} ${
+              isFramework ? 'rounded-md font-medium shadow-xs' : 'rounded-lg font-semibold shadow-sm'
             }`}
           >
-            {props.label || 'Button'}
+            {props.isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+            {!props.isLoading && hasIcon && iconPosition === 'left' && (
+              <SvgIconRenderer iconId={props.iconName} size={iconSize} stroke="currentColor" fill="none" />
+            )}
+            <span>{props.label || 'Button'}</span>
+            {!props.isLoading && hasIcon && iconPosition === 'right' && (
+              <SvgIconRenderer iconId={props.iconName} size={iconSize} stroke="currentColor" fill="none" />
+            )}
             {props.gpio?.enabled && (
-              <span className="ml-1.5 px-1 py-0.2 rounded bg-black/30 text-[9px] font-mono text-emerald-300">
+              <span className="ml-1 px-1 py-0.2 rounded bg-black/40 text-[9px] font-mono text-emerald-300">
                 GPIO {props.gpio.pin}
               </span>
             )}
             {renderChildren()}
           </button>
         );
+      }
 
       case 'button_group':
         return (
@@ -367,25 +419,46 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
           </div>
         );
 
-      case 'input':
+      case 'input': {
+        const inputType = props.inputType || props.type || 'text';
+        const hasError = Boolean(props.hasError);
+        const disabled = Boolean(props.disabled);
+
         return (
           <div id={node.id} onClick={handleClick} className={`${selectionClasses} space-y-1 w-full`}>
             {props.label && (
-              <label className="block text-xs font-medium text-zinc-300">{props.label}</label>
+              <label className="block text-xs font-medium text-zinc-300">
+                {props.label}
+                {props.required && <span className="text-red-400 ml-0.5">*</span>}
+              </label>
             )}
             <input
-              type={props.type || 'text'}
+              type={inputType}
               placeholder={props.placeholder || ''}
-              disabled={!isPreviewMode}
+              defaultValue={props.value || undefined}
+              disabled={disabled || !isPreviewMode}
               style={style}
-              className={`w-full focus:outline-none focus:ring-1 focus:ring-[#0d99ff] ${
+              className={`w-full focus:outline-none transition-colors ${
+                hasError
+                  ? 'border-red-500 focus:ring-1 focus:ring-red-500'
+                  : 'focus:ring-1 focus:ring-[#0d99ff]'
+              } ${
+                disabled ? 'opacity-50 cursor-not-allowed bg-zinc-900/40' : ''
+              } ${
                 isFramework
                   ? 'bg-zinc-950 border border-zinc-800 rounded-md px-3 py-1.5 text-xs text-white'
                   : 'bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-xs text-white'
               }`}
             />
+            {hasError && props.errorMessage && (
+              <p className="text-[11px] text-red-400 flex items-center gap-1 mt-1">
+                <AlertCircle className="w-3 h-3 shrink-0" />
+                <span>{props.errorMessage}</span>
+              </p>
+            )}
           </div>
         );
+      }
 
       case 'input_group':
         return (
@@ -420,45 +493,72 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
 
       case 'label':
         return (
-          <label id={node.id} style={style} onClick={handleClick} className={`${selectionClasses} text-xs font-medium text-zinc-300 block`}>
-            {props.text || 'Etiqueta de formulario'}
+          <label
+            id={node.id}
+            htmlFor={props.htmlFor}
+            style={style}
+            onClick={handleClick}
+            className={`${selectionClasses} text-xs font-medium text-zinc-300 block`}
+          >
+            {props.text || props.label || 'Etiqueta de formulario'}
+            {props.required && <span className="text-red-400 ml-0.5">*</span>}
           </label>
         );
 
-      case 'checkbox':
+      case 'checkbox': {
+        const disabled = Boolean(props.disabled);
         return (
           <div
             id={node.id}
             style={style}
             onClick={(e) => {
               handleClick(e);
-              if (isPreviewMode) setCheckboxChecked(!checkboxChecked);
+              if (isPreviewMode && !disabled) setCheckboxChecked(!checkboxChecked);
             }}
-            className={`${selectionClasses} inline-flex items-center gap-2 cursor-pointer select-none text-xs text-zinc-300`}
+            className={`${selectionClasses} inline-flex items-center gap-2 select-none text-xs text-zinc-300 ${
+              disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'cursor-pointer'
+            }`}
           >
             <div
               className={`w-4 h-4 rounded flex items-center justify-center border transition-colors ${
-                checkboxChecked
+                checkboxChecked || props.checked
                   ? 'bg-[#0d99ff] border-[#0d99ff] text-white'
                   : 'border-zinc-600 bg-zinc-800'
               }`}
             >
-              {checkboxChecked && <Check className="w-3 h-3 stroke-[3]" />}
+              {(checkboxChecked || props.checked) && <Check className="w-3 h-3 stroke-[3]" />}
             </div>
             <span>{props.label || 'Checkbox'}</span>
           </div>
         );
+      }
 
       case 'radio':
-      case 'radio_group':
+      case 'radio_group': {
+        const disabled = Boolean(props.disabled);
+        const options = Array.isArray(props.options)
+          ? props.options
+          : typeof props.options === 'string'
+          ? props.options.split(',').map((s: string) => s.trim())
+          : ['Opción 1', 'Opción 2'];
+
         return (
           <div id={node.id} onClick={handleClick} className={`${selectionClasses} space-y-1.5`}>
-            {(props.options || ['Opción 1', 'Opción 2']).map((opt: string, i: number) => (
-              <label key={i} className="flex items-center gap-2 text-xs text-zinc-300 cursor-pointer">
+            {props.label && (
+              <span className="block text-xs font-medium text-zinc-300 mb-1">{props.label}</span>
+            )}
+            {options.map((opt: string, i: number) => (
+              <label
+                key={i}
+                className={`flex items-center gap-2 text-xs text-zinc-300 ${
+                  disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                }`}
+              >
                 <input
                   type="radio"
-                  name={`radio_${node.id}`}
-                  defaultChecked={i === 0}
+                  name={props.name || `radio_${node.id}`}
+                  disabled={disabled || !isPreviewMode}
+                  defaultChecked={props.value ? props.value === opt : i === 0}
                   className="accent-[#0d99ff]"
                 />
                 <span>{opt}</span>
@@ -466,22 +566,41 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
             ))}
           </div>
         );
+      }
 
       case 'select':
       case 'advanced_select':
       case 'combobox':
-      case 'searchbox':
+      case 'searchbox': {
+        const disabled = Boolean(props.disabled);
+        const options = Array.isArray(props.options)
+          ? props.options
+          : typeof props.options === 'string'
+          ? props.options.split(',').map((s: string) => s.trim())
+          : ['Opción 1', 'Opción 2', 'Opción 3'];
+
         return (
           <div id={node.id} onClick={handleClick} className={`${selectionClasses} space-y-1 w-full`}>
             {props.label && (
-              <label className="block text-xs font-medium text-zinc-400">{props.label}</label>
+              <label className="block text-xs font-medium text-zinc-400">
+                {props.label}
+                {props.required && <span className="text-red-400 ml-0.5">*</span>}
+              </label>
             )}
             <div className="relative">
               <select
-                disabled={!isPreviewMode}
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none appearance-none pr-8 cursor-pointer"
+                disabled={disabled || !isPreviewMode}
+                style={style}
+                className={`w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none appearance-none pr-8 ${
+                  disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                }`}
               >
-                {(props.options || ['Opción 1', 'Opción 2', 'Opción 3']).map((o: string, idx: number) => (
+                {props.placeholder && (
+                  <option value="" disabled selected>
+                    {props.placeholder}
+                  </option>
+                )}
+                {options.map((o: string, idx: number) => (
                   <option key={idx} value={o} className="bg-zinc-900">
                     {o}
                   </option>
@@ -491,6 +610,7 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
             </div>
           </div>
         );
+      }
 
       case 'slider':
       case 'range_slider':
@@ -536,20 +656,45 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
           </div>
         );
 
-      case 'textarea':
+      case 'textarea': {
+        const hasError = Boolean(props.hasError);
+        const disabled = Boolean(props.disabled);
+
         return (
           <div id={node.id} onClick={handleClick} className={`${selectionClasses} space-y-1 w-full`}>
             {props.label && (
-              <label className="block text-xs font-medium text-zinc-300">{props.label}</label>
+              <label className="block text-xs font-medium text-zinc-300">
+                {props.label}
+                {props.required && <span className="text-red-400 ml-0.5">*</span>}
+              </label>
             )}
             <textarea
               placeholder={props.placeholder || ''}
-              disabled={!isPreviewMode}
-              rows={3}
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-2 text-xs text-white focus:outline-none"
+              defaultValue={props.value || undefined}
+              disabled={disabled || !isPreviewMode}
+              rows={props.rows || 3}
+              style={style}
+              className={`w-full focus:outline-none transition-colors ${
+                hasError
+                  ? 'border-red-500 focus:ring-1 focus:ring-red-500'
+                  : 'focus:ring-1 focus:ring-[#0d99ff]'
+              } ${
+                disabled ? 'opacity-50 cursor-not-allowed bg-zinc-900/40' : ''
+              } ${
+                isFramework
+                  ? 'bg-zinc-950 border border-zinc-800 rounded-md p-2 text-xs text-white'
+                  : 'bg-zinc-900 border border-zinc-700 rounded-lg p-2 text-xs text-white'
+              }`}
             />
+            {hasError && props.errorMessage && (
+              <p className="text-[11px] text-red-400 flex items-center gap-1 mt-1">
+                <AlertCircle className="w-3 h-3 shrink-0" />
+                <span>{props.errorMessage}</span>
+              </p>
+            )}
           </div>
         );
+      }
 
       case 'toggle':
       case 'toggle_group':
@@ -1132,49 +1277,134 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
       // ==========================================
       // 6. CONTENT & MEDIA
       // ==========================================
-      case 'typography': {
-        const Tag = (props.as as any) || 'p';
-        const defaultClass =
-          Tag === 'h1'
-            ? 'text-3xl font-bold tracking-tight text-white'
-            : Tag === 'h2'
-            ? 'text-2xl font-bold tracking-tight text-zinc-100'
-            : Tag === 'h3'
-            ? 'text-xl font-semibold text-zinc-100'
-            : Tag === 'h4'
-            ? 'text-lg font-semibold text-zinc-200'
-            : Tag === 'h5'
-            ? 'text-base font-semibold text-zinc-200'
-            : Tag === 'h6'
-            ? 'text-sm font-semibold text-zinc-300'
-            : Tag === 'blockquote'
-            ? 'italic border-l-4 border-blue-500 pl-3 text-zinc-300'
-            : Tag === 'code'
-            ? 'font-mono text-xs bg-zinc-800 px-1.5 py-0.5 rounded text-amber-300'
-            : Tag === 'span'
-            ? 'inline'
-            : 'text-zinc-200';
+      case 'typography':
+      case 'text': {
+        const asTag = props.as || 'p';
+        const isSubtitle = asTag === 'subtitle';
+        const isLabel = asTag === 'label';
+        const Tag = isSubtitle ? 'p' : isLabel ? 'label' : (asTag as any);
+
+        let defaultClass = 'text-zinc-200';
+        if (asTag === 'h1') defaultClass = 'text-3xl font-bold tracking-tight text-white';
+        else if (asTag === 'h2') defaultClass = 'text-2xl font-bold tracking-tight text-zinc-100';
+        else if (asTag === 'h3') defaultClass = 'text-xl font-semibold text-zinc-100';
+        else if (asTag === 'h4') defaultClass = 'text-lg font-semibold text-zinc-200';
+        else if (asTag === 'h5') defaultClass = 'text-base font-semibold text-zinc-200';
+        else if (asTag === 'h6') defaultClass = 'text-sm font-semibold text-zinc-300 uppercase tracking-wider';
+        else if (isSubtitle) defaultClass = 'text-base text-zinc-400 font-medium';
+        else if (isLabel) defaultClass = 'text-xs font-medium text-zinc-300 block mb-1';
+        else if (asTag === 'blockquote') defaultClass = 'italic border-l-4 border-blue-500 pl-3 text-zinc-300 my-2';
+        else if (asTag === 'code') defaultClass = 'font-mono text-xs bg-zinc-800 px-1.5 py-0.5 rounded text-amber-300';
+        else if (asTag === 'span') defaultClass = 'inline text-zinc-300';
+        else defaultClass = 'text-sm text-zinc-300 leading-relaxed';
 
         return (
-          <Tag id={node.id} style={style} onClick={handleClick} className={`${selectionClasses} ${defaultClass}`}>
-            {props.text || (typeof Tag === 'string' && Tag.startsWith('h') ? `Encabezado ${Tag.toUpperCase()}` : 'Texto semántico')}
+          <Tag
+            id={node.id}
+            style={{
+              ...style,
+              fontStyle: style.fontStyle || (asTag === 'blockquote' ? 'italic' : undefined),
+            }}
+            onClick={handleClick}
+            className={`${selectionClasses} ${defaultClass}`}
+          >
+            {props.text || (typeof asTag === 'string' && asTag.startsWith('h') ? `Encabezado ${asTag.toUpperCase()}` : 'Texto tipográfico')}
+            {renderChildren()}
           </Tag>
         );
       }
 
-      case 'link':
+      case 'link': {
+        const variant = props.variant || 'link';
+        const size = props.size || 'md';
+        const disabled = Boolean(props.disabled);
+        let variantClasses = 'text-[#0d99ff] hover:underline';
+        if (variant === 'primary') {
+          variantClasses = 'bg-[#0d99ff] hover:bg-blue-600 text-white px-3 py-1.5 rounded-md no-underline';
+        } else if (variant === 'secondary') {
+          variantClasses = 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 px-3 py-1.5 rounded-md no-underline';
+        } else if (variant === 'outline') {
+          variantClasses = 'border border-zinc-600 hover:bg-zinc-800 text-zinc-200 px-3 py-1.5 rounded-md no-underline';
+        } else if (variant === 'ghost') {
+          variantClasses = 'hover:bg-zinc-800 text-zinc-300 px-3 py-1.5 rounded-md no-underline';
+        }
+
+        let sizeClasses = 'text-xs';
+        let iconSize = 14;
+        if (size === 'sm') {
+          sizeClasses = 'text-[11px]';
+          iconSize = 12;
+        } else if (size === 'lg') {
+          sizeClasses = 'text-sm';
+          iconSize = 16;
+        }
+
+        const iconPosition = props.iconPosition || 'right';
+        const hasIcon = Boolean(props.iconName);
+
         return (
-          <a id={node.id} href={props.href || '#'} style={style} onClick={handleClick} className={`${selectionClasses} hover:underline`}>
-            {props.label || 'Enlace'}
+          <a
+            id={node.id}
+            href={disabled ? undefined : (props.href || '#')}
+            target={props.target || '_self'}
+            style={style}
+            onClick={(e) => {
+              if (!isPreviewMode) e.preventDefault();
+              handleClick(e);
+            }}
+            className={`${selectionClasses} inline-flex items-center gap-1.5 transition-colors ${variantClasses} ${sizeClasses} ${
+              disabled ? 'opacity-50 pointer-events-none cursor-not-allowed' : 'cursor-pointer'
+            }`}
+          >
+            {hasIcon && iconPosition === 'left' && (
+              <SvgIconRenderer iconId={props.iconName} size={iconSize} stroke="currentColor" fill="none" />
+            )}
+            <span>{props.label || 'Enlace interactivo'}</span>
+            {hasIcon && iconPosition === 'right' && (
+              <SvgIconRenderer iconId={props.iconName} size={iconSize} stroke="currentColor" fill="none" />
+            )}
+            {renderChildren()}
           </a>
         );
+      }
 
-      case 'image':
+      case 'image': {
+        const aspectRatio = style.aspectRatio || props.aspectRatio || 'auto';
+        const objectFit = style.objectFit || props.objectFit || 'cover';
+        const loading = props.loading || 'lazy';
+        const fallbackSrc = props.fallbackSrc || 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800&auto=format&fit=crop&q=80';
+
         return (
-          <div id={node.id} onClick={handleClick} className={`${selectionClasses} inline-block overflow-hidden`}>
-            <img src={props.src} alt={props.alt || ''} style={style} className="pointer-events-none" />
+          <div
+            id={node.id}
+            onClick={handleClick}
+            className={`${selectionClasses} overflow-hidden w-full`}
+            style={{
+              ...style,
+              aspectRatio,
+            }}
+          >
+            <img
+              src={props.src || fallbackSrc}
+              alt={props.alt || ''}
+              loading={loading}
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (target.src !== fallbackSrc) {
+                  target.src = fallbackSrc;
+                }
+              }}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: objectFit as any,
+                display: 'block',
+              }}
+              className="pointer-events-none"
+            />
           </div>
         );
+      }
 
       case 'kbd':
         return (
@@ -1222,6 +1452,7 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
         node.style?.display === 'inline-block' ||
         node.style?.display === 'inline' ||
         node.type === 'button' ||
+        node.type === 'link' ||
         node.type === 'badge' ||
         node.type === 'svg_icon' ||
         node.type === 'fontawesome_icon' ||

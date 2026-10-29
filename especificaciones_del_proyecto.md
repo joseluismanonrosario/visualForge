@@ -76,6 +76,68 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
 
 El panel lateral de componentes (`LeftSidebar`) se adapta dinámicamente según el tipo de proyecto activo (`projectType`), cargando estrictamente el catálogo correspondiente:
 
+### 2.0 CONJUNTO DE COMPONENTES BÁSICOS Y PRIMITIVOS (PRIMITIVES & BASICS)
+
+Tanto en el catálogo de Frameworks (Shadcn/ui) como en el de HTML / ESP32 (Preline UI), se incluye en la primera posición una categoría prioritaria de **Assets Básicos y Primitivos** (`Primitives & Basics`), diseñados como átomos fundamentales reutilizables para construir cualquier sección o pantalla compleja (como headers, footers, navbars, cards o sidebars) con soporte exhaustivo para propiedades, variantes y estados:
+
+1. **Text (Tipografía)**:
+   - **Niveles y Tipos Semánticos**: Selector de jerarquía con soporte para títulos (`h1`, `h2`, `h3`, `h4`, `h5`, `h6`), subtítulos destacados (`subtitle`), párrafos estándar (`p`), etiquetas de campo (`label`), texto en línea (`span`), citas (`blockquote`), contenedores (`div`) y bloques de código (`code`).
+   - **Propiedades de Estilo**:
+     - *Tamaño (`fontSize`)*: Entrada en píxeles y 8 píldoras de presets rápidos (`12px` a `40px`).
+     - *Peso de Fuente (`fontWeight`)*: Escala numérica 100 a 900 y conmutadores rápidos *Normal* (400) / *Bold* (700).
+     - *Alineación (`textAlign`)*: Izquierda, centro, derecha y justificado.
+     - *Color (`color`)*: Selector cromático con entrada hexadecimal y paleta de muestras rápidas.
+     - *Estilo Cursiva / Itálica (`fontStyle`)*: Botón conmutador con icono `Italic` para alternar entre `'italic'` y `'normal'`.
+   - **Editor de Contenido**: Área de texto multilínea para edición directa de `props.text`.
+
+2. **Button / Link (Acción)**:
+   - **Button (Botón de Acción)**:
+     - *Variantes de Estilo*: Primario/CTA (`primary`/`default`), Secundario (`secondary`), Contorno (`outline`), Fantasma/Transparente (`ghost`), Destructivo (`destructive`) y Enlace (`link`).
+     - *Tamaños*: Pequeño (`sm`), Mediano (`md`), Grande (`lg`).
+     - *Estados Interactivos*: Cargando (`isLoading`: muestra un spinner animado `Loader2` y desactiva el botón), Deshabilitado (`disabled`: opacidad reducida y bloqueo de eventos de puntero) y Activo (`isActive`: resalte con anillo de foco Figma).
+     - *Integración de Iconos*: Soporte para iconos vectoriales integrados (`props.iconName`) con selector de posición (`left` o `right`), presets de acción rápida (flecha `→`, destello `✨`, suma `+`, verificación `✓`) y acceso directo al explorador Iconify Offline. Permite además anidar componentes hijos vectoriales por arrastre.
+   - **Link (Enlace de Navegación)**:
+     - Comparte los estilos base y variantes de acción (`link`, `primary`, `secondary`, `outline`, `ghost`).
+     - Soporta destino de navegación (`href`), objetivo de apertura (`target`: `_self`, `_blank`), tamaño (`sm`, `md`, `lg`), estado deshabilitado (`disabled`) e icono integrado a la izquierda o derecha.
+
+3. **Icon (Gráfico Vectorial)**:
+   - Componente universal de renderizado vectorial (`svg_icon`, `fontawesome_icon`, `styled_icon`).
+   - *Control de Tamaño*: Entrada numérica directa en píxeles, deslizador continuo (12px a 96px) y píldoras de acceso rápido (`16px`, `20px`, `24px`, `32px`, `40px`, `48px`, `64px`).
+   - *Color de Trazo (`Stroke`)* y *Relleno (`Fill`)* con opción transparente "Ninguno".
+   - *Orientación*: Rotación en 90° (`RotateCw`) y volteo horizontal/vertical (`FlipHorizontal`, `FlipVertical`).
+   - *Interoperabilidad*: Se utiliza de manera independiente en el lienzo o integrado dentro de botones y enlaces.
+
+4. **Image (Multimedia)**:
+   - Contenedor para imágenes responsivas con control exhaustivo de visualización:
+     - *Control de Proporciones (`aspectRatio`)*: Presets en píldoras para `Auto`, `16:9`, `4:3`, `1:1` y panorámica `21:9`.
+     - *Ajuste de Contenido (`objectFit`)*: `cover` (llenar y recortar), `contain` (ajustar sin recorte), `fill` (estirar) y `none` (tamaño natural).
+     - *Carga Diferida (`loading`)*: Conmutador entre carga diferida optimizada (`lazy`) e inmediata (`eager`).
+     - *Fallback de Error (`fallbackSrc`)*: Control para URL de respaldo que se activa automáticamente mediante `onError` si la imagen original no puede cargarse.
+
+5. **Form Controls (Entradas de Datos)**:
+   - **Form (Formulario)**: Contenedor semántico `<form>` agrupador de campos con soporte para endpoint de envío (`action`), método de transmisión (`method`: `POST`, `GET`), y distribución flexible (columna vertical o fila horizontal).
+   - **Label (Etiqueta)**: Texto descriptivo vinculado a campos de entrada mediante `htmlFor` con soporte para indicador de campo obligatorio (asterisco rojo `*`).
+   - **Input (Campo de Texto Multiuso)**:
+     - Soporte para variantes de tipo: `text`, `email`, `password`, `number`, `date` y `file`.
+     - Soporte para etiquetas vinculadas, placeholder y valor inicial.
+     - *Estado de Error*: Conmutador de error booleano (`hasError`) con campo de mensaje descriptivo (`errorMessage`), aplicando borde rojo y renderizando alerta visual con icono `AlertCircle`.
+     - *Estado Deshabilitado*: Conmutador `disabled` con cursor de bloqueo y fondo atenuado.
+   - **Textarea (Texto Multilínea)**: Entrada multilínea con control del número de filas visibles (`rows`), placeholder, estado de error y estado deshabilitado.
+   - **Checkbox y Radio**:
+     - *Checkbox*: Casilla interactiva de selección múltiple con estado marcado (`checked`), texto descriptivo y estado deshabilitado.
+     - *Radio*: Control de selección única con nombre de grupo compartido (`name`), editor de lista de opciones separadas por coma y estado deshabilitado.
+   - **Select / Combobox (Lista Desplegable)**: Menú desplegable con placeholder, editor de lista de opciones separadas por comas, estado obligatorio y estado deshabilitado.
+
+6. **Box / Container (Layout)**:
+   - Contenedor base de maquetación y estructura con conmutador rápido de distribución:
+     - *Fila (`Flex Row`)*: Disposición horizontal auto-layout.
+     - *Columna (`Flex Column / Stack`)*: Disposición vertical de elementos.
+     - *Rejilla (`Grid 2`, `Grid 3`, `Grid 4`)*: Cuadrícula responsiva con columnas uniformes.
+     - *Bloque (`Block`)*: Flujo de bloque HTML tradicional.
+   - Control integral de alineación (ejes horizontal y vertical), espaciados (padding y margin uniformes o independientes de 4 lados) y bordes (radio de curvatura, grosor, estilo y color).
+
+---
+
 ### Catálogo A: Para Frameworks (React / Vue - Basado en Shadcn/ui)
 Si el proyecto es de tipo Framework (`projectType === 'react' | 'framework'`), se cargan los componentes agrupados en sus categorías:
 
@@ -367,15 +429,27 @@ Fijada permanentemente en la parte superior del panel de diseño (`Design`), pro
 
 ### 4. Propiedades de Componente (Component Properties)
 Controles contextuales específicos según el componente o sub-elemento seleccionado:
-- **Elementos Tipográficos HTML (`h1`-`h6`, `p`, `span`, `blockquote`, `div`, `code`)**:
-  - Selector de etiqueta HTML (`h1`-`h6`, `p`, `span`, `blockquote`, `div`, `code`).
-  - Píldoras rápidas de jerarquía (`H1`, `H2`, `H3`, `H4`, `P`, `Span`, `Quote`).
-  - Escalado tipográfico inteligente (dimensiones y pesos automáticos por etiqueta).
+- **Elementos Tipográficos HTML (`typography`, `text`)**:
+  - Selector de nivel o tipo de texto (`h1`-`h6`, `subtitle`, `p`, `label`, `span`, `blockquote`, `div`, `code`).
+  - Píldoras rápidas de jerarquía (`H1`, `H2`, `H3`, `H4`, `Sub`, `P`, `Label`, `Span`, `Quote`).
   - Editor de texto multilínea (`props.text`).
-- **Botones y Badges (`button`, `badge`)**: Etiqueta de texto y variante visual (*Default*, *Secondary*, *Outline*, *Destructive*, *Ghost*, *Link*).
-- **Enlaces (`link`)**: Texto del enlace, URL (`href`) y destino (`target`: `_self`, `_blank`).
-- **Imágenes (`image`)**: URL (`src`), texto alternativo (`alt`) y ajuste visual (`objectFit`: *cover*, *contain*, *fill*, *none*).
-- **Campos de Formulario (`input`, `textarea`, `searchbox`)**: Marcador de posición (`placeholder`) y valor por defecto (`value`).
+  - Conmutadores rápidos de peso tipográfico (Normal 400 vs Bold 700) y de estilo Cursiva / Itálica (`fontStyle`: normal vs italic con icono `Italic`).
+- **Botones (`button`)**:
+  - Etiqueta de texto (`props.label`).
+  - Selector de variante visual (*Primario/CTA*, *Secundario*, *Outline*, *Ghost*, *Destructive*, *Link*).
+  - Selector de tamaño (*sm*, *md*, *lg*).
+  - Conmutadores de estados interactivos: *Loading* (con spinner animado `Loader2`), *Disabled* (deshabilitado) y *Activo* (anillo de foco Figma).
+  - Integración de iconos vectoriales: selector de icono (`iconName`), posición (*Izquierda* o *Derecha*), píldoras de presets rápidos y acceso al explorador Iconify Offline.
+- **Enlaces (`link`)**: Texto del enlace (`label`), URL (`href`), destino (`target`: `_self`, `_blank`), variantes compartidas de acción (*Link*, *Primario*, *Secundario*, *Outline*, *Ghost*), selector de tamaño (*sm*, *md*, *lg*), estado deshabilitado e icono integrado.
+- **Imágenes (`image`)**: URL de imagen (`src`), texto alternativo (`alt`), control de proporción en píldoras (`aspectRatio`: *Auto*, *16:9*, *4:3*, *1:1*, *21:9*), ajuste de contenido (`objectFit`: *cover*, *contain*, *fill*, *none*), conmutador de carga diferida (*lazy* vs *eager*) y URL de fallback en caso de error (`fallbackSrc`) con restablecimiento a placeholder por defecto.
+- **Contenedores de Maquetación (`box`, `container`, `stack`)**:
+  - Conmutador rápido de distribución de maquetación: *Fila (Row)*, *Columna (Stack)*, *Grid 2 Cols*, *Grid 3 Cols*, *Grid 4 Cols* y *Bloque (Block)*.
+- **Formularios (`form`)**: Endpoint de acción (`action`), método de transmisión HTTP (*POST*, *GET*) y conmutador de orientación de campos (*Fila* vs *Columna*).
+- **Etiquetas (`label`)**: Texto descriptivo (`text`), identificador de campo vinculado (`htmlFor`) y conmutador de campo obligatorio (*required*) con asterisco visual rojo (`*`).
+- **Campos de Formulario (`input`, `searchbox`)**: Tipo de entrada (*text*, *email*, *password*, *number*, *date*, *file*), placeholder, valor por defecto, etiqueta vinculada, conmutador de campo obligatorio, conmutador de estado de error (`hasError`) con mensaje explicativo (`errorMessage`), y conmutador deshabilitado (`disabled`).
+- **Áreas de Texto Multilínea (`textarea`)**: Etiqueta vinculada, placeholder, contador de filas visibles (`rows`), campo obligatorio, estado de error con mensaje y estado deshabilitado.
+- **Casillas y Opciones (`checkbox`, `radio`)**: Texto de la opción (`label`), estado marcado inicial (`checked`), nombre de grupo (`name`), editor de lista de opciones separadas por comas (para radios) y estado deshabilitado.
+- **Listas Desplegables (`select`, `combobox`)**: Etiqueta, placeholder, editor de opciones en formato separado por comas y estado deshabilitado.
 - **Tarjetas, Alertas y Colapsables (`card`, `alert`, `collapsible`)**: Título y descripción multilínea.
 - **Teclado (`kbd`)**: Combinación de teclas (`props.keys`).
 - **Interruptores y Deslizadores (`switch`, `slider`)**: Etiqueta, mínimo, máximo y valor activo.
@@ -397,7 +471,8 @@ Controles contextuales específicos según el componente o sub-elemento seleccio
 - **Tracking / Letter Spacing (`letterSpacing`)**: Control de espaciado entre caracteres (LS).
 - **Alineación de Texto (`textAlign`)**: 4 botones iconográficos Figma (`AlignLeft`, `AlignCenter`, `AlignRight`, `AlignJustify`).
 - **Transformación de Texto (`textTransform`)**: 4 botones (*Aa Normal*, *AA Mayúsculas*, *aa Minúsculas*, *Ab Capitalizar*).
-- **Decoración de Texto (`textDecoration`)**: 3 botones (*Ninguna*, *Subrayado*, *Tachado*).
+- **Decoración & Estilo de Texto**: Cuadrícula de 4 botones iconográficos: *Ninguna* (`—`), *Subrayado* (`Underline`), *Tachado* (`Strikethrough`) y conmutador de *Itálica / Cursiva* (`Italic` - `fontStyle: italic/normal`).
+- **Color de Texto (`color`)**: Selector visual cromático, entrada hexadecimal, botón *Clear* y 10 muestras de color rápidas.
 - **Color de Texto (`color`)**: Selector visual cromático, entrada hexadecimal, botón *Clear* y 10 muestras de color rápidas.
 
 ### 6. Fill (Relleno y Color de Fondo)
