@@ -4,6 +4,12 @@ import {
   AlignCenter,
   AlignRight,
   AlignJustify,
+  AlignStartHorizontal,
+  AlignCenterHorizontal,
+  AlignEndHorizontal,
+  AlignStartVertical,
+  AlignCenterVertical,
+  AlignEndVertical,
   Maximize2,
   Minimize2,
   Square,
@@ -270,24 +276,25 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   const currentJustify = style.justifyContent || 'flex-start';
 
   const handleQuickAlign = (type: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom') => {
+    const ensureFlex = style.display === 'inline' ? 'inline-flex' : (style.display || 'flex');
     switch (type) {
       case 'left':
-        onUpdateStyle({ alignItems: 'flex-start' });
+        onUpdateStyle({ alignItems: 'flex-start', display: ensureFlex });
         break;
       case 'center':
-        onUpdateStyle({ alignItems: 'center' });
+        onUpdateStyle({ alignItems: 'center', display: ensureFlex });
         break;
       case 'right':
-        onUpdateStyle({ alignItems: 'flex-end' });
+        onUpdateStyle({ alignItems: 'flex-end', display: ensureFlex });
         break;
       case 'top':
-        onUpdateStyle({ justifyContent: 'flex-start' });
+        onUpdateStyle({ justifyContent: 'flex-start', display: ensureFlex });
         break;
       case 'middle':
-        onUpdateStyle({ justifyContent: 'center' });
+        onUpdateStyle({ justifyContent: 'center', display: ensureFlex });
         break;
       case 'bottom':
-        onUpdateStyle({ justifyContent: 'flex-end' });
+        onUpdateStyle({ justifyContent: 'flex-end', display: ensureFlex });
         break;
     }
   };
@@ -548,9 +555,59 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
       {activeTab === 'design' && (
         <div className="flex-1 overflow-y-auto divide-y divide-[#383838] p-3 space-y-4">
           {/* ======================================================== */}
-          {/* 1. ELEMENT IDENTIFICATION & CONTEXTUAL PROPERTIES       */}
+          {/* 1. FIGMA-STYLE TOP ALIGNMENT TOOLBAR                     */}
+          {/* ======================================================== */}
+          <div className="flex items-center justify-between px-1.5 py-1 bg-[#1e1e1e] border border-[#383838] rounded-md shadow-xs">
+            <button
+              onClick={() => handleQuickAlign('left')}
+              title="Alinear a la izquierda (Align Left)"
+              className="p-1 hover:bg-[#323232] rounded text-zinc-400 hover:text-white transition-colors"
+            >
+              <AlignStartHorizontal className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => handleQuickAlign('center')}
+              title="Centrar horizontalmente (Align Horizontal Centers)"
+              className="p-1 hover:bg-[#323232] rounded text-zinc-400 hover:text-white transition-colors"
+            >
+              <AlignCenterHorizontal className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => handleQuickAlign('right')}
+              title="Alinear a la derecha (Align Right)"
+              className="p-1 hover:bg-[#323232] rounded text-zinc-400 hover:text-white transition-colors"
+            >
+              <AlignEndHorizontal className="w-4 h-4" />
+            </button>
+            <div className="w-[1px] h-4 bg-[#383838] my-0.5" />
+            <button
+              onClick={() => handleQuickAlign('top')}
+              title="Alinear arriba (Align Top)"
+              className="p-1 hover:bg-[#323232] rounded text-zinc-400 hover:text-white transition-colors"
+            >
+              <AlignStartVertical className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => handleQuickAlign('middle')}
+              title="Centrar verticalmente (Align Vertical Centers)"
+              className="p-1 hover:bg-[#323232] rounded text-zinc-400 hover:text-white transition-colors"
+            >
+              <AlignCenterVertical className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => handleQuickAlign('bottom')}
+              title="Alinear abajo (Align Bottom)"
+              className="p-1 hover:bg-[#323232] rounded text-zinc-400 hover:text-white transition-colors"
+            >
+              <AlignEndVertical className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* ======================================================== */}
+          {/* 2. FRAME / DIMENSIONS & DISPLAY                          */}
           {/* ======================================================== */}
           <div className="space-y-3">
+            {/* Element identification header */}
             <div className="flex items-center justify-between pb-1">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#0d99ff]" />
@@ -562,6 +619,432 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                 {selectedNode.type === 'typography'
                   ? `<${props.as || 'p'}>`
                   : selectedNode.type}
+              </span>
+            </div>
+
+            {/* Display property */}
+            <div className="space-y-1">
+              <span className="text-[10px] text-zinc-500 font-medium block">Display</span>
+              <select
+                value={style.display || (selectedNode.isContainer ? 'flex' : 'block')}
+                onChange={(e) => onUpdateStyle({ display: e.target.value })}
+                className="w-full bg-[#1e1e1e] border border-[#383838] focus:border-[#0d99ff] rounded px-2.5 py-1 text-white text-xs focus:outline-none"
+              >
+                <option value="block" className="bg-[#1e1e1e]">Block (Elemento de Bloque / Full Width)</option>
+                <option value="flex" className="bg-[#1e1e1e]">Flex (Contenedor Flexible Auto-Layout)</option>
+                <option value="inline-block" className="bg-[#1e1e1e]">Inline-Block (En línea con dimensiones)</option>
+                <option value="inline-flex" className="bg-[#1e1e1e]">Inline-Flex (Flex en línea)</option>
+                <option value="grid" className="bg-[#1e1e1e]">Grid (Rejilla CSS)</option>
+                <option value="inline" className="bg-[#1e1e1e]">Inline (Texto en línea puro)</option>
+              </select>
+            </div>
+
+            {/* Dimensions W & H */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-center bg-[#1e1e1e] border border-[#383838] focus-within:border-[#0d99ff] rounded px-2 py-1">
+                <span className="text-zinc-500 font-mono text-[11px] mr-2">W</span>
+                <input
+                  type="text"
+                  value={style.width || '100%'}
+                  onChange={(e) => onUpdateStyle({ width: e.target.value })}
+                  className="w-full bg-transparent text-white focus:outline-none text-xs font-mono"
+                />
+              </div>
+              <div className="flex items-center bg-[#1e1e1e] border border-[#383838] focus-within:border-[#0d99ff] rounded px-2 py-1">
+                <span className="text-zinc-500 font-mono text-[11px] mr-2">H</span>
+                <input
+                  type="text"
+                  value={style.height || 'auto'}
+                  onChange={(e) => onUpdateStyle({ height: e.target.value })}
+                  className="w-full bg-transparent text-white focus:outline-none text-xs font-mono"
+                />
+              </div>
+            </div>
+
+            {/* Sizing shortcuts */}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => onUpdateStyle({ width: 'auto', alignSelf: 'auto' })}
+                className="flex-1 py-1 rounded bg-[#1e1e1e] hover:bg-[#323232] border border-[#383838] text-[11px] text-zinc-300 text-center transition-colors"
+              >
+                Hug Contents
+              </button>
+              <button
+                onClick={() => onUpdateStyle({ width: '100%', alignSelf: 'stretch' })}
+                className="flex-1 py-1 rounded bg-[#1e1e1e] hover:bg-[#323232] border border-[#383838] text-[11px] text-zinc-300 text-center transition-colors"
+              >
+                Fill Container
+              </button>
+            </div>
+
+            {/* Min-Width & Max-Width */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-center bg-[#1e1e1e] border border-[#383838] rounded px-2 py-1">
+                <span className="text-zinc-500 font-mono text-[10px] mr-1">MinW</span>
+                <input
+                  type="text"
+                  value={style.minWidth || ''}
+                  onChange={(e) => onUpdateStyle({ minWidth: e.target.value })}
+                  placeholder="none"
+                  className="w-full bg-transparent text-white focus:outline-none text-xs font-mono"
+                />
+              </div>
+              <div className="flex items-center bg-[#1e1e1e] border border-[#383838] rounded px-2 py-1">
+                <span className="text-zinc-500 font-mono text-[10px] mr-1">MaxW</span>
+                <input
+                  type="text"
+                  value={style.maxWidth || ''}
+                  onChange={(e) => onUpdateStyle({ maxWidth: e.target.value })}
+                  placeholder="none"
+                  className="w-full bg-transparent text-white focus:outline-none text-xs font-mono"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* ======================================================== */}
+          {/* 3. AUTO LAYOUT & SPACING                                 */}
+          {/* ======================================================== */}
+          <div className="pt-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Columns3 className="w-3.5 h-3.5 text-[#0d99ff]" />
+                <span>Auto Layout</span>
+              </span>
+              <div className="flex items-center bg-[#1e1e1e] border border-[#383838] rounded p-0.5">
+                <button
+                  onClick={() => onUpdateStyle({ flexDirection: 'row', display: 'flex' })}
+                  title="Horizontal Layout (Row)"
+                  className={`p-1 rounded transition-colors ${
+                    style.flexDirection === 'row' ? 'bg-[#0d99ff] text-white' : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+                <button
+                  onClick={() => onUpdateStyle({ flexDirection: 'column', display: 'flex' })}
+                  title="Vertical Layout (Column)"
+                  className={`p-1 rounded transition-colors ${
+                    style.flexDirection === 'column' || !style.flexDirection
+                      ? 'bg-[#0d99ff] text-white'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  <ArrowDown className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+
+            {/* 3x3 Matrix Grid */}
+            <div className="flex items-center gap-3 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+              <div className="grid grid-cols-3 gap-1 w-20 h-20 bg-[#282829] p-1 rounded-md border border-[#3e3e42] shrink-0">
+                {matrixPositions.map((pos) => {
+                  const isActive =
+                    currentAlign === pos.align && currentJustify === pos.justify;
+                  return (
+                    <button
+                      key={pos.label}
+                      onClick={() =>
+                        onUpdateStyle({
+                          alignItems: pos.align,
+                          justifyContent: pos.justify,
+                          display: 'flex',
+                        })
+                      }
+                      title={pos.label}
+                      className={`rounded-sm transition-colors ${
+                        isActive
+                          ? 'bg-[#0d99ff] ring-1 ring-white'
+                          : 'bg-[#383838] hover:bg-[#525252]'
+                      }`}
+                    />
+                  );
+                })}
+              </div>
+              <div className="text-[10px] text-zinc-400 space-y-1">
+                <div>
+                  <span className="text-zinc-500">Align:</span>{' '}
+                  <span className="font-mono text-zinc-200">{currentAlign}</span>
+                </div>
+                <div>
+                  <span className="text-zinc-500">Justify:</span>{' '}
+                  <span className="font-mono text-zinc-200">{currentJustify}</span>
+                </div>
+                <div className="pt-1">
+                  <span className="text-[9px] text-zinc-500">Haz clic en los puntos para posicionar los hijos en la cuadrícula</span>
+                </div>
+              </div>
+            </div>
+
+            {/* ITEM GAP */}
+            <div className="flex items-center justify-between bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+              <span className="text-[11px] font-medium text-zinc-300">Item Gap (Espaciado)</span>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="text"
+                  value={style.gap || '0px'}
+                  onChange={(e) => onUpdateStyle({ gap: e.target.value })}
+                  placeholder="0px"
+                  className="w-20 bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2 py-1 text-right text-white text-xs font-mono focus:outline-none"
+                />
+                <div className="flex items-center gap-1">
+                  {['0px', '8px', '16px', '24px'].map((preset) => (
+                    <button
+                      key={preset}
+                      onClick={() => onUpdateStyle({ gap: preset })}
+                      className={`px-1.5 py-0.5 rounded text-[10px] font-mono border ${
+                        style.gap === preset
+                          ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                          : 'bg-[#252526] hover:bg-[#323232] text-zinc-400 border-[#383838]'
+                      }`}
+                    >
+                      {preset.replace('px', '')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* PADDING CONTROL */}
+            <div className="space-y-1.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-medium text-zinc-300">Padding (Interior)</span>
+                  <button
+                    onClick={() => setPaddingLinked(!paddingLinked)}
+                    className="p-1 hover:bg-[#2c2c2c] rounded text-zinc-400 hover:text-white transition-colors"
+                    title={paddingLinked ? 'Desvincular (4 lados independientes: T, R, B, L)' : 'Vincular lados uniformes'}
+                  >
+                    {paddingLinked ? (
+                      <Link2 className="w-3 h-3 text-[#0d99ff]" />
+                    ) : (
+                      <Unlink className="w-3 h-3 text-zinc-500" />
+                    )}
+                  </button>
+                </div>
+                <span className="text-[10px] text-zinc-500 font-mono">
+                  {paddingLinked
+                    ? style.paddingTop || style.padding || '0px'
+                    : `${style.paddingTop || '0'} · ${style.paddingRight || '0'} · ${style.paddingBottom || '0'} · ${style.paddingLeft || '0'}`}
+                </span>
+              </div>
+
+              {paddingLinked ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={style.paddingTop || style.padding || '0px'}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      onUpdateStyle({
+                        paddingTop: val,
+                        paddingRight: val,
+                        paddingBottom: val,
+                        paddingLeft: val,
+                        padding: val,
+                      });
+                    }}
+                    placeholder="0px"
+                    className="flex-1 bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2.5 py-1 text-white text-xs font-mono focus:outline-none"
+                  />
+                  <div className="flex items-center gap-1">
+                    {['0px', '8px', '12px', '16px', '24px'].map((preset) => (
+                      <button
+                        key={preset}
+                        onClick={() =>
+                          onUpdateStyle({
+                            paddingTop: preset,
+                            paddingRight: preset,
+                            paddingBottom: preset,
+                            paddingLeft: preset,
+                            padding: preset,
+                          })
+                        }
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-mono border ${
+                          (style.paddingTop || style.padding) === preset
+                            ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                            : 'bg-[#252526] hover:bg-[#323232] text-zinc-400 border-[#383838]'
+                        }`}
+                      >
+                        {preset.replace('px', '')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-4 gap-1.5 pt-1">
+                  <div>
+                    <span className="text-[9px] text-zinc-500 block text-center uppercase tracking-wider mb-0.5">Top</span>
+                    <input
+                      type="text"
+                      value={style.paddingTop || '0px'}
+                      onChange={(e) => onUpdateStyle({ paddingTop: e.target.value })}
+                      placeholder="0px"
+                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-1.5 py-1 text-center text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[9px] text-zinc-500 block text-center uppercase tracking-wider mb-0.5">Right</span>
+                    <input
+                      type="text"
+                      value={style.paddingRight || '0px'}
+                      onChange={(e) => onUpdateStyle({ paddingRight: e.target.value })}
+                      placeholder="0px"
+                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-1.5 py-1 text-center text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[9px] text-zinc-500 block text-center uppercase tracking-wider mb-0.5">Bottom</span>
+                    <input
+                      type="text"
+                      value={style.paddingBottom || '0px'}
+                      onChange={(e) => onUpdateStyle({ paddingBottom: e.target.value })}
+                      placeholder="0px"
+                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-1.5 py-1 text-center text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[9px] text-zinc-500 block text-center uppercase tracking-wider mb-0.5">Left</span>
+                    <input
+                      type="text"
+                      value={style.paddingLeft || '0px'}
+                      onChange={(e) => onUpdateStyle({ paddingLeft: e.target.value })}
+                      placeholder="0px"
+                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-1.5 py-1 text-center text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* MARGIN CONTROL */}
+            <div className="space-y-1.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-medium text-zinc-300">Margin (Exterior)</span>
+                  <button
+                    onClick={() => setMarginLinked(!marginLinked)}
+                    className="p-1 hover:bg-[#2c2c2c] rounded text-zinc-400 hover:text-white transition-colors"
+                    title={marginLinked ? 'Desvincular (4 lados independientes: T, R, B, L)' : 'Vincular lados uniformes'}
+                  >
+                    {marginLinked ? (
+                      <Link2 className="w-3 h-3 text-[#0d99ff]" />
+                    ) : (
+                      <Unlink className="w-3 h-3 text-zinc-500" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => onUpdateStyle({ marginLeft: 'auto', marginRight: 'auto' })}
+                    className="px-1.5 py-0.5 rounded bg-[#252526] hover:bg-[#323232] border border-[#383838] text-[9px] text-zinc-300 transition-colors"
+                    title="Centrar horizontalmente (margin: 0 auto)"
+                  >
+                    Auto Center
+                  </button>
+                </div>
+                <span className="text-[10px] text-zinc-500 font-mono">
+                  {marginLinked
+                    ? style.marginTop || style.margin || '0px'
+                    : `${style.marginTop || '0'} · ${style.marginRight || '0'} · ${style.marginBottom || '0'} · ${style.marginLeft || '0'}`}
+                </span>
+              </div>
+
+              {marginLinked ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={style.marginTop || style.margin || '0px'}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      onUpdateStyle({
+                        marginTop: val,
+                        marginRight: val,
+                        marginBottom: val,
+                        marginLeft: val,
+                        margin: val,
+                      });
+                    }}
+                    placeholder="0px"
+                    className="flex-1 bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2.5 py-1 text-white text-xs font-mono focus:outline-none"
+                  />
+                  <div className="flex items-center gap-1">
+                    {['0px', '8px', '16px', '24px', '32px'].map((preset) => (
+                      <button
+                        key={preset}
+                        onClick={() =>
+                          onUpdateStyle({
+                            marginTop: preset,
+                            marginRight: preset,
+                            marginBottom: preset,
+                            marginLeft: preset,
+                            margin: preset,
+                          })
+                        }
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-mono border ${
+                          (style.marginTop || style.margin) === preset
+                            ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
+                            : 'bg-[#252526] hover:bg-[#323232] text-zinc-400 border-[#383838]'
+                        }`}
+                      >
+                        {preset.replace('px', '')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-4 gap-1.5 pt-1">
+                  <div>
+                    <span className="text-[9px] text-zinc-500 block text-center uppercase tracking-wider mb-0.5">Top</span>
+                    <input
+                      type="text"
+                      value={style.marginTop || '0px'}
+                      onChange={(e) => onUpdateStyle({ marginTop: e.target.value })}
+                      placeholder="0px"
+                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-1.5 py-1 text-center text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[9px] text-zinc-500 block text-center uppercase tracking-wider mb-0.5">Right</span>
+                    <input
+                      type="text"
+                      value={style.marginRight || '0px'}
+                      onChange={(e) => onUpdateStyle({ marginRight: e.target.value })}
+                      placeholder="0px"
+                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-1.5 py-1 text-center text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[9px] text-zinc-500 block text-center uppercase tracking-wider mb-0.5">Bottom</span>
+                    <input
+                      type="text"
+                      value={style.marginBottom || '0px'}
+                      onChange={(e) => onUpdateStyle({ marginBottom: e.target.value })}
+                      placeholder="0px"
+                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-1.5 py-1 text-center text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[9px] text-zinc-500 block text-center uppercase tracking-wider mb-0.5">Left</span>
+                    <input
+                      type="text"
+                      value={style.marginLeft || '0px'}
+                      onChange={(e) => onUpdateStyle({ marginLeft: e.target.value })}
+                      placeholder="0px"
+                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-1.5 py-1 text-center text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ======================================================== */}
+          {/* 4. COMPONENT PROPERTIES                                  */}
+          {/* ======================================================== */}
+          <div className="pt-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Tag className="w-3.5 h-3.5 text-[#0d99ff]" />
+                <span>Component Properties</span>
               </span>
             </div>
 
@@ -908,7 +1391,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                       setIconPage(1);
                       setShowIconModal(true);
                     }}
-                    className="px-2.5 py-1 rounded bg-[#0d99ff] text-white font-medium hover:bg-[#0082df] text-[11px] shadow-xs"
+                    className="px-2.5 py-1 rounded bg-[#0d99ff] text-white font-medium hover:bg-[#0082df] text-[11px] shadow-xs transition-colors"
                   >
                     Explorar
                   </button>
@@ -999,7 +1482,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
           </div>
 
           {/* ======================================================== */}
-          {/* 2. FIGMA-STYLE TYPOGRAPHY                                 */}
+          {/* 5. TYPOGRAPHY                                            */}
           {/* ======================================================== */}
           <div className="pt-3 space-y-3">
             <div className="flex items-center justify-between">
@@ -1199,7 +1682,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                 />
                 <button
                   onClick={() => onUpdateStyle({ color: 'inherit' })}
-                  className="px-2 py-0.5 text-[10px] rounded bg-[#2c2c2c] hover:bg-[#383838] text-zinc-400 hover:text-white"
+                  className="px-2 py-0.5 text-[10px] rounded bg-[#2c2c2c] hover:bg-[#383838] text-zinc-400 hover:text-white transition-colors"
                   title="Heredar color de texto"
                 >
                   Clear
@@ -1237,492 +1720,13 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
           </div>
 
           {/* ======================================================== */}
-          {/* 3. FIGMA-STYLE SPACING & BOX MODEL (PADDING & MARGINS)   */}
-          {/* ======================================================== */}
-          <div className="pt-3 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Box className="w-3.5 h-3.5 text-[#0d99ff]" />
-                <span>Spacing & Box Model</span>
-              </span>
-            </div>
-
-            {/* PADDING CONTROL */}
-            <div className="space-y-1.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-medium text-zinc-300">Padding (Interior)</span>
-                  <button
-                    onClick={() => setPaddingLinked(!paddingLinked)}
-                    className="p-1 hover:bg-[#2c2c2c] rounded text-zinc-400 hover:text-white transition-colors"
-                    title={paddingLinked ? 'Desvincular (4 lados independientes: T, R, B, L)' : 'Vincular lados uniformes'}
-                  >
-                    {paddingLinked ? (
-                      <Link2 className="w-3 h-3 text-[#0d99ff]" />
-                    ) : (
-                      <Unlink className="w-3 h-3 text-zinc-500" />
-                    )}
-                  </button>
-                </div>
-                <span className="text-[10px] text-zinc-500 font-mono">
-                  {paddingLinked
-                    ? style.paddingTop || style.padding || '0px'
-                    : `${style.paddingTop || '0'} · ${style.paddingRight || '0'} · ${style.paddingBottom || '0'} · ${style.paddingLeft || '0'}`}
-                </span>
-              </div>
-
-              {paddingLinked ? (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={style.paddingTop || style.padding || '0px'}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      onUpdateStyle({
-                        paddingTop: val,
-                        paddingRight: val,
-                        paddingBottom: val,
-                        paddingLeft: val,
-                        padding: val,
-                      });
-                    }}
-                    placeholder="0px"
-                    className="flex-1 bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2.5 py-1 text-white text-xs font-mono focus:outline-none"
-                  />
-                  <div className="flex items-center gap-1">
-                    {['0px', '8px', '12px', '16px', '24px'].map((preset) => (
-                      <button
-                        key={preset}
-                        onClick={() =>
-                          onUpdateStyle({
-                            paddingTop: preset,
-                            paddingRight: preset,
-                            paddingBottom: preset,
-                            paddingLeft: preset,
-                            padding: preset,
-                          })
-                        }
-                        className={`px-1.5 py-0.5 rounded text-[10px] font-mono border ${
-                          (style.paddingTop || style.padding) === preset
-                            ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
-                            : 'bg-[#252526] hover:bg-[#323232] text-zinc-400 border-[#383838]'
-                        }`}
-                      >
-                        {preset.replace('px', '')}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-4 gap-1.5 pt-1">
-                  <div>
-                    <span className="text-[9px] text-zinc-500 block text-center uppercase tracking-wider mb-0.5">Top</span>
-                    <input
-                      type="text"
-                      value={style.paddingTop || '0px'}
-                      onChange={(e) => onUpdateStyle({ paddingTop: e.target.value })}
-                      placeholder="0px"
-                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-1.5 py-1 text-center text-white text-xs font-mono focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <span className="text-[9px] text-zinc-500 block text-center uppercase tracking-wider mb-0.5">Right</span>
-                    <input
-                      type="text"
-                      value={style.paddingRight || '0px'}
-                      onChange={(e) => onUpdateStyle({ paddingRight: e.target.value })}
-                      placeholder="0px"
-                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-1.5 py-1 text-center text-white text-xs font-mono focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <span className="text-[9px] text-zinc-500 block text-center uppercase tracking-wider mb-0.5">Bottom</span>
-                    <input
-                      type="text"
-                      value={style.paddingBottom || '0px'}
-                      onChange={(e) => onUpdateStyle({ paddingBottom: e.target.value })}
-                      placeholder="0px"
-                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-1.5 py-1 text-center text-white text-xs font-mono focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <span className="text-[9px] text-zinc-500 block text-center uppercase tracking-wider mb-0.5">Left</span>
-                    <input
-                      type="text"
-                      value={style.paddingLeft || '0px'}
-                      onChange={(e) => onUpdateStyle({ paddingLeft: e.target.value })}
-                      placeholder="0px"
-                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-1.5 py-1 text-center text-white text-xs font-mono focus:outline-none"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* MARGIN CONTROL */}
-            <div className="space-y-1.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-medium text-zinc-300">Margin (Exterior)</span>
-                  <button
-                    onClick={() => setMarginLinked(!marginLinked)}
-                    className="p-1 hover:bg-[#2c2c2c] rounded text-zinc-400 hover:text-white transition-colors"
-                    title={marginLinked ? 'Desvincular (4 lados independientes: T, R, B, L)' : 'Vincular lados uniformes'}
-                  >
-                    {marginLinked ? (
-                      <Link2 className="w-3 h-3 text-[#0d99ff]" />
-                    ) : (
-                      <Unlink className="w-3 h-3 text-zinc-500" />
-                    )}
-                  </button>
-                  <button
-                    onClick={() => onUpdateStyle({ marginLeft: 'auto', marginRight: 'auto' })}
-                    className="px-1.5 py-0.5 rounded bg-[#252526] hover:bg-[#323232] border border-[#383838] text-[9px] text-zinc-300 transition-colors"
-                    title="Centrar horizontalmente (margin: 0 auto)"
-                  >
-                    Auto Center
-                  </button>
-                </div>
-                <span className="text-[10px] text-zinc-500 font-mono">
-                  {marginLinked
-                    ? style.marginTop || style.margin || '0px'
-                    : `${style.marginTop || '0'} · ${style.marginRight || '0'} · ${style.marginBottom || '0'} · ${style.marginLeft || '0'}`}
-                </span>
-              </div>
-
-              {marginLinked ? (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={style.marginTop || style.margin || '0px'}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      onUpdateStyle({
-                        marginTop: val,
-                        marginRight: val,
-                        marginBottom: val,
-                        marginLeft: val,
-                        margin: val,
-                      });
-                    }}
-                    placeholder="0px"
-                    className="flex-1 bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2.5 py-1 text-white text-xs font-mono focus:outline-none"
-                  />
-                  <div className="flex items-center gap-1">
-                    {['0px', '8px', '16px', '24px', '32px'].map((preset) => (
-                      <button
-                        key={preset}
-                        onClick={() =>
-                          onUpdateStyle({
-                            marginTop: preset,
-                            marginRight: preset,
-                            marginBottom: preset,
-                            marginLeft: preset,
-                            margin: preset,
-                          })
-                        }
-                        className={`px-1.5 py-0.5 rounded text-[10px] font-mono border ${
-                          (style.marginTop || style.margin) === preset
-                            ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
-                            : 'bg-[#252526] hover:bg-[#323232] text-zinc-400 border-[#383838]'
-                        }`}
-                      >
-                        {preset.replace('px', '')}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-4 gap-1.5 pt-1">
-                  <div>
-                    <span className="text-[9px] text-zinc-500 block text-center uppercase tracking-wider mb-0.5">Top</span>
-                    <input
-                      type="text"
-                      value={style.marginTop || '0px'}
-                      onChange={(e) => onUpdateStyle({ marginTop: e.target.value })}
-                      placeholder="0px"
-                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-1.5 py-1 text-center text-white text-xs font-mono focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <span className="text-[9px] text-zinc-500 block text-center uppercase tracking-wider mb-0.5">Right</span>
-                    <input
-                      type="text"
-                      value={style.marginRight || '0px'}
-                      onChange={(e) => onUpdateStyle({ marginRight: e.target.value })}
-                      placeholder="0px"
-                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-1.5 py-1 text-center text-white text-xs font-mono focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <span className="text-[9px] text-zinc-500 block text-center uppercase tracking-wider mb-0.5">Bottom</span>
-                    <input
-                      type="text"
-                      value={style.marginBottom || '0px'}
-                      onChange={(e) => onUpdateStyle({ marginBottom: e.target.value })}
-                      placeholder="0px"
-                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-1.5 py-1 text-center text-white text-xs font-mono focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <span className="text-[9px] text-zinc-500 block text-center uppercase tracking-wider mb-0.5">Left</span>
-                    <input
-                      type="text"
-                      value={style.marginLeft || '0px'}
-                      onChange={(e) => onUpdateStyle({ marginLeft: e.target.value })}
-                      placeholder="0px"
-                      className="w-full bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-1.5 py-1 text-center text-white text-xs font-mono focus:outline-none"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* ITEM GAP */}
-            <div className="flex items-center justify-between bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
-              <span className="text-[11px] font-medium text-zinc-300">Item Gap (Espaciado)</span>
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="text"
-                  value={style.gap || '0px'}
-                  onChange={(e) => onUpdateStyle({ gap: e.target.value })}
-                  placeholder="0px"
-                  className="w-20 bg-[#252526] border border-[#383838] focus:border-[#0d99ff] rounded px-2 py-1 text-right text-white text-xs font-mono focus:outline-none"
-                />
-                <div className="flex items-center gap-1">
-                  {['0px', '8px', '16px', '24px'].map((preset) => (
-                    <button
-                      key={preset}
-                      onClick={() => onUpdateStyle({ gap: preset })}
-                      className={`px-1.5 py-0.5 rounded text-[10px] font-mono border ${
-                        style.gap === preset
-                          ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
-                          : 'bg-[#252526] hover:bg-[#323232] text-zinc-400 border-[#383838]'
-                      }`}
-                    >
-                      {preset.replace('px', '')}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* ======================================================== */}
-          {/* 4. LAYOUT, DISPLAY & DIMENSIONS                          */}
-          {/* ======================================================== */}
-          <div className="pt-3 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Columns3 className="w-3.5 h-3.5 text-[#0d99ff]" />
-                <span>Layout & Dimensions</span>
-              </span>
-            </div>
-
-            {/* Display property */}
-            <div className="space-y-1">
-              <span className="text-[10px] text-zinc-500 font-medium block">Display</span>
-              <select
-                value={style.display || (selectedNode.isContainer ? 'flex' : 'block')}
-                onChange={(e) => onUpdateStyle({ display: e.target.value })}
-                className="w-full bg-[#1e1e1e] border border-[#383838] focus:border-[#0d99ff] rounded px-2.5 py-1 text-white text-xs focus:outline-none"
-              >
-                <option value="block" className="bg-[#1e1e1e]">Block (Elemento de Bloque / Full Width)</option>
-                <option value="flex" className="bg-[#1e1e1e]">Flex (Contenedor Flexible Auto-Layout)</option>
-                <option value="inline-block" className="bg-[#1e1e1e]">Inline-Block (En línea con dimensiones)</option>
-                <option value="inline-flex" className="bg-[#1e1e1e]">Inline-Flex (Flex en línea)</option>
-                <option value="grid" className="bg-[#1e1e1e]">Grid (Rejilla CSS)</option>
-                <option value="inline" className="bg-[#1e1e1e]">Inline (Texto en línea puro)</option>
-              </select>
-            </div>
-
-            {/* Dimensions W & H */}
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex items-center bg-[#1e1e1e] border border-[#383838] focus-within:border-[#0d99ff] rounded px-2 py-1">
-                <span className="text-zinc-500 font-mono text-[11px] mr-2">W</span>
-                <input
-                  type="text"
-                  value={style.width || '100%'}
-                  onChange={(e) => onUpdateStyle({ width: e.target.value })}
-                  className="w-full bg-transparent text-white focus:outline-none text-xs font-mono"
-                />
-              </div>
-              <div className="flex items-center bg-[#1e1e1e] border border-[#383838] focus-within:border-[#0d99ff] rounded px-2 py-1">
-                <span className="text-zinc-500 font-mono text-[11px] mr-2">H</span>
-                <input
-                  type="text"
-                  value={style.height || 'auto'}
-                  onChange={(e) => onUpdateStyle({ height: e.target.value })}
-                  className="w-full bg-transparent text-white focus:outline-none text-xs font-mono"
-                />
-              </div>
-            </div>
-
-            {/* Sizing shortcuts */}
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => onUpdateStyle({ width: 'auto', alignSelf: 'auto' })}
-                className="flex-1 py-1 rounded bg-[#1e1e1e] hover:bg-[#323232] border border-[#383838] text-[11px] text-zinc-300 text-center"
-              >
-                Hug Contents
-              </button>
-              <button
-                onClick={() => onUpdateStyle({ width: '100%', alignSelf: 'stretch' })}
-                className="flex-1 py-1 rounded bg-[#1e1e1e] hover:bg-[#323232] border border-[#383838] text-[11px] text-zinc-300 text-center"
-              >
-                Fill Container
-              </button>
-            </div>
-
-            {/* Min-Width & Max-Width */}
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex items-center bg-[#1e1e1e] border border-[#383838] rounded px-2 py-1">
-                <span className="text-zinc-500 font-mono text-[10px] mr-1">MinW</span>
-                <input
-                  type="text"
-                  value={style.minWidth || ''}
-                  onChange={(e) => onUpdateStyle({ minWidth: e.target.value })}
-                  placeholder="none"
-                  className="w-full bg-transparent text-white focus:outline-none text-xs font-mono"
-                />
-              </div>
-              <div className="flex items-center bg-[#1e1e1e] border border-[#383838] rounded px-2 py-1">
-                <span className="text-zinc-500 font-mono text-[10px] mr-1">MaxW</span>
-                <input
-                  type="text"
-                  value={style.maxWidth || ''}
-                  onChange={(e) => onUpdateStyle({ maxWidth: e.target.value })}
-                  placeholder="none"
-                  className="w-full bg-transparent text-white focus:outline-none text-xs font-mono"
-                />
-              </div>
-            </div>
-
-            {/* Flexbox Controls (Direction, Align Bar & 3x3 Matrix) */}
-            <div className="space-y-2 pt-1 border-t border-[#383838]">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-medium text-zinc-400">Dirección y Alineación Flex</span>
-                <div className="flex items-center bg-[#1e1e1e] border border-[#383838] rounded p-0.5">
-                  <button
-                    onClick={() => onUpdateStyle({ flexDirection: 'row', display: 'flex' })}
-                    title="Horizontal Layout (Row)"
-                    className={`p-1 rounded ${
-                      style.flexDirection === 'row' ? 'bg-[#0d99ff] text-white' : 'text-zinc-400'
-                    }`}
-                  >
-                    <ArrowRight className="w-3 h-3" />
-                  </button>
-                  <button
-                    onClick={() => onUpdateStyle({ flexDirection: 'column', display: 'flex' })}
-                    title="Vertical Layout (Column)"
-                    className={`p-1 rounded ${
-                      style.flexDirection === 'column' || !style.flexDirection
-                        ? 'bg-[#0d99ff] text-white'
-                        : 'text-zinc-400'
-                    }`}
-                  >
-                    <ArrowDown className="w-3 h-3" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Quick Alignment Bar */}
-              <div className="grid grid-cols-6 gap-1 bg-[#1e1e1e] p-1 rounded-lg border border-[#383838]">
-                <button
-                  onClick={() => handleQuickAlign('left')}
-                  title="Align Left"
-                  className="p-1 hover:bg-[#323232] rounded flex justify-center text-zinc-400 hover:text-white"
-                >
-                  <AlignLeft className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={() => handleQuickAlign('center')}
-                  title="Align Horizontal Center"
-                  className="p-1 hover:bg-[#323232] rounded flex justify-center text-zinc-400 hover:text-white"
-                >
-                  <AlignCenter className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={() => handleQuickAlign('right')}
-                  title="Align Right"
-                  className="p-1 hover:bg-[#323232] rounded flex justify-center text-zinc-400 hover:text-white"
-                >
-                  <AlignRight className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={() => handleQuickAlign('top')}
-                  title="Align Top"
-                  className="p-1 hover:bg-[#323232] rounded flex justify-center text-zinc-400 hover:text-white"
-                >
-                  <AlignJustify className="w-3.5 h-3.5 rotate-90" />
-                </button>
-                <button
-                  onClick={() => handleQuickAlign('middle')}
-                  title="Align Vertical Center"
-                  className="p-1 hover:bg-[#323232] rounded flex justify-center text-zinc-400 hover:text-white"
-                >
-                  <AlignCenter className="w-3.5 h-3.5 rotate-90" />
-                </button>
-                <button
-                  onClick={() => handleQuickAlign('bottom')}
-                  title="Align Bottom"
-                  className="p-1 hover:bg-[#323232] rounded flex justify-center text-zinc-400 hover:text-white"
-                >
-                  <AlignJustify className="w-3.5 h-3.5 -rotate-90" />
-                </button>
-              </div>
-
-              {/* 3x3 Matrix Grid */}
-              <div className="flex items-center gap-3 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
-                <div className="grid grid-cols-3 gap-1 w-20 h-20 bg-[#282829] p-1 rounded-md border border-[#3e3e42] shrink-0">
-                  {matrixPositions.map((pos) => {
-                    const isActive =
-                      currentAlign === pos.align && currentJustify === pos.justify;
-                    return (
-                      <button
-                        key={pos.label}
-                        onClick={() =>
-                          onUpdateStyle({
-                            alignItems: pos.align,
-                            justifyContent: pos.justify,
-                            display: 'flex',
-                          })
-                        }
-                        title={pos.label}
-                        className={`rounded-sm transition-colors ${
-                          isActive
-                            ? 'bg-[#0d99ff] ring-1 ring-white'
-                            : 'bg-[#383838] hover:bg-[#525252]'
-                        }`}
-                      />
-                    );
-                  })}
-                </div>
-                <div className="text-[10px] text-zinc-400 space-y-1">
-                  <div>
-                    <span className="text-zinc-500">Align:</span>{' '}
-                    <span className="font-mono text-zinc-200">{currentAlign}</span>
-                  </div>
-                  <div>
-                    <span className="text-zinc-500">Justify:</span>{' '}
-                    <span className="font-mono text-zinc-200">{currentJustify}</span>
-                  </div>
-                  <div className="pt-1">
-                    <span className="text-[9px] text-zinc-500">Haz clic en los puntos para posicionar los hijos en la cuadrícula</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* ======================================================== */}
-          {/* 5. FILL & BACKGROUND                                     */}
+          {/* 6. FILL                                                  */}
           {/* ======================================================== */}
           <div className="pt-3 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
                 <Palette className="w-3.5 h-3.5 text-[#0d99ff]" />
-                <span>Fill & Background</span>
+                <span>Fill</span>
               </span>
               <span className="text-[10px] text-zinc-500 font-mono">
                 {style.backgroundColor || 'transparent'}
@@ -1745,7 +1749,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
               />
               <button
                 onClick={() => onUpdateStyle({ backgroundColor: 'transparent' })}
-                className="px-2 py-0.5 text-[10px] rounded bg-[#2c2c2c] hover:bg-[#383838] text-zinc-400 hover:text-white"
+                className="px-2 py-0.5 text-[10px] rounded bg-[#2c2c2c] hover:bg-[#383838] text-zinc-400 hover:text-white transition-colors"
                 title="Fondo transparente"
               >
                 Clear
@@ -1779,35 +1783,16 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                 />
               ))}
             </div>
-
-            {/* Opacity */}
-            <div className="space-y-1 pt-1">
-              <div className="flex items-center justify-between text-[10px] text-zinc-400">
-                <span>Opacidad</span>
-                <span className="font-mono text-zinc-300">
-                  {Math.round(parseFloat(style.opacity ?? '1') * 100)}%
-                </span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.05"
-                value={style.opacity !== undefined ? Number(style.opacity) : 1}
-                onChange={(e) => onUpdateStyle({ opacity: e.target.value })}
-                className="w-full accent-[#0d99ff]"
-              />
-            </div>
           </div>
 
           {/* ======================================================== */}
-          {/* 6. STROKE & BORDER (CORNER RADIUS, BORDER, SHADOW)       */}
+          {/* 7. STROKE & BORDERS                                      */}
           {/* ======================================================== */}
           <div className="pt-3 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
                 <Square className="w-3.5 h-3.5 text-[#0d99ff]" />
-                <span>Stroke & Border</span>
+                <span>Stroke</span>
               </span>
               <span className="text-[10px] text-zinc-500 font-mono">
                 {style.borderRadius || '0px'}
@@ -1832,7 +1817,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                   <button
                     key={preset}
                     onClick={() => onUpdateStyle({ borderRadius: preset })}
-                    className={`px-1.5 py-0.5 rounded text-[10px] font-mono border ${
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-mono border transition-colors ${
                       style.borderRadius === preset
                         ? 'bg-[#0d99ff] text-white border-[#0d99ff]'
                         : 'bg-[#1e1e1e] hover:bg-[#323232] text-zinc-400 border-[#383838]'
@@ -1892,11 +1877,23 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                 />
                 <button
                   onClick={() => onUpdateStyle({ borderColor: 'transparent', borderWidth: '0px' })}
-                  className="px-2 py-0.5 text-[10px] rounded bg-[#2c2c2c] hover:bg-[#383838] text-zinc-400 hover:text-white"
+                  className="px-2 py-0.5 text-[10px] rounded bg-[#2c2c2c] hover:bg-[#383838] text-zinc-400 hover:text-white transition-colors"
                 >
                   Clear
                 </button>
               </div>
+            </div>
+          </div>
+
+          {/* ======================================================== */}
+          {/* 8. EFFECTS & LAYER                                       */}
+          {/* ======================================================== */}
+          <div className="pt-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#0d99ff]" />
+                <span>Effects & Layer</span>
+              </span>
             </div>
 
             {/* Box Shadow */}
@@ -1915,6 +1912,25 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                 <option value="0 0 15px rgba(13, 153, 255, 0.4)" className="bg-[#1e1e1e]">Blue Glow (Neón Azul)</option>
                 <option value="0 0 15px rgba(16, 185, 129, 0.4)" className="bg-[#1e1e1e]">Emerald Glow (Neón Verde)</option>
               </select>
+            </div>
+
+            {/* Opacity */}
+            <div className="space-y-1 pt-1">
+              <div className="flex items-center justify-between text-[10px] text-zinc-400">
+                <span>Opacidad (Layer Opacity)</span>
+                <span className="font-mono text-zinc-300">
+                  {Math.round(parseFloat(style.opacity ?? '1') * 100)}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={style.opacity !== undefined ? Number(style.opacity) : 1}
+                onChange={(e) => onUpdateStyle({ opacity: e.target.value })}
+                className="w-full accent-[#0d99ff]"
+              />
             </div>
           </div>
 
