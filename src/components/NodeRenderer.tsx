@@ -39,6 +39,7 @@ interface NodeRendererProps {
   selectedId: string | null;
   onSelectNode: (id: string, e: React.MouseEvent) => void;
   toolMode?: ToolMode;
+  onInsertTool?: (tool: ToolMode, targetId?: string | null) => void;
   isPreviewMode: boolean;
   dropTargetId: string | null;
   dropPosition: DropPosition | null;
@@ -55,6 +56,7 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
   selectedId,
   onSelectNode,
   toolMode = 'select',
+  onInsertTool,
   isPreviewMode,
   dropTargetId,
   dropPosition,
@@ -102,6 +104,10 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
       return;
     }
     e.stopPropagation();
+    if (toolMode && ['container', 'heading', 'paragraph', 'image'].includes(toolMode)) {
+      onInsertTool?.(toolMode, node.id);
+      return;
+    }
     onSelectNode(node.id, e);
   };
 
@@ -179,6 +185,7 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
         selectedId={selectedId}
         onSelectNode={onSelectNode}
         toolMode={toolMode}
+        onInsertTool={onInsertTool}
         isPreviewMode={isPreviewMode}
         dropTargetId={dropTargetId}
         dropPosition={dropPosition}

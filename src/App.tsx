@@ -26,6 +26,7 @@ import { RightSidebar } from './components/RightSidebar';
 import { Canvas } from './components/Canvas';
 import { ExportModal } from './components/ExportModal';
 import { NewProjectModal } from './components/NewProjectModal';
+import { FloatingToolbox } from './components/FloatingToolbox';
 
 export function App() {
   const [projectName, setProjectName] = useState('VisualForge Studio - Project');
@@ -115,6 +116,100 @@ export function App() {
       setSelectedId(newId);
     },
     [tree, selectedId, updateTreeWithHistory, projectType]
+  );
+
+  // Quick insertion from FloatingToolbox insertion tools
+  const handleInsertTool = useCallback(
+    (tool: ToolMode, targetId?: string | null) => {
+      let compDef: ComponentDefinition | null = null;
+      if (tool === 'container') {
+        compDef = {
+          type: 'container',
+          name: 'Container',
+          category: 'Box / Container (Layout)',
+          icon: 'Box',
+          isContainer: true,
+          defaultStyle: {
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px',
+            padding: '24px',
+            width: '100%',
+            borderRadius: '8px',
+            backgroundColor: '#18181b',
+            border: '1px solid #27272a',
+          },
+          defaultProps: {
+            label: 'Contenedor Flexbox',
+          },
+        };
+      } else if (tool === 'heading') {
+        compDef = {
+          type: 'typography',
+          name: 'Heading',
+          category: 'Text (Tipografía)',
+          icon: 'Heading',
+          isContainer: false,
+          defaultStyle: {
+            fontSize: '28px',
+            fontWeight: '700',
+            color: '#ffffff',
+            lineHeight: '1.25',
+            textAlign: 'left',
+          },
+          defaultProps: {
+            as: 'h2',
+            text: 'Título Principal',
+          },
+        };
+      } else if (tool === 'paragraph') {
+        compDef = {
+          type: 'typography',
+          name: 'Paragraph',
+          category: 'Text (Tipografía)',
+          icon: 'Pilcrow',
+          isContainer: false,
+          defaultStyle: {
+            fontSize: '14px',
+            fontWeight: '400',
+            color: '#a1a1aa',
+            lineHeight: '1.6',
+            textAlign: 'left',
+          },
+          defaultProps: {
+            as: 'p',
+            text: 'Párrafo de texto descriptivo adaptable para cualquier sección.',
+          },
+        };
+      } else if (tool === 'image') {
+        compDef = {
+          type: 'image',
+          name: 'Image',
+          category: 'Image (Multimedia)',
+          icon: 'Image',
+          isContainer: false,
+          defaultStyle: {
+            width: '100%',
+            height: 'auto',
+            borderRadius: '8px',
+            overflow: 'hidden',
+          },
+          defaultProps: {
+            src: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800&auto=format&fit=crop&q=80',
+            alt: 'Imagen ilustrativa',
+            aspectRatio: '16:9',
+            objectFit: 'cover',
+            loading: 'lazy',
+          },
+        };
+      }
+
+      if (compDef) {
+        handleInsertComponent(compDef, targetId || selectedId, 'inside');
+        setToolMode('select');
+      }
+    },
+    [handleInsertComponent, selectedId]
   );
 
   // Update Style of Selected Node
@@ -363,6 +458,7 @@ export function App() {
           onSelectNode={setSelectedId}
           viewportMode={viewportMode}
           toolMode={toolMode}
+          onInsertTool={handleInsertTool}
           zoom={zoom}
           onZoom={setZoom}
           isPreviewMode={isPreviewMode}
@@ -382,6 +478,16 @@ export function App() {
           setIsOpen={setIsRightOpen}
         />
       </div>
+
+      {/* Floating Smart Toolbox (Figma / VisionOS Style) */}
+      {!isPreviewMode && (
+        <FloatingToolbox
+          toolMode={toolMode}
+          setToolMode={setToolMode}
+          onInsertComponent={(comp) => handleInsertComponent(comp, selectedId, 'inside')}
+          selectedId={selectedId}
+        />
+      )}
 
       {/* Export Code Modal */}
       <ExportModal

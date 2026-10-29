@@ -19,6 +19,7 @@ interface CanvasProps {
   onSelectNode: (id: string | null, e?: React.MouseEvent) => void;
   viewportMode: ViewportMode;
   toolMode: ToolMode;
+  onInsertTool?: (tool: ToolMode, targetId?: string | null) => void;
   zoom: number;
   onZoom?: (newZoom: number | ((prev: number) => number)) => void;
   isPreviewMode: boolean;
@@ -36,6 +37,7 @@ export const Canvas: React.FC<CanvasProps> = ({
   onSelectNode,
   viewportMode,
   toolMode,
+  onInsertTool,
   zoom,
   onZoom,
   isPreviewMode,
@@ -55,6 +57,22 @@ export const Canvas: React.FC<CanvasProps> = ({
 
   // Active Hand Mode: true if Hand Tool is selected, Spacebar is held down, or actively panning
   const isHandActive = toolMode === 'hand' || isSpacePressed || isPanning;
+
+  // Dynamic canvas cursor based on active tool
+  const getCanvasCursor = () => {
+    if (isHandActive) return isPanning ? 'cursor-grabbing' : 'cursor-grab';
+    switch (toolMode) {
+      case 'container':
+        return 'cursor-crosshair';
+      case 'heading':
+      case 'paragraph':
+        return 'cursor-text';
+      case 'image':
+        return 'cursor-copy';
+      default:
+        return 'cursor-default';
+    }
+  };
 
   // Listen for Spacebar press and release (Photoshop / Figma style space+drag) + Keyboard scroll
   useEffect(() => {
@@ -374,14 +392,16 @@ export const Canvas: React.FC<CanvasProps> = ({
       onMouseUp={handleMouseUp}
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleCanvasDrop}
-      onClick={() => {
+      onClick={(e) => {
         if (!isHandActive) {
+          if (['container', 'heading', 'paragraph', 'image'].includes(toolMode)) {
+            onInsertTool?.(toolMode, null);
+            return;
+          }
           onSelectNode(null);
         }
       }}
-      className={`flex-1 relative overflow-hidden bg-[#1e1e1e] canvas-dots flex flex-col items-center select-none ${
-        isHandActive ? (isPanning ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default'
-      }`}
+      className={`flex-1 relative overflow-hidden bg-[#1e1e1e] canvas-dots flex flex-col items-center select-none ${getCanvasCursor()}`}
     >
       {/* Pan & Zoom Canvas Container */}
       <div
@@ -397,6 +417,10 @@ export const Canvas: React.FC<CanvasProps> = ({
           onClick={(e) => {
             if (isHandActive) return;
             e.stopPropagation();
+            if (['container', 'heading', 'paragraph', 'image'].includes(toolMode)) {
+              onInsertTool?.(toolMode, null);
+              return;
+            }
           }}
         >
           {/* Frame Label Header (Figma Artboard Tag) */}
@@ -431,6 +455,7 @@ export const Canvas: React.FC<CanvasProps> = ({
                     selectedId={selectedId}
                     onSelectNode={onSelectNode}
                     toolMode={isHandActive ? 'hand' : toolMode}
+                    onInsertTool={onInsertTool}
                     isPreviewMode={isPreviewMode}
                     dropTargetId={dropTargetId}
                     dropPosition={dropPosition}
@@ -449,9 +474,9 @@ export const Canvas: React.FC<CanvasProps> = ({
             )}
           </div>
 
-          {/* Floating Contextual Pill for Selected Node - Hidden in Hand Tool mode */}
+          {/* Floating Contextual Pill for Selected Node - Positioned right above the Floating Toolbox */}
           {selectedId && !isPreviewMode && !isHandActive && (
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-[#252526] border border-[#383838] px-3 py-1.5 rounded-full shadow-2xl flex items-center gap-2 text-xs text-zinc-200">
+            <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 bg-[#252526] border border-[#383838] px-3 py-1.5 rounded-full shadow-2xl flex items-center gap-2 text-xs text-zinc-200">
               <span className="text-[11px] font-mono text-[#0d99ff] border-r border-[#383838] pr-2">
                 {selectedId}
               </span>

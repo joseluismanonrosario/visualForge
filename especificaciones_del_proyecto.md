@@ -80,6 +80,34 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
      - **Inspect / Code (Inspección)**: Vista previa instantánea del código CSS / Tailwind generado del elemento seleccionado.
    - Colapsable para enfoque en pantalla completa.
 
+5. **Barra de Herramientas Flotante (`FloatingToolbox`) (Estilo Figma & Apple VisionOS)**:
+   - **Ubicación y Estructura Visual**:
+     - Posición inicial flotante centrada horizontalmente en la parte inferior de la pantalla (`bottom-6 left-1/2 -translate-x-1/2`).
+     - Diseño en cápsula/píldora (`rounded-full`), fondo oscuro semisólido/translúcido con efecto `backdrop-blur-2xl` (glassmorphism: `bg-[#18181b]/85 border border-white/10`), sombra flotante pronunciada (`shadow-2xl shadow-black/70`) y anillo sutil (`ring-1 ring-white/5`).
+     - Agarraderas discretas de puntos (`GripVertical`) en ambos extremos laterales para indicar capacidad de movimiento con cursor `cursor-grab / cursor-grabbing`.
+   - **Funcionalidad de Movimiento Libre y Acoplamiento Inteligente (Smart Docking)**:
+     - Arrastre interactivo fluido mediante eventos globales de ratón.
+     - **Acoplamiento Inteligente (Smart Docking)**: Si el usuario arrastra la barra hacia la parte superior (`y < 110px`), se encaja suavemente en el top (`top-14`) con animación de transición; si se devuelve hacia el fondo (`y > window.innerHeight - 130px`), se acopla en la parte inferior (`bottom-6`); en cualquier otra posición, permanece flotando libremente en las coordenadas exactas de suelta (`dockPosition: 'free'`).
+     - Guías visuales luminosas (`dockGuide` de neón azul pulsante) que anticipan el acoplamiento al acercarse a las zonas top o bottom.
+   - **Distribución de Herramientas (De izquierda a derecha con divisores verticales)**:
+     - **Bloque 1 (Navegación y Selección)**:
+       * **Select / Pointer (`V`)**: Herramienta de selección principal, activa y resaltada por defecto en azul brillante (`#0d99ff`).
+       * **Pan / Hand (`H`)**: Herramienta para desplazamiento y navegación panorámica del lienzo.
+     - **Bloque 2 (Estructura y Maquetación)**:
+       * **Container / Frame (`F`)**: Herramienta para inserción y dibujo de contenedores y cajas Flexbox/Grid.
+     - **Bloque 3 (Tipografía)**:
+       * **Heading (`T`)**: Inserción de títulos y encabezados principales (`H1 / H2`).
+       * **Paragraph (`P`)**: Inserción de párrafos y bloques de texto multilínea descriptivos.
+     - **Bloque 4 (Gráficos y Contenido)**:
+       * **Icons (Icon Set - 🔔 🛒 ♥)**: Acceso rápido a colección de iconos UI vectoriales.
+       * **Image (`I`)**: Inserción de contenedores de imágenes multimedia responsivas.
+   - **Comportamiento Interactivo y Radio-Group**:
+     - **Selección Exclusiva**: Solo una herramienta puede estar activa a la vez. La herramienta activa cambia su fondo a un azul vibrante (`bg-[#0d99ff] text-white shadow-[0_0_14px_rgba(13,153,255,0.6)] scale-105`) y modifica en tiempo real el cursor del lienzo (`cursor-default`, `cursor-grab`, `cursor-crosshair`, `cursor-text`, `cursor-copy`).
+     - **Inserción Directa en el Lienzo**: Al hacer clic sobre cualquier contenedor o zona del lienzo con una herramienta de inserción activa, se coloca instantáneamente el componente en esa ubicación y se retorna automáticamente a la herramienta de selección (`select`). Un segundo clic consecutivo en el botón de la herramienta inserta directamente en el nodo seleccionado.
+     - **Feedback Visual y Tooltips**: Tooltips emergentes flotantes con orientación adaptativa (arriba o abajo según el acoplamiento de la barra), etiquetas informativas y badges con atajos de teclado (`[V]`, `[H]`, `[F]`, `[T]`, `[P]`, `[I]`).
+     - **Menú Flotante de Iconos (Popover UI)**: Al hacer clic en la herramienta "Icons", no altera el cursor del lienzo, sino que despliega una ventana flotante translúcida encima/debajo del toolbox con buscador en tiempo real y cuadrícula de 32 iconos UI comunes; al hacer clic en un icono, lo inserta en el lienzo y cierra la ventana emergente.
+     - **Atajos de Teclado Globales**: Escucha teclas `V`, `H`, `F`, `T`, `P`, `I` y `Escape` (siempre que el usuario no esté redactando en campos de texto).
+
 ---
 
 ## 2. CATÁLOGOS DINÁMICOS DE COMPONENTES UI (CATÁLOGO A: SHADCN/UI & CATÁLOGO B: PRELINE UI)

@@ -48,7 +48,7 @@ export interface CanvasNode {
 }
 
 export type ViewportMode = 'desktop' | 'tablet' | 'mobile';
-export type ToolMode = 'select' | 'hand';
+export type ToolMode = 'select' | 'hand' | 'container' | 'heading' | 'paragraph' | 'image';
 export type DropPosition = 'before' | 'inside' | 'after';
 
 export interface DragState {
