@@ -72,7 +72,7 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
 
 ---
 
-## 2. CATÁLOGOS DINÁMICOS DE COMPONENTES UI (CATÁLOGO A: SHADCN/UI & CATÁLOGO B: PRELINE UI)
+## 2. CATÁLOGOS DINÁMICOS DE COMPONENTES UI (CATÁLOGO A: SHADCN/UI, CATÁLOGO B: PRELINE UI Y CATÁLOGO C: IOT & DASHBOARDS ESP32)
 
 El panel lateral de componentes (`LeftSidebar`) se adapta dinámicamente según el tipo de proyecto activo (`projectType`), cargando estrictamente el catálogo correspondiente:
 
@@ -338,26 +338,78 @@ Tanto en el catálogo de Frameworks (Shadcn/ui) como en el de HTML / ESP32 (Prel
 
 ---
 
+### Catálogo C: Biblioteca Especializada para Dashboards IoT & Microcontroladores (ESP32 / Web General)
+
+El panel lateral izquierdo (`LeftSidebar`) incorpora un selector conmutador tripartito de catálogos (**Shadcn**, **Preline UI** e **IoT & ESP32**). Cuando se activa el catálogo **IoT & ESP32**, se presenta una biblioteca estructurada en 3 categorías optimizada tanto para maquetar interfaces web generales de alta interactividad como para generar dashboards de telemetría y control físico para microcontroladores como el **ESP32**, donde cada componente posee metadatos descriptivos de datos (`data-binding`) para su integración directa con el firmware C++ o backend:
+
+1. **Componentes Primitivos Base (UI General)**:
+   - **Text (Typography & Readings)**: Elemento de texto multipropósito que soporta jerarquías semánticas (`h1`-`h6`, `subtitle`, `p`, `label`, `span`) con variantes de tamaño, peso tipográfico, alineación, color e itálica. Incluye enlace a lecturas de sensores en tiempo real.
+   - **Action Button (Control / Disparo)**: Botón de comando con soporte para variantes (`default`, `secondary`, `outline`, `ghost`, `destructive`), tamaños, estados interactivos (loading, disabled) e iconos SVG integrables, optimizado para emitir comandos HTTP/WebSocket al ESP32.
+   - **Action Link (Navegación)**: Enlace de acción rápida que comparte la estética y variantes de los botones para enlaces externos, manuales o saltos entre vistas del microcontrolador.
+   - **Icon (Gráfico SVG Dinámico)**: Componente vectorial directo con selección cromática, escalado continuo e integración embebida en botones, links o métricas.
+   - **Image (Stream ESP32-CAM / Media)**: Contenedor multimedia con proporciones (`16:9`, `4:3`, `1:1`, etc.), control de ajuste (`cover`, `contain`), carga diferida y fallback de error, optimizado para flujos MJPEG de cámaras ESP32-CAM o logotipos de proyectos.
+   - **Form Controls (Entradas de Configuración)**:
+     - `Input`: Entrada de texto, número, contraseña, email o fecha para ajuste de parámetros de red Wi-Fi, umbrales y calibración.
+     - `Textarea`: Bloque multilínea ideal para visores de terminal serie, logs y volcados de consola.
+     - `Checkbox`: Interruptor booleano para banderas de configuración (flags de habilitación, modo depuración).
+     - `Radio`: Selector excluyente para selección de perfiles o modos de operación (ej. Automático, Manual, Eco).
+     - `Select`: Desplegable de selección de sensores conectados o puertos de comunicación.
+   - **Box (Layout Container)**: Contenedor maestro con distribución configurable (Flex Row, Flex Column, Grid de 2 a 4 columnas o Bloque), control de alineación, espaciados independientes y bordes.
+
+2. **Componentes Gráficos y Visualización de Datos (Basados en Chart.js / Canvas / Vector SVG Dinámicos)**:
+   - **LineChart (Telemetría en Vivo)**: Gráfico de líneas temporales con curvas suavizadas, gradiente translúcido, rejilla de referencia, marcas de tiempo y punto pulsante en vivo, ideal para graficar temperatura, humedad o presión.
+   - **BarChart (Consumo / Niveles)**: Gráfico de barras responsivas con soporte para unidades físicas (`mA`, `W`, `L`, etc.), cálculo dinámico de escala y etiquetas por nodo.
+   - **PieChart (Distribución de Estados)**: Gráfico de anillo / dona vectorial SVG para representar el uso de memoria Flash, Heap libre o particiones SPIFFS/LittleFS en el microcontrolador.
+   - **AreaChart (Potencia & Señal)**: Gráfico de área sombreada para monitorear potencias RMS, RSSI Wi-Fi en dBm o consumo de corriente instantáneo.
+   - **GaugeChart (Medidor / Tacómetro)**: Medidor radial semicircular de 180° con arco graduado dinámico de 0 a 100 (o rango personalizado), coloreado contextual (azul seguro, amarillo advertencia, rojo crítico) para presión de tanques o tacómetros.
+   - **Telemetry Metric Card (Widget)**: Tarjeta widget integral que combina título, etiqueta de protocolo (`MQTT`, `WS`, `HTTP`), indicador numérico de gran tamaño con tipografía monoespaciada, unidad de medida, estado de salud con punto pulsante (`OPTIMAL`, `ALERT`) y descripción de tendencia.
+
+3. **Capa de Mapeo y Enlace de Datos para ESP32 / IoT (Data Binding Metadata Layer)**:
+   Todos los componentes del sistema disponen en el Inspector de Diseño (`RightSidebar`) de una sección dedicada **Data Binding (ESP32 / IoT)** con conmutador de activación (`Activar`), que almacena en el nodo las directivas de enlace:
+   - **Modos de Enlace (`bindingMode`)**:
+     - `read`: Solo lectura para sensores (ej. lecturas analógicas ADC, DHT22, BME280).
+     - `write`: Solo escritura para actuadores (ej. relés, servomotores, solenoides).
+     - `bidirectional`: Sincronización bidireccional en tiempo real para estados compartidos.
+   - **Fuente de Datos / Protocolo (`dataSource`)**:
+     - `websocket`: Conexión de baja latencia con WebSocket nativo de `ESPAsyncWebServer`.
+     - `mqtt`: Tópicos MQTT con brokers como Mosquitto o HiveMQ.
+     - `http-poll`: Peticiones REST periódicas (`fetch('/api/...')`).
+     - `serial`: Comunicación serie UART por cable USB o módulo Bluetooth.
+   - **Tópico / Endpoint (`topic` / `endpoint`)**: Ruta del recurso (ej. `esp32/dht22/temperature` o `/api/gpio/2`).
+   - **Clave de Datos (`dataKey` / `jsonPath`)**: Propiedad JSON a deserializar (ej. `payload.temperature`).
+   - **Mapeo de Pines Físicos y Variables C++ (`gpioPin` / `variableName`)**: Identificador del pin físico en la placa o nombre de variable en C++ (ej. `GPIO_2`, `GPIO_4`, `PWM_CHANNEL_0`).
+   - **Intervalo de Refresco (`refreshInterval`)**: Tiempo de muestreo en milisegundos (por defecto 1000 ms) y actualización automática (`autoUpdate`).
+   - **Previsualización de Código**: Genera un fragmento en vivo del handler en C++ (`ESP.on(...)` o `ESP.publish(...)`).
+
+4. **Indicadores de Estado y Control Físico para Hardware**:
+   - **Status Badge (Conexión ESP32)**: Píldora de estado con tres modos de conectividad (*Online*, *Connecting*, *Offline*) con animación pulsante de ping (`animate-ping`) y lectura de latencia en milisegundos (`18ms`).
+   - **Toggle Switch (Relay Control)**: Control físico para activación y desactivación de relés de potencia, optoacopladores o transistores MOSFET acoplados a pines GPIO, con cambio visual de estado (CERRADO/ENCENDIDO vs ABIERTO/APAGADO) y emisión de comandos `fetch('/api/gpio/toggle?pin=X')`.
+   - **Slider / Range (Control PWM / Analógico)**: Deslizador interactivo en tiempo real de 0 a 255 (o rango configurable) para modulación por ancho de pulsos (PWM), control de velocidad de motores DC o dimmers de iluminación LED, con emisión de peticiones automáticas `fetch('/api/gpio/pwm?pin=X&val=Y')`.
+
+---
+
 ### 3. MOTOR DE RENDERIZADO Y EXPORTACIÓN ADAPTATIVA
 
 El sistema garantiza coherencia total entre el lienzo de edición y el código exportado:
 
 1. **Lienzo Central (Canvas & NodeRenderer)**:
-   - Renderiza fielmente los componentes según el catálogo activo (`shadcn` vs `preline`).
-   - Soporta interactividad en modo Preview (tabs, sliders, toggles, acordeones, modales).
-   - Inyecta metadatos del catálogo en cada nodo para garantizar su correcta exportación.
+   - Renderiza fielmente los componentes según el catálogo activo (`shadcn`, `preline` o `iot`).
+   - Soporta interactividad en modo Preview (tabs, sliders, toggles, acordeones, modales, relés y controles PWM).
+   - Inyecta metadatos del catálogo y datos de enlace (`dataBinding`) en cada nodo para garantizar su correcta exportación.
 
 2. **Pipeline de Exportación Multi-Target**:
    - **Para React / Framework (`react_shadcn`)**:
      - Genera código JSX/TSX limpio, modular y desacoplado.
      - Utiliza importaciones directas de componentes oficiales de Shadcn (`@/components/ui/...`).
+     - Renderiza visualizadores de telemetría SVG (`LineChart`, `BarChart`, `PieChart`, `GaugeChart`) y widgets (`MetricCard`, `RelaySwitch`, `PwmSlider`) listos para usar en dashboards de monitoreo.
      - Transforma los SVGs utilizados en funciones de componentes de React nativas (`convertSvgToJsx`).
    - **Para HTML / Tailwind (`html_css`)**:
      - Genera HTML5 semántico utilizando clases oficiales de Tailwind CSS basadas en la arquitectura de Preline UI.
+     - Inserta los componentes de gráficos con SVGs vectoriales inline y atributos descriptivos de enlace (`data-topic`, `data-binding-mode`).
      - Inserta los iconos como **SVGs Inline directos**, sin dependencias de fuentes externas ni hojas de estilo CDN pesadas.
    - **Para ESP32 / IoT (`esp32_html`, `esp32_main_cpp`, `esp32_embedded`)**:
-     - **`index.html`**: Totalmente autónomo y optimizado para microcontroladores con recursos limitados. Emplea SVGs inline puros (0 fuentes `.woff`), estilos mínimos y un script asíncrono no bloqueante (`updateGPIO(pin, action, val)`).
-     - **`main.cpp`**: Genera firmware C++ listo para compilar con `ESPAsyncWebServer`, configurando automáticamente en `setup()` el `pinMode()` (OUTPUT, INPUT o PWM con `ledcAttach`) de todos los pines utilizados en el diseño y los endpoints de control REST.
+     - **`index.html`**: Totalmente autónomo y optimizado para microcontroladores con recursos limitados. Emplea SVGs inline puros (0 fuentes `.woff`), estilos mínimos y scripts asíncronos con `fetch('/api/gpio/toggle?pin=X')` y `fetch('/api/gpio/pwm?pin=X&val=Y')`.
+     - **`main.cpp`**: Genera firmware C++ listo para compilar con `ESPAsyncWebServer`, detectando y configurando automáticamente en `setup()` el `pinMode()` (OUTPUT, INPUT o PWM con `ledcAttach`) de todos los pines utilizados tanto en la configuración clásica de GPIO como en el nuevo catálogo IoT (`relay_switch`, `pwm_slider` y `dataBinding`). Incluye las rutas REST para control inmediato desde el navegador.
      - **`esp32_webserver.h`**: Cabecera C++ todo en uno con el HTML/SVG guardado en memoria flash `PROGMEM` (`R"rawliteral(...)rawliteral"`).
 
 ---
@@ -462,6 +514,25 @@ Controles contextuales específicos según el componente o sub-elemento seleccio
     - **Color de Trazo / Icono (`Stroke`)**: Selector cromático visual con entrada hexadecimal, botón Clear y 10 muestras rápidas de color.
     - **Color de Relleno Vectorial (`Fill`)**: Selector cromático para el interior de las figuras vectoriales, botón dedicado "Ninguno" (`none`) para iconos con contorno/transparentes y muestras de color.
     - **Orientación y Transformación Geométrica**: Botones de rotación rápida en 90° (`RotateCw`) y volteo horizontal / vertical (`FlipHorizontal`, `FlipVertical`), aplicando transformaciones CSS (`transform: rotate(...) scaleX(...) scaleY(...)`) tanto en el lienzo interactivo como en la exportación (SVG Inline, JSX y ESP32).
+- **Componentes Gráficos y Visualización de Datos (`line_chart`, `bar_chart`, `pie_chart`, `area_chart`, `gauge_chart`, `metric_card`)**:
+  - Título del gráfico o widget, unidades de medida personalizadas (`°C`, `mA`, `% RH`, `V`, `bar`), color primario o de barras con selector cromático y paleta hex.
+  - Valores numéricos mínimo, máximo y umbrales para tacómetros y medidores analógicos (`gauge_chart`).
+  - Mapeo de protocolo (`MQTT`, `WebSocket`, `HTTP-Poll`) y etiquetas de tendencia para tarjetas de telemetría (`metric_card`).
+- **Controles de Hardware y Estado (`status_badge`, `relay_switch`, `pwm_slider`)**:
+  - `status_badge`: Selector de estado (*online*, *connecting*, *offline*), texto descriptivo personalizado, conmutador de pulsación de ping (`pulse`) y latencia en milisegundos.
+  - `relay_switch`: Etiqueta descriptiva, pin GPIO vinculado (ej. `GPIO_4`), textos de estado activo/inactivo personalizados y estado inicial abierto/cerrado.
+  - `pwm_slider`: Etiqueta descriptiva, pin GPIO de modulación (ej. `GPIO_5`), rango numérico (min 0, max 255) y lectura porcentual en tiempo real.
+
+### 4.1 Data Binding / Metadatos IoT (ESP32 & Hardware)
+*(Sección universal presente en todos los componentes para vincularlos con periféricos, sensores o variables C++ de microcontroladores)*
+- **Conmutador de Activación (`Activar`)**: Permite habilitar o deshabilitar el enlace de datos para el nodo seleccionado.
+- **Modo de Enlace (`bindingMode`)**: Selector entre *Read (Sensores / Lectura)*, *Write (Actuadores / Envío)* y *Bidirectional (Sincronizado)*.
+- **Fuente de Datos / Protocolo (`dataSource`)**: Selección del canal de comunicación (*WebSocket*, *MQTT*, *HTTP Polling / REST*, *Serial / UART*).
+- **Tópico / Endpoint (`topic` / `endpoint`)**: Ruta del recurso en el firmware o broker (ej. `esp32/sensors/temperature` o `/api/gpio/4`).
+- **Clave JSON (`dataKey` / `jsonPath`)**: Clave interna para extracción de valores en payloads JSON complejos (ej. `payload.temperature`).
+- **Pin Físico o Variable C++ (`gpioPin` / `variableName`)**: Asignación directa del número de pin físico o nombre de variable en el firmware ESP32 (ej. `GPIO_2`, `ADC_CHANNEL_0`).
+- **Intervalo de Refresco (`refreshInterval`)**: Frecuencia de actualización en milisegundos para lecturas periódicas.
+- **Previsualización de Código**: Muestra en tiempo real la línea de código equivalente en firmware C++ (`ESP.on(...)` o `ESP.publish(...)`).
 
 ### 5. Tipografía (Typography Panel)
 *(Visible exclusivamente para componentes con contenido textual; se oculta automáticamente al seleccionar iconos vectoriales)*

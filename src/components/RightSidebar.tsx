@@ -59,6 +59,12 @@ import {
   CheckSquare,
   FileText,
   LayoutGrid,
+  LineChart as LineChartIcon,
+  BarChart3,
+  PieChart as PieChartIcon,
+  Activity,
+  Power,
+  Gauge,
 } from 'lucide-react';
 import { CanvasNode, ProjectType, GpioConfig, GpioAction, GpioCommMode } from '../types';
 import {
@@ -2060,6 +2066,361 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
               </div>
             )}
 
+            {/* LINE & AREA CHART PROPERTIES */}
+            {(selectedNode.type === 'line_chart' || selectedNode.type === 'area_chart') && (
+              <div className="space-y-2.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Título del Gráfico</label>
+                  <input
+                    type="text"
+                    value={props.title || ''}
+                    onChange={(e) => onUpdateProps({ title: e.target.value })}
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Unidad de Medida</label>
+                    <input
+                      type="text"
+                      value={props.unit || ''}
+                      onChange={(e) => onUpdateProps({ unit: e.target.value })}
+                      placeholder="°C, %, V..."
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Color Primario</label>
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="color"
+                        value={props.color || style.color || '#0d99ff'}
+                        onChange={(e) => {
+                          onUpdateProps({ color: e.target.value });
+                          onUpdateStyle({ color: e.target.value });
+                        }}
+                        className="w-6 h-6 rounded cursor-pointer border border-[#383838] bg-transparent"
+                      />
+                      <input
+                        type="text"
+                        value={props.color || style.color || '#0d99ff'}
+                        onChange={(e) => {
+                          onUpdateProps({ color: e.target.value });
+                          onUpdateStyle({ color: e.target.value });
+                        }}
+                        className="flex-1 bg-[#252526] border border-[#383838] rounded px-1.5 py-1 text-white text-xs font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* BAR CHART PROPERTIES */}
+            {selectedNode.type === 'bar_chart' && (
+              <div className="space-y-2.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Título del Gráfico</label>
+                  <input
+                    type="text"
+                    value={props.title || ''}
+                    onChange={(e) => onUpdateProps({ title: e.target.value })}
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Unidad</label>
+                    <input
+                      type="text"
+                      value={props.unit || ''}
+                      onChange={(e) => onUpdateProps({ unit: e.target.value })}
+                      placeholder="mA, W, L..."
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Color Barras</label>
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="color"
+                        value={props.color || style.color || '#10b981'}
+                        onChange={(e) => {
+                          onUpdateProps({ color: e.target.value });
+                          onUpdateStyle({ color: e.target.value });
+                        }}
+                        className="w-6 h-6 rounded cursor-pointer border border-[#383838] bg-transparent"
+                      />
+                      <input
+                        type="text"
+                        value={props.color || style.color || '#10b981'}
+                        onChange={(e) => {
+                          onUpdateProps({ color: e.target.value });
+                          onUpdateStyle({ color: e.target.value });
+                        }}
+                        className="flex-1 bg-[#252526] border border-[#383838] rounded px-1.5 py-1 text-white text-xs font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* GAUGE CHART PROPERTIES */}
+            {selectedNode.type === 'gauge_chart' && (
+              <div className="space-y-2.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Título del Medidor</label>
+                  <input
+                    type="text"
+                    value={props.title || ''}
+                    onChange={(e) => onUpdateProps({ title: e.target.value })}
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Valor</label>
+                    <input
+                      type="number"
+                      value={props.value ?? 78}
+                      onChange={(e) => onUpdateProps({ value: Number(e.target.value) })}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Mínimo</label>
+                    <input
+                      type="number"
+                      value={props.min ?? 0}
+                      onChange={(e) => onUpdateProps({ min: Number(e.target.value) })}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Máximo</label>
+                    <input
+                      type="number"
+                      value={props.max ?? 100}
+                      onChange={(e) => onUpdateProps({ max: Number(e.target.value) })}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Unidad de Medida</label>
+                  <input
+                    type="text"
+                    value={props.unit || '%'}
+                    onChange={(e) => onUpdateProps({ unit: e.target.value })}
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs font-mono focus:outline-none"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* METRIC CARD PROPERTIES */}
+            {selectedNode.type === 'metric_card' && (
+              <div className="space-y-2.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Título de la Métrica</label>
+                  <input
+                    type="text"
+                    value={props.title || ''}
+                    onChange={(e) => onUpdateProps({ title: e.target.value })}
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Valor Numérico</label>
+                    <input
+                      type="text"
+                      value={props.value || ''}
+                      onChange={(e) => onUpdateProps({ value: e.target.value })}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Unidad</label>
+                    <input
+                      type="text"
+                      value={props.unit || ''}
+                      onChange={(e) => onUpdateProps({ unit: e.target.value })}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Estado</label>
+                    <select
+                      value={props.status || 'OPTIMAL'}
+                      onChange={(e) => onUpdateProps({ status: e.target.value })}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                    >
+                      <option value="OPTIMAL" className="bg-[#1e1e1e]">OPTIMAL (Verde)</option>
+                      <option value="NORMAL" className="bg-[#1e1e1e]">NORMAL</option>
+                      <option value="WARNING" className="bg-[#1e1e1e]">WARNING (Amarillo)</option>
+                      <option value="ALERT" className="bg-[#1e1e1e]">ALERT (Rojo)</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Protocolo</label>
+                    <select
+                      value={props.protocol || 'MQTT'}
+                      onChange={(e) => onUpdateProps({ protocol: e.target.value })}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                    >
+                      <option value="MQTT" className="bg-[#1e1e1e]">MQTT</option>
+                      <option value="WEBSOCKET" className="bg-[#1e1e1e]">WEBSOCKET</option>
+                      <option value="HTTP" className="bg-[#1e1e1e]">HTTP</option>
+                      <option value="SERIAL" className="bg-[#1e1e1e]">SERIAL</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Texto de Tendencia</label>
+                  <input
+                    type="text"
+                    value={props.trend || ''}
+                    onChange={(e) => onUpdateProps({ trend: e.target.value })}
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* STATUS BADGE PROPERTIES */}
+            {selectedNode.type === 'status_badge' && (
+              <div className="space-y-2.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Estado de Conexión</label>
+                    <select
+                      value={props.status || 'online'}
+                      onChange={(e) => onUpdateProps({ status: e.target.value })}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                    >
+                      <option value="online" className="bg-[#1e1e1e]">Online (Conectado)</option>
+                      <option value="connecting" className="bg-[#1e1e1e]">Connecting (Reconectando)</option>
+                      <option value="offline" className="bg-[#1e1e1e]">Offline (Desconectado)</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Latencia</label>
+                    <input
+                      type="text"
+                      value={props.latency || '18ms'}
+                      onChange={(e) => onUpdateProps({ latency: e.target.value })}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Etiqueta de Texto</label>
+                  <input
+                    type="text"
+                    value={props.label || ''}
+                    onChange={(e) => onUpdateProps({ label: e.target.value })}
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="flex items-center justify-between pt-1 border-t border-[#383838]">
+                  <span className="text-[10px] text-zinc-400">Animación Pulsante (Ping)</span>
+                  <input
+                    type="checkbox"
+                    checked={props.pulse !== false}
+                    onChange={(e) => onUpdateProps({ pulse: e.target.checked })}
+                    className="accent-emerald-500"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* RELAY SWITCH PROPERTIES */}
+            {selectedNode.type === 'relay_switch' && (
+              <div className="space-y-2.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Nombre del Relé / Carga</label>
+                  <input
+                    type="text"
+                    value={props.label || ''}
+                    onChange={(e) => onUpdateProps({ label: e.target.value })}
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Pin GPIO Asignado</label>
+                    <input
+                      type="text"
+                      value={props.gpioPin || 'GPIO_4'}
+                      onChange={(e) => onUpdateProps({ gpioPin: e.target.value })}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Estado Inicial</label>
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-[10px] text-zinc-300">{props.checked ? 'ON' : 'OFF'}</span>
+                      <input
+                        type="checkbox"
+                        checked={Boolean(props.checked)}
+                        onChange={(e) => onUpdateProps({ checked: e.target.checked })}
+                        className="accent-emerald-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* PWM SLIDER PROPERTIES */}
+            {selectedNode.type === 'pwm_slider' && (
+              <div className="space-y-2.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Etiqueta de Salida PWM</label>
+                  <input
+                    type="text"
+                    value={props.label || ''}
+                    onChange={(e) => onUpdateProps({ label: e.target.value })}
+                    className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Pin GPIO</label>
+                    <input
+                      type="text"
+                      value={props.gpioPin || 'GPIO_5'}
+                      onChange={(e) => onUpdateProps({ gpioPin: e.target.value })}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Mínimo</label>
+                    <input
+                      type="number"
+                      value={props.min ?? 0}
+                      onChange={(e) => onUpdateProps({ min: Number(e.target.value) })}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Máximo</label>
+                    <input
+                      type="number"
+                      value={props.max ?? 255}
+                      onChange={(e) => onUpdateProps({ max: Number(e.target.value) })}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+
             {/* Other Component Text / Content if applicable */}
             {!isIcon &&
               selectedNode.type !== 'typography' &&
@@ -2453,7 +2814,199 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
             )}
           </div>
 
+          
           {/* ======================================================== */}
+          {/* 4.1 DATA BINDING / IOT METADATA (ESP32 & HARDWARE)       */}
+          {/* ======================================================== */}
+          <div className="pt-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Zap className="w-3.5 h-3.5 text-amber-400" />
+                <span>Data Binding (ESP32 / IoT)</span>
+              </span>
+              <label className="flex items-center gap-1 cursor-pointer">
+                <span className="text-[10px] text-zinc-400">Activar</span>
+                <input
+                  type="checkbox"
+                  checked={Boolean(props.dataBinding?.enabled)}
+                  onChange={(e) => {
+                    const current = props.dataBinding || {
+                      bindingMode: 'read',
+                      dataSource: 'websocket',
+                      topic: 'esp32/sensor',
+                      dataKey: 'value',
+                      gpioPin: 'GPIO_2',
+                      refreshInterval: 1000,
+                      autoUpdate: true,
+                    };
+                    onUpdateProps({
+                      dataBinding: {
+                        ...current,
+                        enabled: e.target.checked,
+                      },
+                    });
+                  }}
+                  className="accent-amber-500"
+                />
+              </label>
+            </div>
+
+            {props.dataBinding?.enabled ? (
+              <div className="space-y-2.5 bg-[#18181b] border border-amber-500/30 rounded-xl p-3 text-xs">
+                {/* Binding Mode & Data Source Protocol */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-amber-300">Modo de Enlace</label>
+                    <select
+                      value={props.dataBinding.bindingMode || 'read'}
+                      onChange={(e) =>
+                        onUpdateProps({
+                          dataBinding: { ...props.dataBinding, bindingMode: e.target.value },
+                        })
+                      }
+                      className="w-full bg-[#252526] border border-[#383838] focus:border-amber-400 rounded px-2 py-1 text-white text-xs focus:outline-none"
+                    >
+                      <option value="read" className="bg-[#1e1e1e]">Read (Sensores / Lectura)</option>
+                      <option value="write" className="bg-[#1e1e1e]">Write (Actuadores / Envío)</option>
+                      <option value="bidirectional" className="bg-[#1e1e1e]">Bidirectional (Sincronizado)</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-amber-300">Fuente / Protocolo</label>
+                    <select
+                      value={props.dataBinding.dataSource || 'websocket'}
+                      onChange={(e) =>
+                        onUpdateProps({
+                          dataBinding: { ...props.dataBinding, dataSource: e.target.value },
+                        })
+                      }
+                      className="w-full bg-[#252526] border border-[#383838] focus:border-amber-400 rounded px-2 py-1 text-white text-xs focus:outline-none"
+                    >
+                      <option value="websocket" className="bg-[#1e1e1e]">WebSocket (Tiempo Real)</option>
+                      <option value="mqtt" className="bg-[#1e1e1e]">MQTT Broker</option>
+                      <option value="http-poll" className="bg-[#1e1e1e]">HTTP REST / Polling</option>
+                      <option value="serial" className="bg-[#1e1e1e]">Serial UART</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Topic / Endpoint */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-zinc-400">Tópico MQTT / Ruta Endpoint</label>
+                  <input
+                    type="text"
+                    value={props.dataBinding.topic || props.dataBinding.endpoint || ''}
+                    onChange={(e) =>
+                      onUpdateProps({
+                        dataBinding: {
+                          ...props.dataBinding,
+                          topic: e.target.value,
+                          endpoint: e.target.value,
+                        },
+                      })
+                    }
+                    placeholder="ej. esp32/dht22/temperature o /api/gpio/2"
+                    className="w-full bg-[#252526] border border-[#383838] focus:border-amber-400 rounded px-2 py-1 text-white text-xs font-mono focus:outline-none"
+                  />
+                </div>
+
+                {/* DataKey / JSON Path */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Clave JSON (dataKey)</label>
+                    <input
+                      type="text"
+                      value={props.dataBinding.dataKey || props.dataBinding.jsonPath || ''}
+                      onChange={(e) =>
+                        onUpdateProps({
+                          dataBinding: {
+                            ...props.dataBinding,
+                            dataKey: e.target.value,
+                            jsonPath: e.target.value,
+                          },
+                        })
+                      }
+                      placeholder="payload.temperature"
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Pin / Variable C++</label>
+                    <input
+                      type="text"
+                      value={props.dataBinding.gpioPin || props.dataBinding.variableName || ''}
+                      onChange={(e) =>
+                        onUpdateProps({
+                          dataBinding: {
+                            ...props.dataBinding,
+                            gpioPin: e.target.value,
+                            variableName: e.target.value,
+                          },
+                        })
+                      }
+                      placeholder="GPIO_2 o temp_c"
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Refresh Interval & Auto Update */}
+                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#27272a]">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Refresco (ms)</label>
+                    <input
+                      type="number"
+                      value={props.dataBinding.refreshInterval ?? 1000}
+                      onChange={(e) =>
+                        onUpdateProps({
+                          dataBinding: {
+                            ...props.dataBinding,
+                            refreshInterval: Number(e.target.value),
+                          },
+                        })
+                      }
+                      step={100}
+                      min={50}
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-zinc-400">Unidad de Medida</label>
+                    <input
+                      type="text"
+                      value={props.dataBinding.unit || ''}
+                      onChange={(e) =>
+                        onUpdateProps({
+                          dataBinding: {
+                            ...props.dataBinding,
+                            unit: e.target.value,
+                          },
+                        })
+                      }
+                      placeholder="°C, %, V..."
+                      className="w-full bg-[#252526] border border-[#383838] rounded px-2 py-1 text-white text-xs font-mono focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Code Preview snippet */}
+                <div className="p-2 rounded bg-black/50 border border-zinc-800 text-[9px] font-mono text-zinc-400">
+                  <span className="text-amber-400 font-semibold">// ESP32 Data Binding Handler</span>
+                  <div className="text-zinc-300 truncate">
+                    {props.dataBinding.bindingMode === 'read'
+                      ? `ESP.on("${props.dataBinding.topic || 'sensor'}", parseData);`
+                      : `ESP.publish("${props.dataBinding.topic || 'cmd'}", val);`}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838] text-[11px] text-zinc-500">
+                Habilita <span className="text-zinc-300 font-medium">Activar</span> para conectar este componente a lecturas de sensores o actuadores en firmware ESP32.
+              </div>
+            )}
+          </div>
+
+{/* ======================================================== */}
           {/* 5. TYPOGRAPHY (Excluido para iconos vectoriales)          */}
           {/* ======================================================== */}
           {!isIcon && (

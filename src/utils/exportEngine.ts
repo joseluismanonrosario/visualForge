@@ -174,8 +174,18 @@ export function extractUsedGpioPins(nodes: CanvasNode[]): ExtractedGpioPin[] {
   const result: ExtractedGpioPin[] = [];
   const visited = new Set<string>();
 
+  function parsePin(raw: any): number | null {
+    if (typeof raw === 'number' && !isNaN(raw)) return raw;
+    if (typeof raw === 'string') {
+      const match = raw.match(/\d+/);
+      if (match) return parseInt(match[0], 10);
+    }
+    return null;
+  }
+
   function traverse(list: CanvasNode[]) {
     for (const node of list) {
+      // 1. Classic gpio props
       if (node.props?.gpio?.enabled && typeof node.props.gpio.pin === 'number') {
         const key = `${node.id}-${node.props.gpio.pin}`;
         if (!visited.has(key)) {
@@ -192,6 +202,30 @@ export function extractUsedGpioPins(nodes: CanvasNode[]): ExtractedGpioPin[] {
           });
         }
       }
+      // 2. IoT Data Binding and Hardware Controls
+      else if (node.props?.dataBinding?.enabled || node.type === 'relay_switch' || node.type === 'pwm_slider') {
+        const pinRaw = node.props?.dataBinding?.gpioPin || node.props?.gpioPin;
+        const pin = parsePin(pinRaw) ?? (node.type === 'relay_switch' ? 4 : node.type === 'pwm_slider' ? 5 : null);
+        if (pin !== null) {
+          const key = `${node.id}-${pin}`;
+          if (!visited.has(key)) {
+            visited.add(key);
+            const isPwm = node.type === 'pwm_slider';
+            const isRead = node.props?.dataBinding?.bindingMode === 'read';
+            result.push({
+              nodeId: node.id,
+              nodeName: node.name,
+              nodeType: node.type,
+              pin,
+              action: isPwm ? 'PWM' : isRead ? 'READ_PIN' : 'TOGGLE_PIN',
+              mode: node.props?.dataBinding?.dataSource === 'websocket' ? 'WEBSOCKET' : 'HTTP_GET',
+              label: node.props?.label || node.name,
+              pwmValue: isPwm ? Number(node.props?.value ?? 128) : undefined,
+            });
+          }
+        }
+      }
+
       if (node.children && node.children.length > 0) {
         traverse(node.children);
       }
@@ -554,6 +588,112 @@ ${indent}</header>`;
         case 'image':
           return `${indent}<img src="${node.props.src}" alt="${node.props.alt || ''}" loading="${node.props.loading || 'lazy'}" id="${node.id}" className="rounded-lg object-cover w-full"${styleAttr} />`;
 
+        // IoT & ESP32 Visualizations & Controls (Catálogo IoT)
+        case 'line_chart':
+        case 'area_chart': {
+          const title = node.props.title || (node.type === 'area_chart' ? 'Potencia & Señal' : 'Telemetría en Vivo');
+          const unit = node.props.unit || '°C';
+          const color = node.props.color || (node.type === 'area_chart' ? '#f59e0b' : '#0d99ff');
+          return `${indent}<div className="vf-chart-card bg-zinc-900 border border-zinc-800 rounded-xl p-4 w-full space-y-2" id="${node.id}"${styleAttr}>
+${indent}  <div className="flex items-center justify-between">
+${indent}    <div>
+${indent}      <span className="text-xs font-semibold text-zinc-200 block">${title}</span>
+${indent}      <span className="text-[10px] text-zinc-500 font-mono">${node.props.dataBinding?.topic || 'esp32/telemetry'}</span>
+${indent}    </div>
+${indent}    <span className="text-xs font-bold text-white font-mono">26.4 ${unit}</span>
+${indent}  </div>
+${indent}  <div className="w-full h-24 bg-zinc-950 rounded-lg flex items-center justify-center border border-zinc-800">
+${indent}    <svg viewBox="0 0 300 80" className="w-full h-full overflow-visible">
+${indent}      <path d="M 10 50 Q 75 10, 150 40 T 290 20" fill="none" stroke="${color}" strokeWidth="2.5" />
+${indent}    </svg>
+${indent}  </div>
+${indent}</div>`;
+        }
+        case 'bar_chart': {
+          const title = node.props.title || 'Consumo / Niveles';
+          const color = node.props.color || '#10b981';
+          return `${indent}<div className="vf-bar-card bg-zinc-900 border border-zinc-800 rounded-xl p-4 w-full space-y-2" id="${node.id}"${styleAttr}>
+${indent}  <div className="flex items-center justify-between">
+${indent}    <span className="text-xs font-semibold text-zinc-200">${title}</span>
+${indent}    <span className="text-[10px] font-mono text-zinc-400">${node.props.unit || 'mA'}</span>
+${indent}  </div>
+${indent}  <div className="h-24 bg-zinc-950 rounded-lg p-2 flex items-end justify-between gap-2 border border-zinc-800">
+${indent}    {[60, 85, 45, 95, 70].map((h, i) => (
+${indent}      <div key={i} style={{ height: \`\${h}%\`, backgroundColor: '${color}' }} className="flex-1 rounded-t" />
+${indent}    ))}
+${indent}  </div>
+${indent}</div>`;
+        }
+        case 'pie_chart': {
+          const title = node.props.title || 'Distribución de Estados';
+          return `${indent}<div className="vf-pie-card bg-zinc-900 border border-zinc-800 rounded-xl p-4 w-full space-y-2" id="${node.id}"${styleAttr}>
+${indent}  <span className="text-xs font-semibold text-zinc-200 block">${title}</span>
+${indent}  <div className="h-24 bg-zinc-950 rounded-lg p-2 flex items-center justify-around border border-zinc-800">
+${indent}    <svg viewBox="0 0 36 36" className="w-16 h-16 -rotate-90">
+${indent}      <circle cx="18" cy="18" r="14" fill="none" stroke="#27272a" strokeWidth="4" />
+${indent}      <circle cx="18" cy="18" r="14" fill="none" stroke="#0d99ff" strokeWidth="4" strokeDasharray="65 100" />
+${indent}      <circle cx="18" cy="18" r="14" fill="none" stroke="#8b5cf6" strokeWidth="4" strokeDasharray="35 100" strokeDashoffset="-65" />
+${indent}    </svg>
+${indent}  </div>
+${indent}</div>`;
+        }
+        case 'gauge_chart': {
+          const title = node.props.title || 'Medidor / Tacómetro';
+          const val = node.props.value ?? 78;
+          const unit = node.props.unit || '%';
+          return `${indent}<div className="vf-gauge-card bg-zinc-900 border border-zinc-800 rounded-xl p-4 w-full text-center space-y-1" id="${node.id}"${styleAttr}>
+${indent}  <span className="text-xs font-semibold text-zinc-300 block">${title}</span>
+${indent}  <div className="relative w-32 h-16 mx-auto flex items-end justify-center">
+${indent}    <svg viewBox="0 0 100 60" className="w-full h-full">
+${indent}      <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#27272a" strokeWidth="8" strokeLinecap="round" />
+${indent}      <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#0d99ff" strokeWidth="8" strokeLinecap="round" strokeDasharray="98 126" />
+${indent}    </svg>
+${indent}    <div className="absolute bottom-0 font-mono text-lg font-bold text-white">${val} ${unit}</div>
+${indent}  </div>
+${indent}</div>`;
+        }
+        case 'metric_card': {
+          const title = node.props.title || 'Humedad Relativa';
+          const value = node.props.value || '58.4';
+          const unit = node.props.unit || '% RH';
+          return `${indent}<div className="vf-metric-widget bg-zinc-900 border border-zinc-800 rounded-xl p-4 w-full space-y-2" id="${node.id}"${styleAttr}>
+${indent}  <div className="flex items-center justify-between">
+${indent}    <span className="text-xs text-zinc-400">${title}</span>
+${indent}    <span className="text-[10px] font-mono text-violet-400 bg-violet-500/10 border border-violet-500/20 px-1.5 py-0.5 rounded">${node.props.protocol || 'MQTT'}</span>
+${indent}  </div>
+${indent}  <div className="text-3xl font-bold font-mono text-white">${value} <span className="text-sm font-normal text-zinc-400">${unit}</span></div>
+${indent}</div>`;
+        }
+        case 'status_badge': {
+          const label = node.props.label || 'ESP32 Conectado';
+          return `${indent}<div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium bg-emerald-950/40 text-emerald-300 border-emerald-500/40" id="${node.id}"${styleAttr}>
+${indent}  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+${indent}  <span>${label}</span>
+${indent}</div>`;
+        }
+        case 'relay_switch': {
+          const label = node.props.label || 'Relé Principal';
+          const gpioPin = node.props.gpioPin || 'GPIO_4';
+          return `${indent}<div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 w-full space-y-3" id="${node.id}"${styleAttr}>
+${indent}  <div className="flex items-center justify-between">
+${indent}    <span className="text-xs font-semibold text-white">${label}</span>
+${indent}    <span className="text-[10px] text-zinc-400 font-mono">${gpioPin}</span>
+${indent}  </div>
+${indent}  <Button className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold">${node.props.checked ? 'Apagar' : 'Encender'}</Button>
+${indent}</div>`;
+        }
+        case 'pwm_slider': {
+          const label = node.props.label || 'Control PWM';
+          const gpioPin = node.props.gpioPin || 'GPIO_5';
+          return `${indent}<div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 w-full space-y-2" id="${node.id}"${styleAttr}>
+${indent}  <div className="flex items-center justify-between text-xs text-zinc-300">
+${indent}    <span>${label} (${gpioPin})</span>
+${indent}    <span className="font-mono text-blue-400">${node.props.value ?? 128}</span>
+${indent}  </div>
+${indent}  <input type="range" min="${node.props.min ?? 0}" max="${node.props.max ?? 255}" defaultValue="${node.props.value ?? 128}" className="w-full accent-blue-500 cursor-pointer" />
+${indent}</div>`;
+        }
+
         default:
           return `${indent}<div id="${node.id}"${styleAttr}>${childrenCode || node.props.label || node.type}</div>`;
       }
@@ -792,6 +932,158 @@ ${indent}</header>`;
             return `${indent}<span id="${node.id}" class="inline-flex items-center justify-center align-middle"${styleAttr}>${inlineSvg}</span>`;
           }
           return `${indent}<span id="${node.id}" class="inline-flex items-center justify-center align-middle"${styleAttr}>[Icon: ${iconKey}]</span>`;
+        }
+
+        // IoT & ESP32 Visualizations & Controls (Catálogo IoT)
+        case 'line_chart':
+        case 'area_chart': {
+          const title = node.props.title || (node.type === 'area_chart' ? 'Potencia & Señal' : 'Telemetría en Vivo');
+          const unit = node.props.unit || '°C';
+          const strokeColor = node.props.color || (node.type === 'area_chart' ? '#f59e0b' : '#0d99ff');
+          const bindingAttr = node.props.dataBinding?.enabled ? ` data-topic="${node.props.dataBinding.topic || ''}" data-binding-mode="${node.props.dataBinding.bindingMode || 'read'}"` : '';
+          return `${indent}<div class="vf-chart-card bg-zinc-900/90 border border-zinc-800 rounded-xl p-4 w-full space-y-2" id="${node.id}"${styleAttr}${bindingAttr}>
+${indent}  <div class="flex items-center justify-between">
+${indent}    <div>
+${indent}      <span class="text-xs font-semibold text-zinc-200 block">${title}</span>
+${indent}      <span class="text-[10px] text-zinc-500 font-mono">${node.props.dataBinding?.topic || 'esp32/telemetry'}</span>
+${indent}    </div>
+${indent}    <div class="text-right">
+${indent}      <span class="text-sm font-bold text-white font-mono" id="${node.id}_val">26.4 ${unit}</span>
+${indent}      <span class="text-[9px] text-emerald-400 block flex items-center justify-end gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block"></span> EN VIVO</span>
+${indent}    </div>
+${indent}  </div>
+${indent}  <div class="w-full h-24 bg-zinc-950 rounded-lg p-2 border border-zinc-800 relative overflow-hidden">
+${indent}    <svg viewBox="0 0 300 80" class="w-full h-full overflow-visible">
+${indent}      <path d="M 10 50 Q 75 10, 150 40 T 290 20" fill="none" stroke="${strokeColor}" stroke-width="2.5" stroke-linecap="round" />
+${indent}    </svg>
+${indent}  </div>
+${indent}</div>`;
+        }
+
+        case 'bar_chart': {
+          const title = node.props.title || 'Consumo / Niveles';
+          const unit = node.props.unit || 'mA';
+          const barColor = node.props.color || '#10b981';
+          return `${indent}<div class="vf-bar-card bg-zinc-900/90 border border-zinc-800 rounded-xl p-4 w-full space-y-2" id="${node.id}"${styleAttr}>
+${indent}  <div class="flex items-center justify-between">
+${indent}    <span class="text-xs font-semibold text-zinc-200">${title}</span>
+${indent}    <span class="text-[10px] font-mono text-zinc-400">${unit}</span>
+${indent}  </div>
+${indent}  <div class="h-24 bg-zinc-950 rounded-lg p-2.5 flex items-end justify-between gap-2 border border-zinc-800">
+${indent}    <div class="flex-1 bg-zinc-800 rounded-t h-[60%]" style="background-color: ${barColor};"></div>
+${indent}    <div class="flex-1 bg-zinc-800 rounded-t h-[85%]" style="background-color: ${barColor};"></div>
+${indent}    <div class="flex-1 bg-zinc-800 rounded-t h-[45%]" style="background-color: ${barColor};"></div>
+${indent}    <div class="flex-1 bg-zinc-800 rounded-t h-[95%]" style="background-color: ${barColor};"></div>
+${indent}    <div class="flex-1 bg-zinc-800 rounded-t h-[70%]" style="background-color: ${barColor};"></div>
+${indent}  </div>
+${indent}</div>`;
+        }
+
+        case 'pie_chart': {
+          const title = node.props.title || 'Memoria Flash & Heap ESP32';
+          return `${indent}<div class="vf-pie-card bg-zinc-900/90 border border-zinc-800 rounded-xl p-4 w-full space-y-2" id="${node.id}"${styleAttr}>
+${indent}  <span class="text-xs font-semibold text-zinc-200 block">${title}</span>
+${indent}  <div class="h-24 bg-zinc-950 rounded-lg p-2 flex items-center justify-around border border-zinc-800">
+${indent}    <div class="relative w-16 h-16">
+${indent}      <svg viewBox="0 0 36 36" class="w-full h-full -rotate-90">
+${indent}        <circle cx="18" cy="18" r="14" fill="none" stroke="#27272a" stroke-width="4" />
+${indent}        <circle cx="18" cy="18" r="14" fill="none" stroke="#0d99ff" stroke-width="4" stroke-dasharray="65 100" />
+${indent}        <circle cx="18" cy="18" r="14" fill="none" stroke="#8b5cf6" stroke-width="4" stroke-dasharray="35 100" stroke-dashoffset="-65" />
+${indent}      </svg>
+${indent}      <div class="absolute inset-0 flex items-center justify-center font-mono font-bold text-[9px] text-white">ESP32</div>
+${indent}    </div>
+${indent}  </div>
+${indent}</div>`;
+        }
+
+        case 'gauge_chart': {
+          const title = node.props.title || 'Nivel del Tanque / Presión';
+          const val = node.props.value ?? 78;
+          const unit = node.props.unit || '%';
+          return `${indent}<div class="vf-gauge-card bg-zinc-900/90 border border-zinc-800 rounded-xl p-4 w-full text-center space-y-1" id="${node.id}"${styleAttr}>
+${indent}  <span class="text-xs font-semibold text-zinc-300 block">${title}</span>
+${indent}  <div class="relative w-32 h-16 mx-auto flex items-end justify-center">
+${indent}    <svg viewBox="0 0 100 60" class="w-full h-full">
+${indent}      <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#27272a" stroke-width="8" stroke-linecap="round" />
+${indent}      <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#0d99ff" stroke-width="8" stroke-linecap="round" stroke-dasharray="98 126" />
+${indent}    </svg>
+${indent}    <div class="absolute bottom-0 font-mono text-base font-bold text-white">${val} <span class="text-[10px] text-zinc-400 font-normal">${unit}</span></div>
+${indent}  </div>
+${indent}</div>`;
+        }
+
+        case 'metric_card': {
+          const title = node.props.title || 'Humedad Relativa';
+          const value = node.props.value || '58.4';
+          const unit = node.props.unit || '% RH';
+          const protocol = node.props.protocol || 'MQTT';
+          const trend = node.props.trend || '+2.1% en la última hora';
+          return `${indent}<div class="vf-metric-widget bg-zinc-900/90 border border-zinc-800 rounded-xl p-4 w-full space-y-2" id="${node.id}"${styleAttr}>
+${indent}  <div class="flex items-center justify-between">
+${indent}    <span class="text-xs font-medium text-zinc-400">${title}</span>
+${indent}    <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-semibold bg-violet-500/20 text-violet-300 border border-violet-500/30">${protocol}</span>
+${indent}  </div>
+${indent}  <div class="flex items-baseline gap-1.5">
+${indent}    <span class="text-3xl font-bold font-mono text-white tracking-tight" id="${node.id}_val">${value}</span>
+${indent}    <span class="text-sm font-semibold text-zinc-400">${unit}</span>
+${indent}  </div>
+${indent}  <div class="flex items-center justify-between text-[10px] pt-1 border-t border-zinc-800">
+${indent}    <span class="text-emerald-400 font-medium flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block"></span> OPTIMAL</span>
+${indent}    <span class="text-zinc-500 text-[9px]">${trend}</span>
+${indent}  </div>
+${indent}</div>`;
+        }
+
+        case 'status_badge': {
+          const status = node.props.status || 'online';
+          const label = node.props.label || 'ESP32 Conectado';
+          const isOnline = status === 'online';
+          return `${indent}<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium ${isOnline ? 'bg-emerald-950/40 text-emerald-300 border-emerald-500/40' : 'bg-red-950/40 text-red-300 border-red-500/40'}" id="${node.id}"${styleAttr}>
+${indent}  <span class="relative flex h-2 w-2">
+${indent}    <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isOnline ? 'bg-emerald-400' : 'bg-red-400'}"></span>
+${indent}    <span class="relative inline-flex rounded-full h-2 w-2 ${isOnline ? 'bg-emerald-500' : 'bg-red-500'}"></span>
+${indent}  </span>
+${indent}  <span>${label}</span>
+${indent}</div>`;
+        }
+
+        case 'relay_switch': {
+          const label = node.props.label || 'Relé Principal';
+          const gpioPin = node.props.gpioPin || 'GPIO_4';
+          const pinNum = parseInt(gpioPin.replace(/\D/g, '')) || 4;
+          const isChecked = Boolean(node.props.checked);
+          const clickHandler = isEsp32
+            ? ` onclick="fetch('/api/gpio/toggle?pin=${pinNum}').then(r=>r.json()).then(d=>console.log(d))"`
+            : '';
+          return `${indent}<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 w-full space-y-3" id="${node.id}"${styleAttr}>
+${indent}  <div class="flex items-center justify-between">
+${indent}    <div>
+${indent}      <span class="text-xs font-semibold text-white block">${label}</span>
+${indent}      <span class="text-[10px] text-zinc-400 font-mono">${gpioPin}</span>
+${indent}    </div>
+${indent}    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold ${isChecked ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-zinc-800 text-zinc-400 border border-zinc-700'}">${isChecked ? 'ON' : 'OFF'}</span>
+${indent}  </div>
+${indent}  <button type="button" class="w-full py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 ${isChecked ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700'}"${clickHandler}>
+${indent}    <span>Conmutar Relé</span>
+${indent}  </button>
+${indent}</div>`;
+        }
+
+        case 'pwm_slider': {
+          const label = node.props.label || 'Control Salida PWM';
+          const gpioPin = node.props.gpioPin || 'GPIO_5';
+          const pinNum = parseInt(gpioPin.replace(/\D/g, '')) || 5;
+          const val = node.props.value ?? 128;
+          const inputHandler = isEsp32
+            ? ` oninput="document.getElementById('${node.id}_val').textContent = this.value; fetch('/api/gpio/pwm?pin=${pinNum}&val=' + this.value);"`
+            : ` oninput="document.getElementById('${node.id}_val').textContent = this.value;"`;
+          return `${indent}<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 w-full space-y-2" id="${node.id}"${styleAttr}>
+${indent}  <div class="flex items-center justify-between text-xs text-zinc-300">
+${indent}    <span>${label} (${gpioPin})</span>
+${indent}    <span class="font-mono text-blue-400 font-bold" id="${node.id}_val">${val}</span>
+${indent}  </div>
+${indent}  <input type="range" min="${node.props.min ?? 0}" max="${node.props.max ?? 255}" value="${val}" class="w-full accent-blue-500 cursor-pointer"${inputHandler} />
+${indent}</div>`;
         }
 
         default:

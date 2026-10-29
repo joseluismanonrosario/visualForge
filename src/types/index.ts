@@ -5,6 +5,26 @@ export type ProjectType = 'esp32' | 'html_css' | 'react' | 'framework' | 'hybrid
 export type GpioAction = 'TOGGLE_PIN' | 'SET_HIGH' | 'SET_LOW' | 'PWM' | 'READ_PIN';
 export type GpioCommMode = 'HTTP_GET' | 'HTTP_POST' | 'WEBSOCKET';
 
+export type BindingMode = 'read' | 'write' | 'bidirectional';
+export type DataSourceProtocol = 'websocket' | 'mqtt' | 'http-poll' | 'serial';
+
+export interface DataBindingConfig {
+  enabled?: boolean;
+  bindingMode: BindingMode;
+  dataSource: DataSourceProtocol;
+  topic?: string;
+  endpoint?: string;
+  dataKey?: string;
+  jsonPath?: string;
+  gpioPin?: string;
+  variableName?: string;
+  refreshInterval?: number;
+  autoUpdate?: boolean;
+  unit?: string;
+  minValue?: number;
+  maxValue?: number;
+}
+
 export interface GpioConfig {
   enabled?: boolean;
   pin: number;
@@ -44,7 +64,7 @@ export interface ComponentDefinition {
   type: string;
   name: string;
   category: string;
-  catalog?: 'shadcn' | 'preline' | 'both';
+  catalog?: 'shadcn' | 'preline' | 'iot' | 'both';
   library?: ComponentLibrary;
   icon: string;
   isContainer: boolean;

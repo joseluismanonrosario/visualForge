@@ -30,6 +30,7 @@ import {
   Sun,
   User,
   Zap,
+  Power,
 } from 'lucide-react';
 
 interface NodeRendererProps {
@@ -200,6 +201,331 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
       case 'stack':
       case 'columns':
       case 'layout_splitter':
+      // ==========================================
+      // IOT & DATA VISUALIZATION DASHBOARD
+      // ==========================================
+      case 'line_chart':
+      case 'area_chart': {
+        const data = props.data || [22.4, 23.1, 22.8, 24.2, 25.1, 24.8, 26.2, 25.9, 26.4];
+        const labels = props.labels || ['10:00', '10:05', '10:10', '10:15', '10:20', '10:25', '10:30', '10:35', '10:40'];
+        const title = props.title || (node.type === 'area_chart' ? 'Potencia & Señal' : 'Telemetría en Vivo');
+        const unit = props.unit || '°C';
+        const strokeColor = props.color || style.color || (node.type === 'area_chart' ? '#f59e0b' : '#0d99ff');
+        const minVal = Math.min(...data);
+        const maxVal = Math.max(...data);
+        const range = (maxVal - minVal) || 1;
+        const lastVal = data[data.length - 1];
+
+        const points = data.map((d: number, i: number) => {
+          const x = (i / (data.length - 1)) * 280 + 10;
+          const y = 110 - ((d - minVal) / range) * 80 - 10;
+          return { x, y };
+        });
+        const pathD = points.reduce((acc: string, pt: any, idx: number) => {
+          if (idx === 0) return `M ${pt.x} ${pt.y}`;
+          return `${acc} L ${pt.x} ${pt.y}`;
+        }, '');
+        const areaD = `${pathD} L ${points[points.length - 1].x} 115 L ${points[0].x} 115 Z`;
+
+        return (
+          <div id={node.id} style={style} onClick={handleClick} className={`${selectionClasses} space-y-2 w-full`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-zinc-200 block">{title}</span>
+                <span className="text-[10px] text-zinc-500 font-mono">
+                  {props.dataBinding?.topic || props.dataBinding?.endpoint || 'esp32/telemetry'}
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="text-sm font-bold text-white font-mono">{lastVal} {unit}</span>
+                <span className="text-[9px] text-emerald-400 block flex items-center justify-end gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> EN VIVO
+                </span>
+              </div>
+            </div>
+            <div className="w-full h-28 relative bg-[#121214] rounded-lg p-2 border border-[#27272a] overflow-hidden">
+              <svg viewBox="0 0 300 120" className="w-full h-full overflow-visible">
+                <defs>
+                  <linearGradient id={`grad_${node.id}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={strokeColor} stopOpacity={node.type === 'area_chart' ? '0.45' : '0.25'} />
+                    <stop offset="100%" stopColor={strokeColor} stopOpacity="0.0" />
+                  </linearGradient>
+                </defs>
+                <line x1="10" y1="30" x2="290" y2="30" stroke="#27272a" strokeDasharray="3 3" />
+                <line x1="10" y1="70" x2="290" y2="70" stroke="#27272a" strokeDasharray="3 3" />
+                <line x1="10" y1="110" x2="290" y2="110" stroke="#27272a" />
+                <path d={areaD} fill={`url(#grad_${node.id})`} />
+                <path d={pathD} fill="none" stroke={strokeColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                {points.map((pt: any, i: number) => (
+                  <circle key={i} cx={pt.x} cy={pt.y} r={i === points.length - 1 ? 4 : 2} fill={strokeColor} className={i === points.length - 1 ? 'animate-pulse' : ''} />
+                ))}
+              </svg>
+            </div>
+            <div className="flex items-center justify-between text-[9px] font-mono text-zinc-500 px-1">
+              <span>{labels[0]}</span>
+              <span>{labels[Math.floor(labels.length / 2)]}</span>
+              <span>{labels[labels.length - 1]}</span>
+            </div>
+          </div>
+        );
+      }
+
+      case 'bar_chart': {
+        const data = props.data || [120, 185, 90, 240, 160];
+        const labels = props.labels || ['Nodo A', 'Nodo B', 'Nodo C', 'Nodo D', 'Nodo E'];
+        const title = props.title || 'Consumo / Niveles';
+        const unit = props.unit || 'mA';
+        const barColor = props.color || style.color || '#10b981';
+        const maxVal = Math.max(...data, 1);
+
+        return (
+          <div id={node.id} style={style} onClick={handleClick} className={`${selectionClasses} space-y-2 w-full`}>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-zinc-300">{title}</span>
+              <span className="text-[10px] font-mono text-zinc-400">Máx: {maxVal} {unit}</span>
+            </div>
+            <div className="h-28 bg-[#121214] rounded-lg p-2.5 border border-[#27272a] flex items-end justify-between gap-2">
+              {data.map((val: number, idx: number) => {
+                const heightPct = Math.round((val / maxVal) * 85);
+                return (
+                  <div key={idx} className="flex-1 flex flex-col items-center gap-1 h-full justify-end group">
+                    <span className="text-[9px] font-mono text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {val}
+                    </span>
+                    <div
+                      style={{ height: `${Math.max(6, heightPct)}%`, backgroundColor: barColor }}
+                      className="w-full rounded-t transition-all hover:brightness-125"
+                    />
+                    <span className="text-[9px] text-zinc-500 truncate max-w-full">
+                      {labels[idx] || `N${idx}`}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      }
+
+      case 'pie_chart': {
+        const data = props.data || [65, 25, 10];
+        const labels = props.labels || ['Flash Libre (65%)', 'Heap Usado (25%)', 'SPIFFS (10%)'];
+        const colors = props.colors || ['#0d99ff', '#8b5cf6', '#10b981'];
+        const title = props.title || 'Memoria Flash & Heap ESP32';
+
+        return (
+          <div id={node.id} style={style} onClick={handleClick} className={`${selectionClasses} space-y-2 w-full`}>
+            <span className="text-xs font-semibold text-zinc-300 block">{title}</span>
+            <div className="h-28 bg-[#121214] rounded-lg p-2 border border-[#27272a] flex items-center justify-around">
+              <div className="relative w-20 h-20">
+                <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                  <circle cx="18" cy="18" r="14" fill="none" stroke="#27272a" strokeWidth="4" />
+                  <circle cx="18" cy="18" r="14" fill="none" stroke={colors[0]} strokeWidth="4" strokeDasharray="55 100" strokeDashoffset="0" />
+                  <circle cx="18" cy="18" r="14" fill="none" stroke={colors[1]} strokeWidth="4" strokeDasharray="25 100" strokeDashoffset="-55" />
+                  <circle cx="18" cy="18" r="14" fill="none" stroke={colors[2]} strokeWidth="4" strokeDasharray="15 100" strokeDashoffset="-80" />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center font-mono font-bold text-[10px] text-white">
+                  ESP32
+                </div>
+              </div>
+              <div className="space-y-1">
+                {labels.map((lbl: string, i: number) => (
+                  <div key={i} className="flex items-center gap-1.5 text-[10px] text-zinc-400">
+                    <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: colors[i % colors.length] }} />
+                    <span className="truncate max-w-[120px]">{lbl}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      case 'gauge_chart': {
+        const val = Number(props.value ?? 78);
+        const min = Number(props.min ?? 0);
+        const max = Number(props.max ?? 100);
+        const unit = props.unit || '%';
+        const title = props.title || 'Nivel del Tanque / Presión';
+        const pct = Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100));
+        const strokeColor = pct > 85 ? '#ef4444' : pct > 65 ? '#f59e0b' : '#0d99ff';
+
+        return (
+          <div id={node.id} style={style} onClick={handleClick} className={`${selectionClasses} space-y-1 w-full text-center`}>
+            <span className="text-xs font-semibold text-zinc-300 block">{title}</span>
+            <div className="relative w-36 h-20 mx-auto flex items-end justify-center overflow-hidden">
+              <svg viewBox="0 0 100 60" className="w-full h-full">
+                <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#27272a" strokeWidth="8" strokeLinecap="round" />
+                <path
+                  d="M 10 50 A 40 40 0 0 1 90 50"
+                  fill="none"
+                  stroke={strokeColor}
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  strokeDasharray={`${(pct / 100) * 126} 126`}
+                />
+              </svg>
+              <div className="absolute bottom-0 flex flex-col items-center">
+                <span className="font-mono text-xl font-bold text-white tracking-tight leading-none">{val}</span>
+                <span className="text-[10px] font-mono text-zinc-400">{unit}</span>
+              </div>
+            </div>
+            <div className="flex justify-between text-[9px] font-mono text-zinc-500 max-w-[150px] mx-auto px-2">
+              <span>{min} {unit}</span>
+              <span>{max} {unit}</span>
+            </div>
+          </div>
+        );
+      }
+
+      case 'metric_card': {
+        const title = props.title || 'Humedad Relativa';
+        const value = props.value || '58.4';
+        const unit = props.unit || '% RH';
+        const status = props.status || 'OPTIMAL';
+        const protocol = props.protocol || 'MQTT';
+        const trend = props.trend || '+2.1% en la última hora';
+
+        return (
+          <div id={node.id} style={style} onClick={handleClick} className={`${selectionClasses} space-y-2.5 w-full`}>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-zinc-400">{title}</span>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-semibold bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                {protocol}
+              </span>
+            </div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-3xl font-bold font-mono text-white tracking-tight">{value}</span>
+              <span className="text-sm font-semibold text-zinc-400">{unit}</span>
+            </div>
+            <div className="flex items-center justify-between text-[10px] pt-1 border-t border-[#27272a]">
+              <span className="text-emerald-400 flex items-center gap-1 font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                {status}
+              </span>
+              <span className="text-zinc-500 text-[9px]">{trend}</span>
+            </div>
+            {renderChildren()}
+          </div>
+        );
+      }
+
+      case 'status_badge': {
+        const status = props.status || 'online';
+        const label = props.label || (status === 'online' ? 'ESP32 Conectado' : status === 'connecting' ? 'Reconectando...' : 'Desconectado');
+        const isOnline = status === 'online';
+        const isConnecting = status === 'connecting';
+        const pulse = props.pulse !== false;
+        const latency = props.latency || '18ms';
+
+        return (
+          <div
+            id={node.id}
+            style={style}
+            onClick={handleClick}
+            className={`${selectionClasses} inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium select-none ${
+              isOnline
+                ? 'bg-emerald-950/40 text-emerald-300 border-emerald-500/40'
+                : isConnecting
+                ? 'bg-amber-950/40 text-amber-300 border-amber-500/40'
+                : 'bg-red-950/40 text-red-300 border-red-500/40'
+            }`}
+          >
+            <span className="relative flex h-2 w-2">
+              {pulse && (
+                <span
+                  className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                    isOnline ? 'bg-emerald-400' : isConnecting ? 'bg-amber-400' : 'bg-red-400'
+                  }`}
+                />
+              )}
+              <span
+                className={`relative inline-flex rounded-full h-2 w-2 ${
+                  isOnline ? 'bg-emerald-500' : isConnecting ? 'bg-amber-500' : 'bg-red-500'
+                }`}
+              />
+            </span>
+            <span>{label}</span>
+            {isOnline && <span className="text-[9px] font-mono text-emerald-400/70 border-l border-emerald-500/30 pl-1.5">{latency}</span>}
+          </div>
+        );
+      }
+
+      case 'relay_switch': {
+        const isChecked = Boolean(props.checked);
+        const label = props.label || 'Relé Principal';
+        const gpioPin = props.gpioPin || 'GPIO_4';
+        const activeText = props.activeText || 'CERRADO (ENCENDIDO)';
+        const inactiveText = props.inactiveText || 'ABIERTO (APAGADO)';
+
+        return (
+          <div id={node.id} style={style} onClick={handleClick} className={`${selectionClasses} space-y-2.5 w-full`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-white block">{label}</span>
+                <span className="text-[10px] text-zinc-400 font-mono">{gpioPin}</span>
+              </div>
+              <span
+                className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
+                  isChecked
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                    : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
+                }`}
+              >
+                {isChecked ? activeText : inactiveText}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (isPreviewMode) onSelectNode(node.id, e);
+              }}
+              className={`w-full py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
+                isChecked
+                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-900/40'
+                  : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700'
+              }`}
+            >
+              <Power className="w-3.5 h-3.5" />
+              <span>{isChecked ? 'Conmutar a OFF' : 'Conmutar a ON'}</span>
+            </button>
+          </div>
+        );
+      }
+
+      case 'pwm_slider': {
+        const value = Number(props.value ?? 128);
+        const min = Number(props.min ?? 0);
+        const max = Number(props.max ?? 255);
+        const label = props.label || 'Dimmer Iluminación LED (PWM)';
+        const gpioPin = props.gpioPin || 'GPIO_5';
+        const pct = Math.round(((value - min) / (max - min)) * 100);
+
+        return (
+          <div id={node.id} style={style} onClick={handleClick} className={`${selectionClasses} space-y-2 w-full`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-zinc-200 block">{label}</span>
+                <span className="text-[10px] text-zinc-400 font-mono">{gpioPin}</span>
+              </div>
+              <div className="text-right">
+                <span className="text-sm font-bold text-[#0d99ff] font-mono">{value}</span>
+                <span className="text-[10px] text-zinc-500 font-mono ml-1">({pct}%)</span>
+              </div>
+            </div>
+            <input
+              type="range"
+              min={min}
+              max={max}
+              defaultValue={value}
+              disabled={!isPreviewMode}
+              className="w-full accent-[#0d99ff] cursor-pointer"
+            />
+          </div>
+        );
+      }
+
       case 'custom_scrollbar':
       case 'form': {
         const ContainerTag = node.type === 'form' ? 'form' : 'div';
@@ -1496,6 +1822,13 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
           : ''
       }`}
     >
+      {/* Data Binding IoT Badge if active */}
+      {!isPreviewMode && props.dataBinding?.enabled && (
+        <div className="absolute -top-7 right-0 z-40 bg-blue-950/90 text-blue-300 border border-blue-500/40 rounded px-1.5 py-0.5 text-[9px] font-mono flex items-center gap-1 shadow-md pointer-events-none">
+          <Zap className="w-2.5 h-2.5 text-amber-400" />
+          <span>{props.dataBinding.dataSource?.toUpperCase() || 'DATA'}: {props.dataBinding.topic || props.dataBinding.gpioPin || 'bound'}</span>
+        </div>
+      )}
       {/* Top Figma Pill with Move Handle & Element Name */}
       {isSelected && (
         <div
