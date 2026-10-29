@@ -2816,8 +2816,9 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
 
           
           {/* ======================================================== */}
-          {/* 4.1 DATA BINDING / IOT METADATA (ESP32 & HARDWARE)       */}
+          {/* 4.1 DATA BINDING / IOT METADATA (SOLO PROYECTOS ESP32)   */}
           {/* ======================================================== */}
+          {projectType === 'esp32' && (
           <div className="pt-3 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -3005,6 +3006,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
               </div>
             )}
           </div>
+          )}
 
 {/* ======================================================== */}
           {/* 5. TYPOGRAPHY (Excluido para iconos vectoriales)          */}

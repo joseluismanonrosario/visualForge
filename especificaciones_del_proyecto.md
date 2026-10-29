@@ -78,81 +78,52 @@ El panel lateral de componentes (`LeftSidebar`) se adapta dinámicamente según 
 - **Proyectos de Framework (`projectType === 'react' | 'framework'`)**: Carga los componentes compuestos oficiales de **Shadcn/ui**.
 - **Proyectos de HTML / CSS o ESP32 (`projectType === 'html_css' | 'esp32'`)**: Carga los componentes compuestos oficiales de **Preline UI**.
 
-### 2.0 CATEGORÍA GENÉRICA: COMPONENTES BÁSICOS (DISPONIBLE PARA TODOS LOS PROYECTOS)
+### 2.0 CATEGORÍAS ESTÁNDAR COMUNES: COMPONENTES BÁSICOS (DISPONIBLES PARA TODOS LOS PROYECTOS)
 
-En **todos los proyectos sin excepción** (tanto Frameworks como HTML/CSS y ESP32), se incluye de forma universal y prioritaria en la primera posición del catálogo la categoría **Componentes Básicos** (`Componentes Básicos`). Estos activos actúan como átomos fundamentales y primitivos reutilizables para construir cualquier sección o pantalla compleja (como headers, footers, navbars, cards o dashboards IoT) con soporte exhaustivo para propiedades, variantes, estados interactivos y metadatos de enlace de datos (`dataBinding`):
+En **todos los proyectos sin excepción** (tanto Frameworks como HTML/CSS y ESP32), se incluyen de forma universal y prioritaria las 6 categorías de activos básicos y estándar, diseñados como átomos fundamentales reutilizables para construir cualquier sección o pantalla con soporte exhaustivo para propiedades, variantes y estados:
 
 1. **Text (Tipografía)**:
-   - **Niveles y Tipos Semánticos**: Selector de jerarquía con soporte para títulos (`h1`, `h2`, `h3`, `h4`, `h5`, `h6`), subtítulos destacados (`subtitle`), párrafos estándar (`p`), etiquetas de campo (`label`), texto en línea (`span`), citas (`blockquote`), contenedores (`div`) y bloques de código (`code`).
-   - **Propiedades de Estilo**:
-     - *Tamaño (`fontSize`)*: Entrada en píxeles y 8 píldoras de presets rápidos (`12px` a `40px`).
-     - *Peso de Fuente (`fontWeight`)*: Escala numérica 100 a 900 y conmutadores rápidos *Normal* (400) / *Bold* (700).
-     - *Alineación (`textAlign`)*: Izquierda, centro, derecha y justificado.
-     - *Color (`color`)*: Selector cromático con entrada hexadecimal y paleta de muestras rápidas.
-     - *Estilo Cursiva / Itálica (`fontStyle`)*: Botón conmutador con icono `Italic` para alternar entre `'italic'` y `'normal'`.
-   - **Editor de Contenido**: Área de texto multilínea para edición directa de `props.text`.
+   - **Nivel y Tipo de Texto**: Selector semántico con soporte para títulos (`h1`, `h2`, `h3`, `h4`, `h5`, `h6`), párrafos estándar (`p`), subtítulos destacados (`subtitle`) y etiquetas (`label`).
+   - **Propiedades de Estilo**: Tamaño (`fontSize`), peso de fuente (normal/bold con escalas numéricas 100-900), alineación (izquierda, centro, derecha, justificado), color cromático e itálica (`fontStyle: italic`).
 
 2. **Button / Link (Acción)**:
-   - **Button (Botón de Acción)**:
-     - *Variantes de Estilo*: Primario/CTA (`primary`/`default`), Secundario (`secondary`), Contorno (`outline`), Fantasma/Transparente (`ghost`), Destructivo (`destructive`) y Enlace (`link`).
-     - *Tamaños*: Pequeño (`sm`), Mediano (`md`), Grande (`lg`).
-     - *Estados Interactivos*: Cargando (`isLoading`: muestra un spinner animado `Loader2` y desactiva el botón), Deshabilitado (`disabled`: opacidad reducida y bloqueo de eventos de puntero) y Activo (`isActive`: resalte con anillo de foco Figma).
-     - *Integración de Iconos*: Soporte para iconos vectoriales integrados (`props.iconName`) con selector de posición (`left` o `right`), presets de acción rápida (flecha `→`, destello `✨`, suma `+`, verificación `✓`) y acceso directo al explorador Iconify Offline. Permite además anidar componentes hijos vectoriales por arrastre.
-   - **Link (Enlace de Navegación)**:
-     - Comparte los estilos base y variantes de acción (`link`, `primary`, `secondary`, `outline`, `ghost`).
-     - Soporta destino de navegación (`href`), objetivo de apertura (`target`: `_self`, `_blank`), tamaño (`sm`, `md`, `lg`), estado deshabilitado (`disabled`) e icono integrado a la izquierda o derecha.
+   - **Button (Botón)**: Variantes de estilo (primario/CTA, secundario, outline, ghost, destructive, link), tamaños (pequeño `sm`, mediano `md`, grande `lg`), estados interactivos (loading con spinner animado, disabled con bloqueo de puntero, activo con foco Figma) y soporte integral para iconos vectoriales integrados (posición izquierda o derecha).
+   - **Link (Enlace)**: Componente para navegación interactiva que comparte los estilos base de acción, con soporte para destino `href`, `target` (`_self`, `_blank`), tamaño, estado deshabilitado e iconos.
 
-3. **Icon (Gráfico Vectorial)**:
-   - Componente universal de renderizado vectorial (`svg_icon`, `fontawesome_icon`, `styled_icon`).
-   - *Control de Tamaño*: Entrada numérica directa en píxeles, deslizador continuo (12px a 96px) y píldoras de acceso rápido (`16px`, `20px`, `24px`, `32px`, `40px`, `48px`, `64px`).
-   - *Color de Trazo (`Stroke`)* y *Relleno (`Fill`)* con opción transparente "Ninguno".
-   - *Orientación*: Rotación en 90° (`RotateCw`) y volteo horizontal/vertical (`FlipHorizontal`, `FlipVertical`).
-   - *Interoperabilidad*: Se utiliza de manera independiente en el lienzo o integrado dentro de botones y enlaces.
+3. **Icon (Gráfico)**:
+   - Elemento universal para renderizar iconos vectoriales SVG con propiedades directas de tamaño (12px a 96px) y color (trazo `stroke` y relleno `fill`).
+   - Puede utilizarse de forma independiente en el lienzo o integrarse dentro de botones y enlaces.
 
 4. **Image (Multimedia)**:
-   - Contenedor para imágenes responsivas con control exhaustivo de visualización:
-     - *Control de Proporciones (`aspectRatio`)*: Presets en píldoras para `Auto`, `16:9`, `4:3`, `1:1` y panorámica `21:9`.
-     - *Ajuste de Contenido (`objectFit`)*: `cover` (llenar y recortar), `contain` (ajustar sin recorte), `fill` (estirar) y `none` (tamaño natural).
-     - *Carga Diferida (`loading`)*: Conmutador entre carga diferida optimizada (`lazy`) e inmediata (`eager`).
-     - *Fallback de Error (`fallbackSrc`)*: Control para URL de respaldo que se activa automáticamente mediante `onError` si la imagen original no puede cargarse.
+   - Contenedor para imágenes con control de proporciones (`aspectRatio`: 16:9, 4:3, 1:1, 21:9, auto), ajuste de contenido (`objectFit`: cover, contain, fill, none), carga diferida (`loading: lazy/eager`) y URL de fallback en caso de error.
 
-5. **Form Controls (Entradas de Datos)**:
-   - **Form (Formulario)**: Contenedor semántico `<form>` agrupador de campos con soporte para endpoint de envío (`action`), método de transmisión (`method`: `POST`, `GET`), y distribución flexible (columna vertical o fila horizontal).
-   - **Label (Etiqueta)**: Texto descriptivo vinculado a campos de entrada mediante `htmlFor` con soporte para indicador de campo obligatorio (asterisco rojo `*`).
-   - **Input (Campo de Texto Multiuso)**:
-     - Soporte para variantes de tipo: `text`, `email`, `password`, `number`, `date` y `file`.
-     - Soporte para etiquetas vinculadas, placeholder y valor inicial.
-     - *Estado de Error*: Conmutador de error booleano (`hasError`) con campo de mensaje descriptivo (`errorMessage`), aplicando borde rojo y renderizando alerta visual con icono `AlertCircle`.
-     - *Estado Deshabilitado*: Conmutador `disabled` con cursor de bloqueo y fondo atenuado.
-   - **Textarea (Texto Multilínea)**: Entrada multilínea con control del número de filas visibles (`rows`), placeholder, estado de error y estado deshabilitado.
-   - **Checkbox y Radio**:
-     - *Checkbox*: Casilla interactiva de selección múltiple con estado marcado (`checked`), texto descriptivo y estado deshabilitado.
-     - *Radio*: Control de selección única con nombre de grupo compartido (`name`), editor de lista de opciones separadas por coma y estado deshabilitado.
-   - **Select / Combobox (Lista Desplegable)**: Menú desplegable con placeholder, editor de lista de opciones separadas por comas, estado obligatorio y estado deshabilitado.
+5. **Form Controls (Entradas de datos)**:
+   - **Form**: Contenedor agrupador de campos con soporte para endpoint de envío (`action`) y método (`method`).
+   - **Label**: Texto descriptivo vinculado a un campo mediante `htmlFor` y asterisco de obligatoriedad.
+   - **Input**: Campo de texto multiuso (variantes de tipo: `text`, `email`, `password`, `number`, `date`, `file`) con estados de error (`hasError`, `errorMessage`) y deshabilitado (`disabled`).
+   - **Textarea**: Entrada de texto multilínea con control de filas (`rows`), estados de error y deshabilitado.
+   - **Checkbox y Radio**: Controles de selección múltiple (checkbox marcado/deshabilitado) o selección única (radio con lista de opciones y nombre de grupo).
+   - **Select / Combobox**: Lista desplegable de opciones configurables con placeholder y estado deshabilitado.
 
 6. **Box / Container (Layout)**:
-   - Contenedor base de maquetación y estructura con conmutador rápido de distribución:
-     - *Fila (`Flex Row`)*: Disposición horizontal auto-layout.
-     - *Columna (`Flex Column / Stack`)*: Disposición vertical de elementos.
-     - *Rejilla (`Grid 2`, `Grid 3`, `Grid 4`)*: Cuadrícula responsiva con columnas uniformes.
-     - *Bloque (`Block`)*: Flujo de bloque HTML tradicional.
-   - Control integral de alineación (ejes horizontal y vertical), espaciados (padding y margin uniformes o independientes de 4 lados) y bordes (radio de curvatura, grosor, estilo y color).
+   - Contenedor base de maquetación con soporte para distribución en filas o columnas (Flexbox con `flexDirection` row/column) o cuadrícula (Grid), alineación (ejes horizontal y vertical), espaciados uniformes o independientes (padding/margin) y bordes (radio de curvatura, grosor y color).
 
-7. **Componentes Gráficos y Visualización de Datos (Basados en Chart.js / Canvas / Vector SVG Dinámicos)**:
-   - **LineChart (Telemetría en Vivo)**: Gráfico de líneas temporales con curvas suavizadas, gradiente translúcido, rejilla de referencia, marcas de tiempo y punto pulsante en vivo, ideal para graficar temperatura, humedad o presión.
-   - **BarChart (Consumo / Niveles)**: Gráfico de barras responsivas con soporte para unidades físicas (`mA`, `W`, `L`, etc.), cálculo dinámico de escala y etiquetas por nodo.
-   - **PieChart (Distribución de Estados)**: Gráfico de anillo / dona vectorial SVG para representar el uso de memoria Flash, Heap libre o particiones SPIFFS/LittleFS en el microcontrolador.
-   - **AreaChart (Potencia & Señal)**: Gráfico de área sombreada para monitorear potencias RMS, RSSI Wi-Fi en dBm o consumo de corriente instantáneo.
-   - **GaugeChart (Medidor / Tacómetro)**: Medidor radial semicircular de 180° con arco graduado dinámico de 0 a 100 (o rango personalizado), coloreado contextual (azul seguro, amarillo advertencia, rojo crítico) para presión de tanques o tacómetros.
-   - **Telemetry Metric Card (Widget)**: Tarjeta widget integral que combina título, etiqueta de protocolo (`MQTT`, `WS`, `HTTP`), indicador numérico de gran tamaño con tipografía monoespaciada, unidad de medida, estado de salud con punto pulsante (`OPTIMAL`, `ALERT`) y descripción de tendencia.
+---
 
-8. **Indicadores de Estado y Control Físico para Hardware**:
-   - **Status Badge (Conexión ESP32 / Dispositivo)**: Píldora de estado con tres modos de conectividad (*Online*, *Connecting*, *Offline*) con animación pulsante de ping (`animate-ping`) y lectura de latencia en milisegundos (`18ms`).
-   - **Toggle Switch (Relay Control)**: Control físico para activación y desactivación de relés de potencia, optoacopladores o transistores MOSFET acoplados a pines GPIO, con cambio visual de estado (CERRADO/ENCENDIDO vs ABIERTO/APAGADO) y emisión de comandos `fetch('/api/gpio/toggle?pin=X')`.
-   - **Slider / Range (Control PWM / Analógico)**: Deslizador interactivo en tiempo real de 0 a 255 (o rango configurable) para modulación por ancho de pulsos (PWM), control de velocidad de motores DC o dimmers de iluminación LED, con emisión de peticiones automáticas `fetch('/api/gpio/pwm?pin=X&val=Y')`.
+### 2.0.1 Componentes IoT & Telemetría y Capa de Data Binding (Exclusivo para Proyectos ESP32)
 
-9. **Capa de Mapeo y Enlace de Datos (Data Binding Metadata Layer)**:
-   Todos los componentes básicos disponen de metadatos de enlace de datos para definir su integración con backends o microcontroladores ESP32 (`bindingMode`, `dataSource`, `topic`/`endpoint`, `dataKey`, `gpioPin`/`variableName` y `refreshInterval`).
+- **Ámbito Exclusivo**: La capa de **Data Binding** y los componentes de hardware y telemetría están reservados **únicamente para proyectos de tipo ESP32** (`projectType === 'esp32'`). En proyectos de Frameworks o HTML/CSS estándar, la sección de Data Binding se oculta automáticamente del panel de propiedades para mantener una interfaz limpia y enfocada en diseño web.
+- **Componentes de Telemetría y Control de Hardware (ESP32)**:
+  - `LineChart`: Gráfico de líneas temporales para telemetría continua (ej. temperatura/humedad) con gradientes y puntos pulsantes en vivo.
+  - `BarChart`: Gráfico de barras para consumo eléctrico o niveles.
+  - `PieChart`: Gráfico circular/anillo para distribución de memoria Flash y Heap del ESP32.
+  - `AreaChart`: Gráfico de área para monitoreo de potencia RMS y señal Wi-Fi RSSI.
+  - `GaugeChart`: Medidor o tacómetro semicircular con coloreado contextual de rangos.
+  - `Telemetry Metric Card`: Widget de monitoreo numérico con indicador de protocolo MQTT/WebSocket, estado y tendencia.
+  - `Status Badge`: Indicador de estado de conexión del dispositivo (Online/Offline/Connecting) con animación de ping.
+  - `Toggle Switch (Relay Control)`: Interruptor optimizado para conmutación ON/OFF de relés físicos acoplados a pines GPIO.
+  - `Slider / Range (PWM / Analógico)`: Control deslizante en tiempo real (0-255) para salidas analógicas o modulación PWM.
+- **Data Binding Metadata (Inspector)**: Configuración de modo (`read`, `write`, `bidirectional`), protocolo (`websocket`, `mqtt`, `http-poll`, `serial`), tópicos/endpoints, clave JSON, pin GPIO y frecuencia de refresco en ms.
 
 ---
 

@@ -505,14 +505,36 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                         <div className="flex items-center justify-between">
                           <span
                             className={`text-[9px] font-mono px-1 py-0.5 rounded ${
-                              item.category === 'Componentes Básicos'
+                              [
+                                'Text (Tipografía)',
+                                'Button / Link (Acción)',
+                                'Icon (Gráfico)',
+                                'Image (Multimedia)',
+                                'Form Controls (Entradas de datos)',
+                                'Box / Container (Layout)',
+                              ].includes(item.category)
                                 ? 'bg-blue-950/60 text-blue-300 border border-blue-500/20'
+                                : item.category === 'IoT & Telemetría (ESP32)'
+                                ? 'bg-amber-950/60 text-amber-300 border border-amber-500/20'
                                 : isFramework
                                 ? 'bg-violet-950/60 text-violet-300 border border-violet-500/20'
                                 : 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/20'
                             }`}
                           >
-                            {item.category === 'Componentes Básicos' ? 'Básico' : isFramework ? 'Shadcn' : 'Preline'}
+                            {[
+                              'Text (Tipografía)',
+                              'Button / Link (Acción)',
+                              'Icon (Gráfico)',
+                              'Image (Multimedia)',
+                              'Form Controls (Entradas de datos)',
+                              'Box / Container (Layout)',
+                            ].includes(item.category)
+                              ? 'Básico'
+                              : item.category === 'IoT & Telemetría (ESP32)'
+                              ? 'ESP32'
+                              : isFramework
+                              ? 'Shadcn'
+                              : 'Preline'}
                           </span>
                           <Plus className="w-3 h-3 text-zinc-500 group-hover:text-[#0d99ff]" />
                         </div>

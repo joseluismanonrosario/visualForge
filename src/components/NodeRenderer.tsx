@@ -1822,8 +1822,8 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
           : ''
       }`}
     >
-      {/* Data Binding IoT Badge if active */}
-      {!isPreviewMode && props.dataBinding?.enabled && (
+      {/* Data Binding IoT Badge if active (Only in ESP32 projects) */}
+      {!isPreviewMode && projectType === 'esp32' && props.dataBinding?.enabled && (
         <div className="absolute -top-7 right-0 z-40 bg-blue-950/90 text-blue-300 border border-blue-500/40 rounded px-1.5 py-0.5 text-[9px] font-mono flex items-center gap-1 shadow-md pointer-events-none">
           <Zap className="w-2.5 h-2.5 text-amber-400" />
           <span>{props.dataBinding.dataSource?.toUpperCase() || 'DATA'}: {props.dataBinding.topic || props.dataBinding.gpioPin || 'bound'}</span>
