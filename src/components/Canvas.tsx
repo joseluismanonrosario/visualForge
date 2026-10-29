@@ -23,7 +23,7 @@ interface CanvasProps {
   zoom: number;
   onZoom?: (newZoom: number | ((prev: number) => number)) => void;
   isPreviewMode: boolean;
-  onDropAsset: (componentType: string, targetId: string | null, position: DropPosition, componentName?: string) => void;
+  onDropAsset: (componentType: string, targetId: string | null, position: DropPosition, componentName?: string, extraProps?: Record<string, any>) => void;
   onReorderNode: (draggedId: string, targetId: string, position: DropPosition) => void;
   onDuplicateNode: (id: string) => void;
   onDeleteNode: (id: string) => void;
@@ -346,7 +346,7 @@ export const Canvas: React.FC<CanvasProps> = ({
       const data = JSON.parse(dataStr);
 
       if (data.sourceType === 'catalog') {
-        onDropAsset(data.componentType, targetId, currentPosition, data.componentName);
+        onDropAsset(data.componentType, targetId, currentPosition, data.componentName, data.props);
       } else if (data.sourceType === 'canvas' && data.nodeId) {
         if (data.nodeId !== targetId) {
           onReorderNode(data.nodeId, targetId, currentPosition);
@@ -369,7 +369,7 @@ export const Canvas: React.FC<CanvasProps> = ({
       const data = JSON.parse(dataStr);
 
       if (data.sourceType === 'catalog') {
-        onDropAsset(data.componentType, null, 'after', data.componentName);
+        onDropAsset(data.componentType, null, 'after', data.componentName, data.props);
       } else if (data.sourceType === 'canvas' && data.nodeId) {
         // Move to root level (end of root tree)
         if (tree.length > 0) {
@@ -434,8 +434,38 @@ export const Canvas: React.FC<CanvasProps> = ({
             </span>
           </div>
 
+          {/* Banner indicador de modo inserción activo */}
+          {['container', 'heading', 'paragraph', 'image'].includes(toolMode) && (
+            <div className="mb-2 px-3 py-1.5 bg-[#0d99ff]/15 border border-[#0d99ff]/40 rounded-lg text-xs text-[#0d99ff] flex items-center justify-between shadow-lg backdrop-blur-md animate-in fade-in select-none">
+              <span className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#0d99ff] animate-ping" />
+                <span>
+                  Modo <strong>{toolMode}</strong> activo: Haz clic en el lienzo o dentro de un contenedor para colocarlo.
+                </span>
+              </span>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onInsertTool?.('select');
+                }}
+                className="text-zinc-400 hover:text-white text-[11px] px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 transition-colors"
+              >
+                Cancelar (Esc)
+              </button>
+            </div>
+          )}
+
           {/* Canvas Artboard Body - When isHandActive is true, disable pointer events to enable panning everywhere without selecting */}
           <div
+            onClick={(e) => {
+              if (isHandActive) return;
+              if (['container', 'heading', 'paragraph', 'image'].includes(toolMode)) {
+                e.stopPropagation();
+                onInsertTool?.(toolMode, null);
+                return;
+              }
+            }}
             className={`min-h-[800px] w-full bg-[#121214] border border-[#2e2e32] rounded-xl shadow-2xl relative transition-shadow ${
               isHandActive ? 'pointer-events-none' : ''
             } ${isPreviewMode ? '' : 'hover:border-[#3e3e42]'}`}

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   MousePointer,
   Hand,
-  Box,
+  Square,
   Heading,
   AlignLeft,
   Sparkles,
@@ -264,7 +264,7 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
         type: 'container',
         name: 'Container',
         category: 'Box / Container (Layout)',
-        icon: 'Box',
+        icon: 'Square',
         isContainer: true,
         defaultStyle: {
           display: 'flex',
@@ -493,22 +493,35 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
           <div className="relative group/btn">
             <button
               type="button"
+              draggable={true}
+              onDragStart={(e) => {
+                e.dataTransfer.effectAllowed = 'copy';
+                e.dataTransfer.setData(
+                  'application/json',
+                  JSON.stringify({
+                    sourceType: 'catalog',
+                    componentType: 'container',
+                    componentName: 'Container',
+                  })
+                );
+                e.dataTransfer.setData('text/plain', 'Container');
+              }}
               onClick={() => handleToolClick('container')}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 ${
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 cursor-pointer ${
                 toolMode === 'container'
                   ? 'bg-[#0d99ff] text-white shadow-[0_0_14px_rgba(13,153,255,0.6)] font-semibold scale-105'
                   : 'text-zinc-400 hover:text-white hover:bg-white/10 active:scale-95'
               }`}
-              aria-label="Insertar Contenedor"
+              aria-label="Insertar o arrastrar Contenedor"
             >
-              <Box className="w-4 h-4" />
+              <Square className="w-4 h-4" strokeWidth={1.8} />
             </button>
             <div
               className={`absolute ${
                 isDockedTop ? 'top-full mt-2.5' : 'bottom-full mb-2.5'
               } left-1/2 -translate-x-1/2 opacity-0 group-hover/btn:opacity-100 pointer-events-none transition-all duration-150 transform scale-95 group-hover/btn:scale-100 z-50 whitespace-nowrap bg-[#18181b]/95 backdrop-blur-md text-white text-[10px] font-medium px-2 py-1 rounded-md border border-white/10 shadow-xl flex items-center gap-1.5`}
             >
-              <span>Insertar Contenedor</span>
+              <span>Insertar o arrastrar Contenedor</span>
               <kbd className="px-1 py-0.2 rounded bg-white/15 text-zinc-300 font-mono text-[9px]">F</kbd>
             </div>
           </div>
@@ -525,13 +538,26 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
           <div className="relative group/btn">
             <button
               type="button"
+              draggable={true}
+              onDragStart={(e) => {
+                e.dataTransfer.effectAllowed = 'copy';
+                e.dataTransfer.setData(
+                  'application/json',
+                  JSON.stringify({
+                    sourceType: 'catalog',
+                    componentType: 'typography',
+                    componentName: 'Heading',
+                  })
+                );
+                e.dataTransfer.setData('text/plain', 'Heading');
+              }}
               onClick={() => handleToolClick('heading')}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 ${
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 cursor-pointer ${
                 toolMode === 'heading'
                   ? 'bg-[#0d99ff] text-white shadow-[0_0_14px_rgba(13,153,255,0.6)] font-semibold scale-105'
                   : 'text-zinc-400 hover:text-white hover:bg-white/10 active:scale-95'
               }`}
-              aria-label="Insertar Título"
+              aria-label="Insertar o arrastrar Título"
             >
               <span className="font-bold text-xs tracking-tight font-sans">A</span>
             </button>
@@ -540,7 +566,7 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
                 isDockedTop ? 'top-full mt-2.5' : 'bottom-full mb-2.5'
               } left-1/2 -translate-x-1/2 opacity-0 group-hover/btn:opacity-100 pointer-events-none transition-all duration-150 transform scale-95 group-hover/btn:scale-100 z-50 whitespace-nowrap bg-[#18181b]/95 backdrop-blur-md text-white text-[10px] font-medium px-2 py-1 rounded-md border border-white/10 shadow-xl flex items-center gap-1.5`}
             >
-              <span>Insertar Título</span>
+              <span>Insertar o arrastrar Título</span>
               <kbd className="px-1 py-0.2 rounded bg-white/15 text-zinc-300 font-mono text-[9px]">T</kbd>
             </div>
           </div>
@@ -549,13 +575,26 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
           <div className="relative group/btn">
             <button
               type="button"
+              draggable={true}
+              onDragStart={(e) => {
+                e.dataTransfer.effectAllowed = 'copy';
+                e.dataTransfer.setData(
+                  'application/json',
+                  JSON.stringify({
+                    sourceType: 'catalog',
+                    componentType: 'typography',
+                    componentName: 'Paragraph',
+                  })
+                );
+                e.dataTransfer.setData('text/plain', 'Paragraph');
+              }}
               onClick={() => handleToolClick('paragraph')}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 ${
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 cursor-pointer ${
                 toolMode === 'paragraph'
                   ? 'bg-[#0d99ff] text-white shadow-[0_0_14px_rgba(13,153,255,0.6)] font-semibold scale-105'
                   : 'text-zinc-400 hover:text-white hover:bg-white/10 active:scale-95'
               }`}
-              aria-label="Insertar Párrafo"
+              aria-label="Insertar o arrastrar Párrafo"
             >
               <AlignLeft className="w-4 h-4" />
             </button>
@@ -564,7 +603,7 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
                 isDockedTop ? 'top-full mt-2.5' : 'bottom-full mb-2.5'
               } left-1/2 -translate-x-1/2 opacity-0 group-hover/btn:opacity-100 pointer-events-none transition-all duration-150 transform scale-95 group-hover/btn:scale-100 z-50 whitespace-nowrap bg-[#18181b]/95 backdrop-blur-md text-white text-[10px] font-medium px-2 py-1 rounded-md border border-white/10 shadow-xl flex items-center gap-1.5`}
             >
-              <span>Insertar Párrafo</span>
+              <span>Insertar o arrastrar Párrafo</span>
               <kbd className="px-1 py-0.2 rounded bg-white/15 text-zinc-300 font-mono text-[9px]">P</kbd>
             </div>
           </div>
@@ -654,9 +693,26 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
                         <button
                           key={item.name}
                           type="button"
+                          draggable={true}
+                          onDragStart={(e) => {
+                            e.dataTransfer.effectAllowed = 'copy';
+                            e.dataTransfer.setData(
+                              'application/json',
+                              JSON.stringify({
+                                sourceType: 'catalog',
+                                componentType: 'svg_icon',
+                                componentName: 'Icon',
+                                props: {
+                                  iconName: `lucide:${item.name.toLowerCase()}`,
+                                  label: item.label,
+                                },
+                              })
+                            );
+                            e.dataTransfer.setData('text/plain', item.name);
+                          }}
                           onClick={() => handleSelectIcon(item.name, item.label)}
-                          className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-[#0d99ff]/20 hover:border-[#0d99ff]/50 border border-transparent transition-all group/icon text-zinc-300 hover:text-white"
-                          title={`Insertar ${item.label}`}
+                          className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-[#0d99ff]/20 hover:border-[#0d99ff]/50 border border-transparent transition-all group/icon text-zinc-300 hover:text-white cursor-pointer"
+                          title={`Insertar o arrastrar ${item.label}`}
                         >
                           <IconComp className="w-5 h-5 group-hover/icon:scale-110 group-hover/icon:text-[#0d99ff] transition-transform" />
                           <span className="text-[9px] font-medium truncate w-full text-center mt-1 text-zinc-400 group-hover/icon:text-zinc-200">
@@ -675,13 +731,26 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
           <div className="relative group/btn">
             <button
               type="button"
+              draggable={true}
+              onDragStart={(e) => {
+                e.dataTransfer.effectAllowed = 'copy';
+                e.dataTransfer.setData(
+                  'application/json',
+                  JSON.stringify({
+                    sourceType: 'catalog',
+                    componentType: 'image',
+                    componentName: 'Image',
+                  })
+                );
+                e.dataTransfer.setData('text/plain', 'Image');
+              }}
               onClick={() => handleToolClick('image')}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 ${
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 cursor-pointer ${
                 toolMode === 'image'
                   ? 'bg-[#0d99ff] text-white shadow-[0_0_14px_rgba(13,153,255,0.6)] font-semibold scale-105'
                   : 'text-zinc-400 hover:text-white hover:bg-white/10 active:scale-95'
               }`}
-              aria-label="Insertar Imagen"
+              aria-label="Insertar o arrastrar Imagen"
             >
               <ImageIcon className="w-4 h-4" />
             </button>
@@ -690,7 +759,7 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
                 isDockedTop ? 'top-full mt-2.5' : 'bottom-full mb-2.5'
               } left-1/2 -translate-x-1/2 opacity-0 group-hover/btn:opacity-100 pointer-events-none transition-all duration-150 transform scale-95 group-hover/btn:scale-100 z-50 whitespace-nowrap bg-[#18181b]/95 backdrop-blur-md text-white text-[10px] font-medium px-2 py-1 rounded-md border border-white/10 shadow-xl flex items-center gap-1.5`}
             >
-              <span>Insertar Imagen</span>
+              <span>Insertar o arrastrar Imagen</span>
               <kbd className="px-1 py-0.2 rounded bg-white/15 text-zinc-300 font-mono text-[9px]">I</kbd>
             </div>
           </div>

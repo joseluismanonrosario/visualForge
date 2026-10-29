@@ -12,23 +12,19 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
 
 1. **Top Bar / Barra Superior de Figma (`h-11 bg-[#2c2c2c] border-b border-[#383838] px-3 flex items-center justify-between`)**:
    - **Izquierda**:
-     - Botón de Menú Figma (ícono menú / logo degradado violeta/azul con nombre "VisualForge").
-     - Herramientas principales estilo Figma en pill container:
-       - **Move Tool (`V`)**: Herramienta de selección y movimiento.
-       - **Hand Tool (`H`)**: Modo exclusivo de navegación y desplazamiento panorámico (Pan) del lienzo:
-         - No permite seleccionar elementos ni modificar selecciones existentes.
-         - Deshabilita los eventos de selección, clics, tiradores de arrastre y guías hover sobre los componentes (`pointer-events-none`).
-         - Permite arrastrar el lienzo fluidamente desde cualquier punto de la pantalla (fondo, artboard o sobre cualquier componente) con cursores `cursor-grab` y `cursor-grabbing`.
-         - **Activación rápida con Barra Espaciadora (`Space + Drag` estilo Photoshop / Figma)**: Al mantener presionada la barra espaciadora (sin estar escribiendo en un campo de texto), se activa de forma instantánea el modo Hand temporal con cursor de mano para desplazar la pantalla en 360 grados libres sin que el navegador haga scroll descendente ni mueva el lienzo al fondo (prevención estricta de eventos `Space` repetidos y contenedor del lienzo en `overflow-hidden`). Al soltar la barra espaciadora, se restaura automáticamente la herramienta previa sin perder el foco ni la selección.
-       - **Frame / Device Selector**: Menú desplegable para alternar viewports (*Desktop 1440px*, *Tablet 768px*, *Mobile 375px*).
+     - Botón de Menú y Logo Figma (isotipo degradado violeta/azul con nombre "VisualForge").
+     - Zona despejada y limpia: Los botones de selección (`MousePointer`) y mover lienzo (`Hand`) se trasladan exclusivamente a la barra flotante `FloatingToolbox` para evitar redundancias y mantener la cabecera despejada.
    - **Centro**:
+     - Botón para crear o configurar proyecto ("Nuevo").
+     - Badge selector de entorno de proyecto (*React Web*, *HTML / CSS*, *ESP32 / IoT*).
      - Título del proyecto editable en línea (ej. `Landing Page - v1`).
-     - Indicador de guardado y estado.
+     - Indicador verde de guardado y estado sincronizado.
    - **Derecha**:
      - Historial de Estados (Undo `Ctrl+Z` / Redo `Ctrl+Shift+Z` o `Ctrl+Y`).
-     - Selector de Nivel de Zoom (`50%`, `75%`, `100%`, `Zoom to fit`).
-     - **Botón Present / Preview (Play `▶`)**: Alterna a modo vista previa interactiva sin guías ni tiradores de selección.
-     - **Botón Share / Export Code**: Abre el modal de exportación en múltiples formatos.
+     - **Frame / Device Selector (Reposicionado)**: Controles de vista de dispositivo (*Desktop 1440px*, *Tablet 768px*, *Mobile 375px*) reubicados en el lateral derecho, situados estratégicamente al lado de los controles de Zoom y del botón Preview.
+     - Selector de Nivel de Zoom (`ZoomOut`, porcentaje editable/clic para reset a `100%`, `ZoomIn`).
+     - **Botón Present / Preview (Play `▶` / Eye)**: Alterna entre modo diseño y modo vista previa interactiva.
+     - **Botón Share / Export Code**: Abre el modal de exportación de código fuente.
 
 2. **Panel Lateral Izquierdo: Capas & Assets (`w-72 bg-[#252526] border-r border-[#383838] flex flex-col`)**:
    - Cabecera con pestañas conmutables estilo Figma:
@@ -93,20 +89,21 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
      - **Bloque 1 (Navegación y Selección)**:
        * **Select / Pointer (`V`)**: Herramienta de selección principal, activa y resaltada por defecto en azul brillante (`#0d99ff`).
        * **Pan / Hand (`H`)**: Herramienta para desplazamiento y navegación panorámica del lienzo.
-     - **Bloque 2 (Estructura y Maquetación)**:
-       * **Container / Frame (`F`)**: Herramienta para inserción y dibujo de contenedores y cajas Flexbox/Grid.
-     - **Bloque 3 (Tipografía)**:
-       * **Heading (`T`)**: Inserción de títulos y encabezados principales (`H1 / H2`).
-       * **Paragraph (`P`)**: Inserción de párrafos y bloques de texto multilínea descriptivos.
-     - **Bloque 4 (Gráficos y Contenido)**:
-       * **Icons (Icon Set - 🔔 🛒 ♥)**: Acceso rápido a colección de iconos UI vectoriales.
-       * **Image (`I`)**: Inserción de contenedores de imágenes multimedia responsivas.
-   - **Comportamiento Interactivo y Radio-Group**:
-     - **Selección Exclusiva**: Solo una herramienta puede estar activa a la vez. La herramienta activa cambia su fondo a un azul vibrante (`bg-[#0d99ff] text-white shadow-[0_0_14px_rgba(13,153,255,0.6)] scale-105`) y modifica en tiempo real el cursor del lienzo (`cursor-default`, `cursor-grab`, `cursor-crosshair`, `cursor-text`, `cursor-copy`).
-     - **Inserción Directa en el Lienzo**: Al hacer clic sobre cualquier contenedor o zona del lienzo con una herramienta de inserción activa, se coloca instantáneamente el componente en esa ubicación y se retorna automáticamente a la herramienta de selección (`select`). Un segundo clic consecutivo en el botón de la herramienta inserta directamente en el nodo seleccionado.
-     - **Feedback Visual y Tooltips**: Tooltips emergentes flotantes con orientación adaptativa (arriba o abajo según el acoplamiento de la barra), etiquetas informativas y badges con atajos de teclado (`[V]`, `[H]`, `[F]`, `[T]`, `[P]`, `[I]`).
-     - **Menú Flotante de Iconos (Popover UI)**: Al hacer clic en la herramienta "Icons", no altera el cursor del lienzo, sino que despliega una ventana flotante translúcida encima/debajo del toolbox con buscador en tiempo real y cuadrícula de 32 iconos UI comunes; al hacer clic en un icono, lo inserta en el lienzo y cierra la ventana emergente.
-     - **Atajos de Teclado Globales**: Escucha teclas `V`, `H`, `F`, `T`, `P`, `I` y `Escape` (siempre que el usuario no esté redactando en campos de texto).
+      - **Bloque 2 (Estructura y Maquetación)**:
+        * **Container / Frame (`F`)**: Herramienta con icono de recuadro/marco de contenedor (`Square` estilo Figma Frame) para inserción, dibujo y arrastre de contenedores y cajas Flexbox/Grid.
+      - **Bloque 3 (Tipografía)**:
+        * **Heading (`T`)**: Inserción y arrastre de títulos y encabezados principales (`H1 / H2`).
+        * **Paragraph (`P`)**: Inserción y arrastre de párrafos y bloques de texto multilínea descriptivos.
+      - **Bloque 4 (Gráficos y Contenido)**:
+        * **Icons (Icon Set - 🔔 🛒 ♥)**: Acceso rápido a colección de iconos UI vectoriales con soporte para inserción al clic o arrastre directo al lienzo.
+        * **Image (`I`)**: Inserción y arrastre de contenedores de imágenes multimedia responsivas.
+    - **Comportamiento Interactivo, Arrastre y Colocación Libre (Drag & Placement)**:
+      - **Arrastre Directo desde el Toolbox (Drag-and-Drop)**: Cada botón de herramienta (Container, Heading, Paragraph, Image e iconos de la ventana emergente) es arrastrable de forma nativa (`draggable={true}`). El usuario puede arrastrar directamente desde la barra flotante a cualquier punto del lienzo artboard o soltarlo con precisión antes, dentro o después de cualquier contenedor.
+      - **Colocación Libre y Selección Inmediata para Mover**: Al seleccionar una herramienta de inserción (`container`, `heading`, `paragraph`, `image`), el lienzo muestra un banner informativo con el estado activo (`Modo inserción activo`) y activa guías hover con realce azul (`hover:ring-2 hover:ring-[#0d99ff] hover:bg-[#0d99ff]/10`). Al hacer clic en cualquier parte (espacio vacío del artboard o dentro de cualquier componente), el elemento se coloca instantáneamente en esa posición exacta y queda seleccionado automáticamente, retornando a la herramienta de selección (`select`) para que el usuario pueda moverlo, reordenarlo o personalizarlo de inmediato por toda la pantalla.
+      - **Selección Exclusiva (Radio-Group)**: Solo una herramienta puede estar activa a la vez. La herramienta activa cambia su fondo a un azul vibrante (`bg-[#0d99ff] text-white shadow-[0_0_14px_rgba(13,153,255,0.6)] scale-105`) y modifica en tiempo real el cursor del lienzo (`cursor-default`, `cursor-grab`, `cursor-crosshair`, `cursor-text`, `cursor-copy`).
+      - **Feedback Visual y Tooltips**: Tooltips emergentes flotantes con orientación adaptativa (arriba o abajo según el acoplamiento de la barra), etiquetas descriptivas ("Insertar o arrastrar...") y badges con atajos de teclado (`[V]`, `[H]`, `[F]`, `[T]`, `[P]`, `[I]`).
+      - **Menú Flotante de Iconos (Popover UI)**: Al hacer clic en la herramienta "Icons", despliega una ventana flotante translúcida encima/debajo del toolbox con buscador en tiempo real y cuadrícula de 32 iconos UI comunes con soporte para clic directo o arrastre individual de cada icono.
+      - **Atajos de Teclado Globales**: Escucha teclas `V`, `H`, `F`, `T`, `P`, `I` y `Escape` (siempre que el usuario no esté redactando en campos de texto).
 
 ---
 

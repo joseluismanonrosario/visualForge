@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import {
-  MousePointer,
-  Hand,
   Monitor,
   Tablet,
   Smartphone,
@@ -25,8 +23,8 @@ interface TopBarProps {
   setProjectName: (name: string) => void;
   projectType: ProjectType;
   onOpenNewProject: () => void;
-  toolMode: ToolMode;
-  setToolMode: (tool: ToolMode) => void;
+  toolMode?: ToolMode;
+  setToolMode?: (tool: ToolMode) => void;
   viewportMode: ViewportMode;
   setViewportMode: (viewport: ViewportMode) => void;
   zoom: number;
@@ -46,8 +44,6 @@ export const TopBar: React.FC<TopBarProps> = ({
   setProjectName,
   projectType,
   onOpenNewProject,
-  toolMode,
-  setToolMode,
   viewportMode,
   setViewportMode,
   zoom,
@@ -65,82 +61,16 @@ export const TopBar: React.FC<TopBarProps> = ({
 
   return (
     <header className="h-11 bg-[#2c2c2c] border-b border-[#383838] px-3 flex items-center justify-between select-none z-30 flex-shrink-0 text-xs text-zinc-200">
-      {/* Left: Brand & Figma Tools */}
+      {/* Left: Brand */}
       <div className="flex items-center gap-3">
         {/* Figma Style Logo */}
-        <div className="flex items-center gap-2 pr-2 border-r border-[#3e3e42]">
+        <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded bg-gradient-to-tr from-violet-600 via-indigo-500 to-blue-400 flex items-center justify-center font-bold text-white shadow-sm text-[11px]">
             VF
           </div>
           <span className="font-semibold text-zinc-100 hidden sm:inline-block tracking-tight">
             VisualForge
           </span>
-        </div>
-
-        {/* Tools Pill Group */}
-        <div className="flex items-center bg-[#1e1e1e] p-0.5 rounded-lg border border-[#383838]">
-          <button
-            onClick={() => setToolMode('select')}
-            title="Move Tool (V)"
-            className={`p-1.5 rounded flex items-center gap-1 transition-colors ${
-              toolMode === 'select'
-                ? 'bg-[#0d99ff] text-white shadow-sm'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
-            }`}
-          >
-            <MousePointer className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => setToolMode('hand')}
-            title="Hand Tool (H / Space+Drag)"
-            className={`p-1.5 rounded flex items-center gap-1 transition-colors ${
-              toolMode === 'hand'
-                ? 'bg-[#0d99ff] text-white shadow-sm'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
-            }`}
-          >
-            <Hand className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {/* Viewport Frame Dropdown */}
-        <div className="flex items-center bg-[#1e1e1e] rounded-lg border border-[#383838] p-0.5">
-          <button
-            onClick={() => setViewportMode('desktop')}
-            title="Desktop Frame (1440px)"
-            className={`px-2 py-1 rounded flex items-center gap-1.5 transition-colors ${
-              viewportMode === 'desktop'
-                ? 'bg-[#383838] text-white font-medium'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
-            }`}
-          >
-            <Monitor className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Desktop</span>
-          </button>
-          <button
-            onClick={() => setViewportMode('tablet')}
-            title="Tablet Frame (768px)"
-            className={`px-2 py-1 rounded flex items-center gap-1.5 transition-colors ${
-              viewportMode === 'tablet'
-                ? 'bg-[#383838] text-white font-medium'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
-            }`}
-          >
-            <Tablet className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Tablet</span>
-          </button>
-          <button
-            onClick={() => setViewportMode('mobile')}
-            title="Mobile Frame (375px)"
-            className={`px-2 py-1 rounded flex items-center gap-1.5 transition-colors ${
-              viewportMode === 'mobile'
-                ? 'bg-[#383838] text-white font-medium'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
-            }`}
-          >
-            <Smartphone className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Mobile</span>
-          </button>
         </div>
       </div>
 
@@ -202,7 +132,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="All changes saved" />
       </div>
 
-      {/* Right: History, Zoom, Preview & Export */}
+      {/* Right: History, Frames, Zoom, Preview & Export */}
       <div className="flex items-center gap-2">
         {/* Undo / Redo */}
         <div className="flex items-center gap-0.5 border-r border-[#3e3e42] pr-2">
@@ -225,6 +155,46 @@ export const TopBar: React.FC<TopBarProps> = ({
             }`}
           >
             <Redo2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* Viewport Frame Dropdown - Positioned beside Zoom and Preview */}
+        <div className="flex items-center bg-[#1e1e1e] rounded-lg border border-[#383838] p-0.5">
+          <button
+            onClick={() => setViewportMode('desktop')}
+            title="Desktop Frame (1440px)"
+            className={`px-2 py-1 rounded flex items-center gap-1.5 transition-colors ${
+              viewportMode === 'desktop'
+                ? 'bg-[#383838] text-white font-medium'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
+            }`}
+          >
+            <Monitor className="w-3.5 h-3.5" />
+            <span className="hidden lg:inline">Desktop</span>
+          </button>
+          <button
+            onClick={() => setViewportMode('tablet')}
+            title="Tablet Frame (768px)"
+            className={`px-2 py-1 rounded flex items-center gap-1.5 transition-colors ${
+              viewportMode === 'tablet'
+                ? 'bg-[#383838] text-white font-medium'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
+            }`}
+          >
+            <Tablet className="w-3.5 h-3.5" />
+            <span className="hidden lg:inline">Tablet</span>
+          </button>
+          <button
+            onClick={() => setViewportMode('mobile')}
+            title="Mobile Frame (375px)"
+            className={`px-2 py-1 rounded flex items-center gap-1.5 transition-colors ${
+              viewportMode === 'mobile'
+                ? 'bg-[#383838] text-white font-medium'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
+            }`}
+          >
+            <Smartphone className="w-3.5 h-3.5" />
+            <span className="hidden lg:inline">Mobile</span>
           </button>
         </div>
 

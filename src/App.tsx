@@ -82,7 +82,12 @@ export function App() {
 
   // Insert component from catalog
   const handleInsertComponent = useCallback(
-    (compDef: ComponentDefinition, targetId?: string | null, position: DropPosition = 'inside') => {
+    (
+      compDef: ComponentDefinition,
+      targetId?: string | null,
+      position: DropPosition = 'inside',
+      extraProps?: Record<string, any>
+    ) => {
       const newId = `${compDef.type}_${Math.random().toString(36).substring(2, 9)}`;
       const isFramework = projectType === 'react' || projectType === 'framework';
       const instantiatedChildren = (compDef.defaultChildren || []).map(instantiateNodeWithFreshIds);
@@ -93,13 +98,17 @@ export function App() {
         library: compDef.library || (isFramework ? 'shadcn' : 'bootstrap'),
         isContainer: compDef.isContainer,
         style: { ...compDef.defaultStyle },
-        props: { ...compDef.defaultProps, catalog: compDef.catalog || (isFramework ? 'shadcn' : 'preline') },
+        props: {
+          ...compDef.defaultProps,
+          catalog: compDef.catalog || (isFramework ? 'shadcn' : 'preline'),
+          ...(extraProps || {}),
+        },
         children: instantiatedChildren,
       };
 
       let newTree: CanvasNode[];
 
-      const effectiveTargetId = targetId || selectedId;
+      const effectiveTargetId = targetId !== undefined ? targetId : selectedId;
 
       if (!effectiveTargetId) {
         newTree = [...tree, newNode];
@@ -127,7 +136,7 @@ export function App() {
           type: 'container',
           name: 'Container',
           category: 'Box / Container (Layout)',
-          icon: 'Box',
+          icon: 'Square',
           isContainer: true,
           defaultStyle: {
             display: 'flex',
@@ -205,7 +214,7 @@ export function App() {
       }
 
       if (compDef) {
-        handleInsertComponent(compDef, targetId || selectedId, 'inside');
+        handleInsertComponent(compDef, targetId, 'inside');
         setToolMode('select');
       }
     },
@@ -305,7 +314,13 @@ export function App() {
 
   // Drop catalog asset onto canvas
   const handleDropAsset = useCallback(
-    (componentType: string, targetId: string | null, position: DropPosition, componentName?: string) => {
+    (
+      componentType: string,
+      targetId: string | null,
+      position: DropPosition,
+      componentName?: string,
+      extraProps?: Record<string, any>
+    ) => {
       const activeCatalog = getCatalogForProject(projectType);
       const compDef =
         (componentName ? activeCatalog.find((c) => c.name === componentName) : null) ||
@@ -313,7 +328,7 @@ export function App() {
         (componentName ? COMPONENT_CATALOG.find((c) => c.name === componentName) : null) ||
         COMPONENT_CATALOG.find((c) => c.type === componentType);
       if (compDef) {
-        handleInsertComponent(compDef, targetId, position);
+        handleInsertComponent(compDef, targetId, position, extraProps);
       }
     },
     [handleInsertComponent, projectType]

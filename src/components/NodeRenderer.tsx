@@ -69,6 +69,7 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
   if (node.hidden) return null;
 
   const isHandMode = toolMode === 'hand';
+  const isPlacementMode = Boolean(toolMode && ['container', 'heading', 'paragraph', 'image'].includes(toolMode) && !isPreviewMode);
   const isSelected = selectedId === node.id && !isPreviewMode && !isHandMode;
   const isDropTarget = dropTargetId === node.id && !isPreviewMode && !isHandMode && draggedNodeId !== node.id;
 
@@ -1824,6 +1825,8 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
       } ${
         isSelected
           ? 'ring-2 ring-[#0d99ff] ring-offset-1 ring-offset-[#1e1e1e] z-30'
+          : isPlacementMode
+          ? 'hover:ring-2 hover:ring-[#0d99ff] hover:bg-[#0d99ff]/10 cursor-pointer'
           : !isHandMode
           ? 'hover:ring-1 hover:ring-[#0d99ff]/50'
           : ''
