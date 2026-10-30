@@ -300,6 +300,37 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
     return (r * 299 + g * 587 + b * 114) / 1000 > 155;
   }
 
+  const DEVICE_PRESETS: Record<
+    'desktop' | 'tablet' | 'mobile',
+    Array<{ name: string; width: number; height: number; label: string }>
+  > = {
+    desktop: [
+      { name: 'Desktop Estándar', width: 1440, height: 900, label: '1440 × 900 — Estándar' },
+      { name: 'Desktop Full HD', width: 1920, height: 1080, label: '1920 × 1080 — Full HD 1080p' },
+      { name: 'MacBook Pro 16"', width: 1728, height: 1117, label: '1728 × 1117 — MacBook Pro 16"' },
+      { name: 'MacBook Pro 14"', width: 1512, height: 982, label: '1512 × 982 — MacBook Pro 14"' },
+      { name: 'MacBook Air 13"', width: 1280, height: 800, label: '1280 × 800 — MacBook Air 13"' },
+      { name: 'Desktop Compacto', width: 1024, height: 768, label: '1024 × 768 — XGA / Compacto' },
+    ],
+    tablet: [
+      { name: 'iPad Mini / Base', width: 768, height: 1024, label: '768 × 1024 — iPad Mini / Base' },
+      { name: 'iPad Air 10.9"', width: 820, height: 1180, label: '820 × 1180 — iPad Air 10.9"' },
+      { name: 'iPad Pro 11"', width: 834, height: 1194, label: '834 × 1194 — iPad Pro 11"' },
+      { name: 'iPad Pro 12.9"', width: 1024, height: 1366, label: '1024 × 1366 — iPad Pro 12.9"' },
+      { name: 'Surface Pro 8', width: 960, height: 1440, label: '960 × 1440 — Surface Pro 8' },
+      { name: 'Tablet Android 10"', width: 800, height: 1280, label: '800 × 1280 — Tablet Android 10"' },
+    ],
+    mobile: [
+      { name: 'iPhone 16 / 15 Pro', width: 393, height: 852, label: '393 × 852 — iPhone 16 / 15 Pro' },
+      { name: 'iPhone 16 / 15 Pro Max', width: 430, height: 932, label: '430 × 932 — iPhone Pro Max' },
+      { name: 'iPhone 13 / 14', width: 390, height: 844, label: '390 × 844 — iPhone 13 / 14' },
+      { name: 'iPhone X / 11 Pro', width: 375, height: 812, label: '375 × 812 — iPhone X / 11 Pro' },
+      { name: 'iPhone SE', width: 375, height: 667, label: '375 × 667 — iPhone SE' },
+      { name: 'Samsung Galaxy S24', width: 412, height: 915, label: '412 × 915 — Galaxy S24 Ultra' },
+      { name: 'Android Común', width: 360, height: 800, label: '360 × 800 — Android Estándar' },
+    ],
+  };
+
   // Si no hay nodo seleccionado o el nodo seleccionado es el Lienzo ('canvas')
   if (!selectedNode || selectedId === 'canvas') {
     const artboardBg = canvasSettings?.artboardBg || '#121214';
@@ -310,6 +341,18 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
     const fontFamily = canvasSettings?.fontFamily || 'Inter';
     const showGrid = canvasSettings?.showGrid !== false;
     const rootCount = tree?.length || 0;
+
+    const currentDevice = viewportMode || 'desktop';
+    const presetsForCurrentDevice = DEVICE_PRESETS[currentDevice] || DEVICE_PRESETS.desktop;
+    const currentWidth =
+      canvasSettings?.width || (currentDevice === 'tablet' ? 768 : currentDevice === 'mobile' ? 375 : 1440);
+    const currentHeight =
+      canvasSettings?.height ||
+      canvasSettings?.minHeight ||
+      (currentDevice === 'tablet' ? 1024 : currentDevice === 'mobile' ? 812 : 900);
+    const matchingPreset = presetsForCurrentDevice.find(
+      (p) => p.width === currentWidth && p.height === currentHeight
+    );
 
     return (
       <aside className="w-80 bg-[#252526] border-l border-[#383838] flex flex-col h-[calc(100vh-44px)] select-none z-20 flex-shrink-0 text-xs text-zinc-300">
@@ -347,67 +390,152 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
             </div>
           </div>
 
-          {/* Selector de Dispositivo y Dimensiones */}
-          <div className="space-y-2">
-            <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">
-              Dispositivo y Vista
-            </label>
-            <div className="grid grid-cols-3 gap-1 bg-[#1e1e1e] p-1 rounded-lg border border-[#383838]">
+          {/* Selector de Dispositivo y Dimensiones del Lienzo */}
+          <div className="space-y-2.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">
+                Dispositivo y Tamaño
+              </label>
+              <span className="text-[10px] font-mono text-[#0d99ff] font-semibold">
+                {currentWidth} × {currentHeight} px
+              </span>
+            </div>
+
+            {/* Botonera de Dispositivo */}
+            <div className="grid grid-cols-3 gap-1 bg-[#252526] p-1 rounded-md border border-[#383838]">
               <button
                 type="button"
                 onClick={() => setViewportMode?.('desktop')}
                 className={`py-1.5 px-2 rounded flex flex-col items-center gap-1 text-[10px] font-medium transition-colors cursor-pointer ${
-                  viewportMode === 'desktop'
+                  currentDevice === 'desktop'
                     ? 'bg-[#0d99ff] text-white shadow-xs'
                     : 'text-zinc-400 hover:text-white hover:bg-white/5'
                 }`}
               >
                 <Monitor className="w-3.5 h-3.5" />
                 <span>Desktop</span>
-                <span className="text-[9px] opacity-75 font-mono">1440px</span>
               </button>
               <button
                 type="button"
                 onClick={() => setViewportMode?.('tablet')}
                 className={`py-1.5 px-2 rounded flex flex-col items-center gap-1 text-[10px] font-medium transition-colors cursor-pointer ${
-                  viewportMode === 'tablet'
+                  currentDevice === 'tablet'
                     ? 'bg-[#0d99ff] text-white shadow-xs'
                     : 'text-zinc-400 hover:text-white hover:bg-white/5'
                 }`}
               >
                 <Tablet className="w-3.5 h-3.5" />
                 <span>Tablet</span>
-                <span className="text-[9px] opacity-75 font-mono">768px</span>
               </button>
               <button
                 type="button"
                 onClick={() => setViewportMode?.('mobile')}
                 className={`py-1.5 px-2 rounded flex flex-col items-center gap-1 text-[10px] font-medium transition-colors cursor-pointer ${
-                  viewportMode === 'mobile'
+                  currentDevice === 'mobile'
                     ? 'bg-[#0d99ff] text-white shadow-xs'
                     : 'text-zinc-400 hover:text-white hover:bg-white/5'
                 }`}
               >
                 <Smartphone className="w-3.5 h-3.5" />
                 <span>Mobile</span>
-                <span className="text-[9px] opacity-75 font-mono">375px</span>
               </button>
             </div>
 
-            {/* Altura mínima del lienzo */}
-            <div className="flex items-center justify-between text-[11px] pt-1">
-              <span className="text-zinc-400">Altura mínima:</span>
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="number"
-                  min={400}
-                  max={3000}
-                  step={50}
-                  value={minHeight}
-                  onChange={(e) => onUpdateCanvasSettings?.({ minHeight: parseInt(e.target.value) || 800 })}
-                  className="w-20 bg-[#1e1e1e] border border-[#383838] rounded px-2 py-0.5 text-white font-mono text-center text-xs focus:outline-none focus:border-[#0d99ff]"
-                />
-                <span className="text-zinc-500 font-mono text-[10px]">px</span>
+            {/* Tamaños por Defecto para el Dispositivo Activo */}
+            <div className="space-y-1">
+              <span className="text-[10px] text-zinc-400 block font-medium">
+                Tamaño Predefinido ({currentDevice === 'desktop' ? 'Desktop' : currentDevice === 'tablet' ? 'Tablet' : 'Móvil'})
+              </span>
+              <select
+                value={matchingPreset ? matchingPreset.name : 'custom'}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const selectedPreset = presetsForCurrentDevice.find((p) => p.name === val);
+                  if (selectedPreset) {
+                    onUpdateCanvasSettings?.({
+                      width: selectedPreset.width,
+                      height: selectedPreset.height,
+                      minHeight: selectedPreset.height,
+                      presetName: `${currentDevice === 'tablet' ? 'Tablet' : currentDevice === 'mobile' ? 'Mobile' : 'Desktop'} — ${selectedPreset.name} (${selectedPreset.width} × ${selectedPreset.height})`,
+                    });
+                  }
+                }}
+                className="w-full bg-[#252526] border border-[#383838] rounded-md px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-[#0d99ff] cursor-pointer"
+              >
+                {presetsForCurrentDevice.map((p) => (
+                  <option key={p.name} value={p.name}>
+                    {p.label}
+                  </option>
+                ))}
+                {!matchingPreset && (
+                  <option value="custom">Personalizado ({currentWidth} × {currentHeight})</option>
+                )}
+              </select>
+            </div>
+
+            {/* Dimensiones Manuales (Ancho / Alto) */}
+            <div className="space-y-1 pt-1 border-t border-[#2c2c2e]">
+              <div className="flex items-center justify-between text-[10px] text-zinc-400">
+                <span className="font-medium">Dimensiones Manuales</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onUpdateCanvasSettings?.({
+                      width: currentHeight,
+                      height: currentWidth,
+                      minHeight: currentWidth,
+                      presetName: `Personalizado (${currentHeight} × ${currentWidth})`,
+                    });
+                  }}
+                  title="Invertir orientación (Horizontal / Vertical)"
+                  className="flex items-center gap-1 text-[9px] text-zinc-400 hover:text-[#0d99ff] transition-colors cursor-pointer"
+                >
+                  <RotateCw className="w-3 h-3" />
+                  <span>Rotar</span>
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {/* Ancho W */}
+                <div className="flex items-center gap-1.5 bg-[#252526] border border-[#383838] rounded-md px-2 py-1 focus-within:border-[#0d99ff]">
+                  <span className="text-[10px] font-mono text-zinc-500 font-bold select-none">W</span>
+                  <input
+                    type="number"
+                    min={200}
+                    max={5000}
+                    step={10}
+                    value={currentWidth}
+                    onChange={(e) => {
+                      const newW = Math.max(100, Math.min(6000, parseInt(e.target.value) || 100));
+                      onUpdateCanvasSettings?.({
+                        width: newW,
+                        presetName: `Personalizado (${newW} × ${currentHeight})`,
+                      });
+                    }}
+                    className="w-full bg-transparent text-white font-mono text-xs focus:outline-none"
+                  />
+                  <span className="text-[10px] text-zinc-500 select-none">px</span>
+                </div>
+                {/* Alto H */}
+                <div className="flex items-center gap-1.5 bg-[#252526] border border-[#383838] rounded-md px-2 py-1 focus-within:border-[#0d99ff]">
+                  <span className="text-[10px] font-mono text-zinc-500 font-bold select-none">H</span>
+                  <input
+                    type="number"
+                    min={200}
+                    max={10000}
+                    step={10}
+                    value={currentHeight}
+                    onChange={(e) => {
+                      const newH = Math.max(100, Math.min(10000, parseInt(e.target.value) || 100));
+                      onUpdateCanvasSettings?.({
+                        height: newH,
+                        minHeight: newH,
+                        presetName: `Personalizado (${currentWidth} × ${newH})`,
+                      });
+                    }}
+                    className="w-full bg-transparent text-white font-mono text-xs focus:outline-none"
+                  />
+                  <span className="text-[10px] text-zinc-500 select-none">px</span>
+                </div>
               </div>
             </div>
           </div>

@@ -127,11 +127,14 @@ export function App() {
     return {
       artboardBg: '#121214',
       artboardTextColor: '#f1f5f9',
-      minHeight: 800,
+      minHeight: 900,
       padding: 16,
       gap: 16,
       fontFamily: 'Inter',
       showGrid: true,
+      width: 1440,
+      height: 900,
+      presetName: 'Desktop Estándar (1440 × 900)',
     };
   });
 
@@ -144,6 +147,26 @@ export function App() {
       return next;
     });
   }, []);
+
+  const handleSetViewportMode = useCallback(
+    (mode: ViewportMode) => {
+      setViewportMode(mode);
+      const defaultPreset =
+        mode === 'tablet'
+          ? { width: 768, height: 1024, name: 'iPad Mini / Base' }
+          : mode === 'mobile'
+          ? { width: 375, height: 812, name: 'iPhone X / 11 Pro' }
+          : { width: 1440, height: 900, name: 'Desktop Estándar' };
+
+      handleUpdateCanvasSettings({
+        width: defaultPreset.width,
+        height: defaultPreset.height,
+        minHeight: defaultPreset.height,
+        presetName: `${mode === 'tablet' ? 'Tablet' : mode === 'mobile' ? 'Mobile' : 'Desktop'} — ${defaultPreset.name} (${defaultPreset.width} × ${defaultPreset.height})`,
+      });
+    },
+    [handleUpdateCanvasSettings]
+  );
 
   const handleClearCanvas = useCallback(() => {
     updateTreeWithHistory([]);
@@ -564,7 +587,7 @@ export function App() {
         toolMode={toolMode}
         setToolMode={setToolMode}
         viewportMode={viewportMode}
-        setViewportMode={setViewportMode}
+        setViewportMode={handleSetViewportMode}
         zoom={zoom}
         setZoom={setZoom}
         resetZoom={() => setZoom(1.0)}
@@ -627,7 +650,7 @@ export function App() {
           canvasSettings={canvasSettings}
           onUpdateCanvasSettings={handleUpdateCanvasSettings}
           viewportMode={viewportMode}
-          setViewportMode={setViewportMode}
+          setViewportMode={handleSetViewportMode}
           zoom={zoom}
           setZoom={setZoom}
           tree={tree}

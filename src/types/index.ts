@@ -62,6 +62,9 @@ export interface CanvasSettings {
   gap: number;
   fontFamily: string;
   showGrid: boolean;
+  width?: number;
+  height?: number;
+  presetName?: string;
 }
 
 export interface DragState {

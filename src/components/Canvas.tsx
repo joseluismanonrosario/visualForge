@@ -219,8 +219,11 @@ export const Canvas: React.FC<CanvasProps> = ({
   const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
   const [placementMousePos, setPlacementMousePos] = useState<{ x: number; y: number } | null>(null);
 
-  // Viewport width calculation
+  // Viewport dimensions calculation (soporta tamaños manuales y presets de dispositivo)
   const getViewportWidth = () => {
+    if (canvasSettings?.width) {
+      return `${canvasSettings.width}px`;
+    }
     switch (viewportMode) {
       case 'tablet':
         return '768px';
@@ -228,20 +231,26 @@ export const Canvas: React.FC<CanvasProps> = ({
         return '375px';
       case 'desktop':
       default:
-        return '100%';
+        return '1440px';
     }
   };
 
+  const getViewportHeight = () => {
+    return (
+      canvasSettings?.height ||
+      canvasSettings?.minHeight ||
+      (viewportMode === 'tablet' ? 1024 : viewportMode === 'mobile' ? 812 : 900)
+    );
+  };
+
   const getViewportTitle = () => {
-    switch (viewportMode) {
-      case 'tablet':
-        return 'Tablet — 768 × 1024';
-      case 'mobile':
-        return 'Mobile — 375 × 812';
-      case 'desktop':
-      default:
-        return 'Desktop — 1440 × 900';
+    const w = canvasSettings?.width || (viewportMode === 'tablet' ? 768 : viewportMode === 'mobile' ? 375 : 1440);
+    const h = getViewportHeight();
+    const deviceLabel = viewportMode === 'tablet' ? 'Tablet' : viewportMode === 'mobile' ? 'Mobile' : 'Desktop';
+    if (canvasSettings?.presetName) {
+      return `${canvasSettings.presetName}`;
     }
+    return `${deviceLabel} — ${w} × ${h}`;
   };
 
   // Top canvas header / artboard top pan handler (permite mover el lienzo arrastrando como la manito)
@@ -461,7 +470,7 @@ export const Canvas: React.FC<CanvasProps> = ({
       >
         {/* Device Frame Artboard */}
         <div
-          style={{ width: getViewportWidth(), maxWidth: '1440px' }}
+          style={{ width: getViewportWidth(), maxWidth: '100%' }}
           className="relative transition-all duration-200"
         >
           {/* Frame Label Header (Figma Artboard Tag) - Arrastrable para mover lienzo (como la manito) y clickeable para seleccionar */}
@@ -544,7 +553,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             style={{
               backgroundColor: canvasSettings?.artboardBg || '#121214',
               color: canvasSettings?.artboardTextColor || '#f1f5f9',
-              minHeight: `${canvasSettings?.minHeight || 800}px`,
+              minHeight: `${getViewportHeight()}px`,
               padding: `${canvasSettings?.padding ?? 16}px`,
               fontFamily: canvasSettings?.fontFamily || 'Inter',
             }}

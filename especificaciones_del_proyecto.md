@@ -73,9 +73,9 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
    - Pestaña colapsable con atajo `Ctrl+\` / `Cmd+\` para maximizar el lienzo.
 
 3. **Lienzo Central (Infinite Canvas & Artboard Viewport)**:
-   - **Cuadrícula de Puntos de Alta Densidad con Iluminación Interactiva por Cursor**:
-     - Espaciado compacto y ceñido de puntos a `14px 14px` (más pegados que la rejilla estándar de 24px) para una textura densa y refinada de matriz de diseño.
-     - **Efecto de Iluminación Interactiva (Interactive Dot Glow)**: Al pasar el cursor del ratón sobre el fondo del canvas, los puntos en un radio de 200px se iluminan dinámicamente en azul cian neón (`#38bdf8`) / blanco brillante con un halo sutil de luz ambiental centrada en la posición del puntero.
+   - **Microcuadrícula de Puntos Ultra-Densa con Iluminación Interactiva por Cursor**:
+     - Espaciado ultra-compacto y ceñido a `6px 6px` con micropuntos diminutos de radio `0.75px` (textura de alta densidad idéntica a la referencia visual, reemplazando la cuadrícula amplia anterior).
+     - **Efecto de Iluminación Interactiva Tenue y Delicado (Interactive Dot Glow)**: Al pasar el cursor del ratón sobre el fondo del canvas, los puntos se iluminan dinámicamente con un brillo suave, tenue y de baja intensidad (en azul cian / blanco a 35% de opacidad) acompañado de un halo sutil de luz ambiental, evitando cualquier deslumbramiento.
      - **Aceleración GPU 60-144 FPS**: Alimentado por variables CSS `--mouse-x` y `--mouse-y` en tiempo real sin recargar ni re-renderizar componentes de React.
      - **Sincronización Panorámica**: Los puntos del fondo y su iluminación interactiva se desplazan en perfecta sincronía atómica con las coordenadas `pan.x` y `pan.y` del lienzo.
    - **Sistema Integral de Scroll y Desplazamiento Fluido en el Canvas**:
@@ -102,7 +102,10 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
    - Colapsable para enfoque en pantalla completa.
    - **Inspector de Propiedades del Lienzo (Canvas Settings Inspector)**:
      - Se activa automáticamente cuando se selecciona el Lienzo (`selectedId === 'canvas'`) o cuando no hay ningún elemento hijo seleccionado en el lienzo.
-     - **Dimensiones y Dispositivo**: Selector interactivo de modo viewport (*Desktop 1440px*, *Tablet 768px*, *Mobile 375px*) y control de altura mínima (`minHeight`) configurable (Auto, 600px, 800px, 900px, 1200px, 1600px, 2000px).
+     - **Dimensiones y Dispositivo (Presets por Dispositivo y Tamaño Manual)**:
+       * **Selector de Categoría**: Botonera conmutadora entre Desktop, Tablet y Móvil.
+       * **Tamaños por Defecto según el Dispositivo**: Al seleccionar Desktop se despliegan sus tamaños estándar (Desktop Estándar 1440×900, Full HD 1920×1080, MacBook Pro 16" 1728×1117, MacBook Pro 14" 1512×982, MacBook Air 13" 1280×800, Desktop Compacto 1024×768); al seleccionar Tablet sus tamaños correspondientes (iPad Mini / Base 768×1024, iPad Air 820×1180, iPad Pro 11" 834×1194, iPad Pro 12.9" 1024×1366, Surface Pro 8 960×1440, Tablet Android 800×1280); al seleccionar Móvil sus tamaños representativos (iPhone 16/15 Pro 393×852, iPhone Pro Max 430×932, iPhone 13/14 390×844, iPhone X/11 375×812, iPhone SE 375×667, Galaxy S24 Ultra 412×915, Android Común 360×800).
+       * **Dimensiones Manuales**: Campos numéricos directos para Ancho (`W`) y Alto (`H`) en píxeles ajustables libremente a cualquier medida deseada, con botón para invertir/rotar orientación (Landscape / Portrait).
      - **Color de Fondo del Lienzo (`artboardBg`)**: Selector nativo de color hexadecimal con paleta de colores predefinidos (Dark `#121214`, Midnight `#0b0f19`, Pure White `#ffffff`, Slate `#f8fafc`, Cream `#fafaf9`).
      - **Contraste Tipográfico Automático**: Cálculo automático del color de texto por defecto del lienzo en función de la luminosidad del fondo elegido, garantizando que el texto nunca desaparezca ni pierda contraste.
      - **Espaciados Globales**: Configuración directa de relleno interno (`padding`: None, Compact 16px, Normal 24px, Spaced 32px, Relaxed 48px) y separación entre secciones (`gap`: 0, 12px, 16px, 24px, 32px, 48px).
