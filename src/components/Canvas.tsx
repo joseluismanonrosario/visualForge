@@ -11,7 +11,7 @@ import {
 import { NodeRenderer } from './NodeRenderer';
 import { COMPONENT_CATALOG } from '../data/componentCatalog';
 import { findNodeInTree } from '../utils/treeUtils';
-import { Copy, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
+import { Copy, Trash2, ArrowUp, ArrowDown, Hand, GripHorizontal } from 'lucide-react';
 
 interface CanvasProps {
   tree: CanvasNode[];
@@ -244,6 +244,20 @@ export const Canvas: React.FC<CanvasProps> = ({
     }
   };
 
+  // Top canvas header / artboard top pan handler (permite mover el lienzo arrastrando como la manito)
+  const handleTopPanMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0 && e.button !== 1) return;
+    if ((e.target as HTMLElement).closest('button, input, select, textarea, [data-interactive="true"]')) {
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+
+    setIsPanning(true);
+    setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+    onSelectNode('canvas');
+  };
+
   // Hand Tool Pan Handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     if (isHandActive || e.button === 1) {
@@ -428,30 +442,34 @@ export const Canvas: React.FC<CanvasProps> = ({
           style={{ width: getViewportWidth(), maxWidth: '1440px' }}
           className="relative transition-all duration-200"
         >
-          {/* Frame Label Header (Figma Artboard Tag) - Clickeable para seleccionar Lienzo */}
+          {/* Frame Label Header (Figma Artboard Tag) - Arrastrable para mover lienzo (como la manito) y clickeable para seleccionar */}
           <div
+            onMouseDown={handleTopPanMouseDown}
             onClick={(e) => {
-              if (isHandActive) return;
               e.stopPropagation();
               onSelectNode('canvas');
             }}
-            className={`flex items-center justify-between mb-2 px-2.5 py-1 rounded-md text-[11px] font-medium cursor-pointer transition-all ${
+            className={`w-full flex items-center justify-between mb-2 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all select-none ${
+              isPanning ? 'cursor-grabbing' : 'cursor-grab'
+            } ${
               selectedId === 'canvas'
                 ? 'bg-[#0d99ff]/20 text-[#0d99ff] border border-[#0d99ff]/50 shadow-sm'
-                : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                : 'text-zinc-400 hover:text-white hover:bg-white/5 border border-white/5'
             }`}
-            title="Haz clic para seleccionar el Lienzo y ver sus propiedades"
+            title="Presiona y arrastra para mover el lienzo (como la manito), o haz clic para ver sus propiedades"
           >
-            <span className="flex items-center gap-1.5">
+            <span className="flex items-center gap-2">
               <span className={`w-2 h-2 rounded-xs ${selectedId === 'canvas' ? 'bg-[#0d99ff] shadow-[0_0_8px_#0d99ff]' : 'bg-[#0d99ff]'}`} />
               <span className="font-semibold">{getViewportTitle()}</span>
-              <span className="text-[10px] text-zinc-500 font-normal ml-1">
-                {selectedId === 'canvas' ? '(Lienzo Seleccionado)' : '(Clic para propiedades)'}
+              <span className="text-[10px] text-zinc-500 font-normal flex items-center gap-1 ml-1">
+                <Hand className="w-3 h-3 text-zinc-400 opacity-80" />
+                <span>{selectedId === 'canvas' ? 'Lienzo Activo · Arrastra para mover' : 'Arrastra para mover'}</span>
               </span>
             </span>
-            <span className="text-zinc-500 font-mono text-[10px]">
-              {tree.length} Elementos Raíz
-            </span>
+            <div className="flex items-center gap-2 text-zinc-500 font-mono text-[10px]">
+              <GripHorizontal className="w-3.5 h-3.5 text-zinc-400 opacity-60" />
+              <span>{tree.length} Elementos Raíz</span>
+            </div>
           </div>
 
           {/* Banner indicador de modo inserción activo */}
@@ -478,6 +496,17 @@ export const Canvas: React.FC<CanvasProps> = ({
 
           {/* Canvas Artboard Body - When clicked on empty area, selects Lienzo and deselects child components */}
           <div
+            onMouseDown={(e) => {
+              if (isHandActive) return;
+              if (e.target === e.currentTarget) {
+                const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                const offsetY = e.clientY - rect.top;
+                // Si presiona en la parte superior del cuerpo del lienzo (primeros 28px)
+                if (offsetY <= 28) {
+                  handleTopPanMouseDown(e);
+                }
+              }
+            }}
             onClick={(e) => {
               if (isHandActive) return;
               if (['container', 'heading', 'paragraph', 'image'].includes(toolMode)) {

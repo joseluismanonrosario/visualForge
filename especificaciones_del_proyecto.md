@@ -89,6 +89,7 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
    - **Selección del Lienzo y Deselección Global (Click en Vacío)**:
      - **Deselección de Componentes**: Al hacer clic en cualquier área despejada sin elementos (tanto en el área libre del Artboard central como en el lienzo exterior infinito `<main>`), se deselecciona automáticamente cualquier componente activo, limpiando la selección.
      - **Selección del Artboard / Lienzo**: Al hacer clic directamente en la etiqueta de cabecera del Artboard (ej. *"Desktop - 1440 × 900"*), en el área vacía del Artboard, o en la fila "Lienzo Principal / Canvas Artboard" del panel de Capas, el Lienzo pasa al estado activo (`selectedId === 'canvas'`), enmarcándose con un anillo de selección azul cian (`ring-2 ring-[#0d99ff]`).
+     - **Desplazamiento / Pan Rápido desde la Parte Superior del Lienzo**: Al presionar y arrastrar sobre la parte superior del lienzo (en la etiqueta/cabecera del Artboard o en la franja superior del cuerpo del lienzo), el cursor adopta el estado de manito (`cursor-grab` / `cursor-grabbing`) y permite desplazar panorámicamente todo el lienzo con la misma fluidez y libertad que la herramienta Manito (`Hand`). Al mismo tiempo, selecciona el lienzo para acceder de inmediato a sus propiedades.
 
 4. **Panel Lateral Derecho: Inspector de Diseño (Figma Design & Inspect Panel, `w-80 bg-[#252526] border-l border-[#383838] flex flex-col`)**:
    - Pestañas superiores:
