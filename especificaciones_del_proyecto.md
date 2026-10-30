@@ -77,19 +77,28 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
      - **Inspect / Code (Inspección)**: Vista previa instantánea del código CSS / Tailwind generado del elemento seleccionado.
    - Colapsable para enfoque en pantalla completa.
 
-5. **Barra de Herramientas Flotante (`FloatingToolbox`) (Estilo Segmentado Modular Figma UI3)**:
+5. **Barra de Herramientas Flotante (`FloatingToolbox`) (Estilo Segmentado Modular Figma UI3 con Barra Contextual Acoplada)**:
    - **Ubicación y Estructura Visual Modular (Segmented Capsule Islands)**:
      - Posición inicial flotante centrada horizontalmente en la parte inferior de la pantalla (`bottom-6 left-1/2 -translate-x-1/2`), con arrastre fluido por el espacio de trabajo.
-     - Contenedor principal compacto y redondeado (`inline-flex items-center gap-1.5 bg-[#17181a]/95 backdrop-blur-2xl border border-white/[0.08] shadow-[0_16px_40px_rgba(0,0,0,0.7)] rounded-2xl p-1.5`).
-     - Distribución modular en 4 islas/segmentos estilizados con estética fiel a Figma UI3:
-       * **Isla 1 - Puntero de Selección (`Select / MousePointer2`)**: Botón independiente (`w-11 h-[38px] rounded-xl`) con el icono de puntero de flecha angulada outline `MousePointer2` en blanco; activo por defecto con fondo azul vibrante (`bg-[#0d99ff] shadow-[0_0_14px_rgba(13,153,255,0.5)]`).
-       * **Isla 2 - Cápsula de Navegación y Creación**: Contenedor oscuro unificado (`bg-[#25272a] rounded-xl px-1.5 h-[38px] border border-white/[0.04] flex items-center gap-1`) que agrupa 4 herramientas de acción con resaltado individual:
-         - **Pan / Hand (`H`)**: Desplazamiento y navegación panorámica por el lienzo.
-         - **Container / Frame (`F`)**: Icono de recuadro con 4 puntos de anclaje en las esquinas (`FrameIcon`) para dibujo y arrastre de contenedores Flexbox/Grid.
-         - **Heading (`T`)**: Tipografía con icono de letra mayúscula limpia `A` para inserción y arrastre de títulos.
-         - **Paragraph (`P`)**: Icono compuesto con líneas de texto horizontales y la letra 'T' lateral integrada (`ParagraphIcon`) para bloques de texto y párrafos.
-       * **Isla 3 - Mosaico Cluster de Iconos UI**: Cápsula interactiva (`bg-[#25272a] rounded-xl px-2.5 h-[38px] border border-white/[0.04]`) con un mosaico en 2 filas de mini iconos vectoriales representativos (Fila 1: `Bell`, `ShoppingCart`, `Ticket`, `Layers`; Fila 2: píldora de alternancia, `Heart`, `Image`). Al hacer clic despliega el popover de iconos UI flotante con buscador en vivo y drag-and-drop de iconos.
-       * **Isla 4 - Multimedia / Image (`I`)**: Botón independiente (`w-11 h-[38px] rounded-xl bg-[#25272a] border border-white/[0.04]`) con icono de imagen estilizada (`PhotoImageIcon`: marco con bordes redondeados, sol en la esquina superior derecha y cordillera de montañas).
+     - **Barra Contextual Superior para Selección ("Toolbox de Arriba")**:
+       * Acoplada directamente sobre la barra principal del toolbox ("pegada al toolbox de abajo" con separación de `gap-2`).
+       * **Visibilidad condicional estricta**: Aparece única y exclusivamente cuando existe un elemento seleccionado (`selectedId !== null`); cuando no hay selección, se oculta automáticamente manteniendo la interfaz despejada.
+       * **Diseño e Iconografía**: Estilo en cápsula (`rounded-full bg-[#17181a]/95 backdrop-blur-2xl border border-white/[0.08] shadow-2xl px-3.5 py-1`) con:
+         - Identificador del nodo seleccionado en tipografía monoespaciada azul cian neón (`#00a3ff`).
+         - Divisor vertical sutil (`w-px h-3.5 bg-white/15`).
+         - 4 botones de acción rápida con iconos limpios sin etiquetas: **Duplicar** (`Copy`), **Subir** (`ArrowUp`), **Bajar** (`ArrowDown`) y **Eliminar** (`Trash2` en rojo suave).
+       * **Movimiento Solidario**: Al arrastrar la barra por el espacio de trabajo o acoplarla arriba/abajo, la barra contextual superior se traslada de forma solidaria y unificada con el toolbox inferior.
+     - **Contenedor Principal de Herramientas ("Toolbox de Abajo")**:
+       * Cápsula compacta y redondeada (`inline-flex items-center gap-1.5 bg-[#17181a]/95 backdrop-blur-2xl border border-white/[0.08] shadow-[0_16px_40px_rgba(0,0,0,0.7)] rounded-2xl p-1.5`).
+       * Distribución modular en 4 islas/segmentos estilizados con estética fiel a Figma UI3:
+         * **Isla 1 - Puntero de Selección (`Select / MousePointer2`)**: Botón independiente (`w-11 h-[38px] rounded-xl`) con el icono de puntero de flecha angulada outline `MousePointer2` en blanco; activo por defecto con fondo azul vibrante (`bg-[#0d99ff] shadow-[0_0_14px_rgba(13,153,255,0.5)]`).
+         * **Isla 2 - Cápsula de Navegación y Creación**: Contenedor oscuro unificado (`bg-[#25272a] rounded-xl px-1.5 h-[38px] border border-white/[0.04] flex items-center gap-1`) que agrupa 4 herramientas de acción con resaltado individual:
+           - **Pan / Hand (`H`)**: Desplazamiento y navegación panorámica por el lienzo.
+           - **Container / Frame (`F`)**: Icono de recuadro con 4 puntos de anclaje en las esquinas (`FrameIcon`) para dibujo y arrastre de contenedores Flexbox/Grid.
+           - **Heading (`T`)**: Tipografía con icono de letra mayúscula limpia `A` para inserción y arrastre de títulos.
+           - **Paragraph (`P`)**: Icono compuesto con líneas de texto horizontales y la letra 'T' lateral integrada (`ParagraphIcon`) para bloques de texto y párrafos.
+         * **Isla 3 - Mosaico Cluster de Iconos UI**: Cápsula interactiva (`bg-[#25272a] rounded-xl px-2.5 h-[38px] border border-white/[0.04]`) con un mosaico en 2 filas de mini iconos vectoriales representativos (Fila 1: `Bell`, `ShoppingCart`, `Ticket`, `Layers`; Fila 2: píldora de alternancia, `Heart`, `Image`). Al hacer clic despliega el popover de iconos UI flotante con buscador en vivo y drag-and-drop de iconos.
+         * **Isla 4 - Multimedia / Image (`I`)**: Botón independiente (`w-11 h-[38px] rounded-xl bg-[#25272a] border border-white/[0.04]`) con icono de imagen estilizada (`PhotoImageIcon`: marco con bordes redondeados, sol en la esquina superior derecha y cordillera de montañas).
    - **Funcionalidad de Movimiento Libre y Acoplamiento Inteligente (Smart Docking)**:
      - Arrastre interactivo fluido mediante eventos globales de ratón haciendo clic en cualquier área del contenedor base.
      - **Acoplamiento Inteligente (Smart Docking)**: Si el usuario arrastra la barra hacia la parte superior (`y < 110px`), se encaja suavemente en el top (`top-14`) con animación de transición; si se devuelve hacia el fondo (`y > window.innerHeight - 130px`), se acopla en la parte inferior (`bottom-6`); en cualquier otra posición, permanece flotando libremente en las coordenadas exactas de suelta (`dockPosition: 'free'`).
@@ -857,3 +866,19 @@ Funciones inmutables y puras para manipular el árbol de capas:
 - **Preservación del trabajo previo**: Mantener intactas las funcionalidades ya implementadas y probadas, salvo petición expresa de cambio.
 - **Ejecución directa sin preguntas (Ámbito exclusivo de este proyecto)**: No preguntar ni pedir confirmación previa para llevar a cabo los cambios solicitados por el usuario; proceder directamente a su ejecución e implementación. Regla aplicable exclusivamente al proyecto `winWebFormApp`.
 - **Actualización mandatoria de especificaciones**: Cada vez que se solicite un cambio, actualización, adición o eliminación en el proyecto, se debe actualizar obligatoriamente este documento (`especificaciones_del_proyecto.md`) para reflejar con exactitud las características y funcionamiento del sistema.
+
+---
+
+## 12. CONFIGURACIÓN DE ENTORNO TYPESCRIPT Y HERRAMIENTAS
+
+- **`tsconfig.app.json` (Frontend Application Code)**:
+  - Configurado con `"moduleResolution": "bundler"`, `"noEmit": true`, `"jsx": "react-jsx"`, `"isolatedModules": true`, `"moduleDetection": "force"`.
+  - Mapeo de alias de importación `@/*` apuntando a `src/*` con `"baseUrl": "."`.
+  - Eliminación de opciones no estándar o incompatibles con versiones de TypeScript / VS Code anteriores a 5.6 (`noUncheckedSideEffectImports`, `allowImportingTsExtensions`), garantizando cero errores y avisos en el editor y compatibilidad total con `tsc -b` y Vite.
+- **`tsconfig.json` (Root Solution Config)**:
+  - Contiene referencias por proyecto a `tsconfig.app.json` y `tsconfig.node.json`.
+  - Incluye configuración de `compilerOptions.baseUrl` y `compilerOptions.paths` para compatibilidad global de resolución de alias `@/*` en extensiones y herramientas de desarrollo.
+- **`tsconfig.node.json` (Tooling & Config)**:
+  - Configuración optimizada para scripts y archivos de entorno Node (`vite.config.ts`).
+- **`.vscode/settings.json`**:
+  - Configuración de workspace que vincula automáticamente el Language Server de VS Code al SDK de TypeScript del proyecto (`node_modules/typescript/lib`).

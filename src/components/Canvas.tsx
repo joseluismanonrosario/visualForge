@@ -511,47 +511,6 @@ export const Canvas: React.FC<CanvasProps> = ({
               </div>
             )}
           </div>
-
-          {/* Floating Contextual Pill for Selected Node - Positioned right above the Floating Toolbox */}
-          {selectedId && !isPreviewMode && !isHandActive && (
-            <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 bg-[#252526] border border-[#383838] px-3 py-1.5 rounded-full shadow-2xl flex items-center gap-2 text-xs text-zinc-200">
-              <span className="text-[11px] font-mono text-[#0d99ff] border-r border-[#383838] pr-2">
-                {selectedId}
-              </span>
-              <button
-                onClick={() => onDuplicateNode(selectedId)}
-                title="Duplicar (Ctrl+D)"
-                className="hover:text-white p-1 hover:bg-[#323232] rounded flex items-center gap-1"
-              >
-                <Copy className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Duplicar</span>
-              </button>
-              <button
-                onClick={() => onMoveSibling(selectedId, 'up')}
-                title="Mover arriba (Alt+↑)"
-                className="hover:text-white p-1 hover:bg-[#323232] rounded flex items-center gap-1"
-              >
-                <ArrowUp className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline text-[11px]">Subir</span>
-              </button>
-              <button
-                onClick={() => onMoveSibling(selectedId, 'down')}
-                title="Mover abajo (Alt+↓)"
-                className="hover:text-white p-1 hover:bg-[#323232] rounded flex items-center gap-1"
-              >
-                <ArrowDown className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline text-[11px]">Bajar</span>
-              </button>
-              <button
-                onClick={() => onDeleteNode(selectedId)}
-                title="Eliminar (Supr / Delete)"
-                className="text-red-400 hover:text-red-300 p-1 hover:bg-red-500/20 rounded flex items-center gap-1"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Eliminar</span>
-              </button>
-            </div>
-          )}
         </div>
       </div>
 

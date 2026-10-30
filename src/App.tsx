@@ -527,6 +527,9 @@ export function App() {
           setToolMode={setToolMode}
           onInsertComponent={(comp) => handleInsertComponent(comp, selectedId, 'inside')}
           selectedId={selectedId}
+          onDuplicateNode={handleDuplicateNode}
+          onDeleteNode={handleDeleteNode}
+          onMoveSibling={handleMoveSibling}
         />
       )}
 
