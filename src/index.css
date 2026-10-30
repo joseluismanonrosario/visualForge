@@ -68,6 +68,27 @@
   color: #f1f5f9;
 }
 
+/* Dark Theme (Default) Global Contrast & Form Controls */
+:root,
+[data-app-theme="dark"] {
+  color-scheme: dark;
+}
+
+select option {
+  background-color: #252528;
+  color: #f1f5f9;
+}
+
+[data-app-theme="light"] select option {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+[data-app-theme="blue"] select option {
+  background-color: #131c31;
+  color: #f1f5f9;
+}
+
 /* --------------------------------------------------------------------------
    Light Theme (Studio Light)
    -------------------------------------------------------------------------- */

@@ -90,9 +90,9 @@ export const TopBar: React.FC<TopBarProps> = ({
           <img
             src={getLogoForTheme(resolvedTheme)}
             alt="VisualForge"
-            className="w-6 h-6 object-contain flex-shrink-0 transition-all duration-200"
+            className="w-5 h-5 aspect-square object-contain flex-shrink-0 select-none pointer-events-none translate-y-[0.5px] transition-transform duration-200"
           />
-          <span className="font-semibold text-zinc-100 hidden sm:inline-block tracking-tight">
+          <span className="font-semibold text-zinc-100 hidden sm:inline-block tracking-tight text-[13px] leading-none">
             VisualForge
           </span>
         </div>

@@ -16,6 +16,7 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
        - **Tema Oscuro (`dark`)**: Isotipo `{X}` blanco brillante / plateado de alto contraste (`/logos/logo-white.png` o `/logos/logo-dark.png`).
        - **Tema Claro / Neutral (`light`)**: Isotipo `{X}` gris grafito / slate metálico (`/logos/logo-gray.png` o `/logos/logo-light.png`).
        - **Tema Azul / Brand (`blue`)**: Isotipo `{X}` azul cobalto / índigo (`/logos/logo-blue.png`).
+       - **Dimensiones y Calibración Óptica**: Tamaño calibrado y ligeramente más compacto (`w-5 h-5` / 20px, relación de aspecto cuadrada estricta `aspect-square`, `object-contain` y alineación con micro-desplazamiento vertical `translate-y-[0.5px]`), evitando estiramientos hacia arriba y garantizando una integración y centrado óptico perfecto con el texto de marca contiguo.
      - Acompañado del texto de marca "VisualForge".
      - Sincronización reactiva en tiempo real del favicon del navegador (`<link rel="icon">`) con el logo del tema activo.
      - Zona despejada y limpia: Los botones de selección (`MousePointer`) y mover lienzo (`Hand`) se trasladan exclusivamente a la barra flotante `FloatingToolbox` para evitar redundancias y mantener la cabecera despejada.
@@ -37,6 +38,7 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
          - Las etiquetas atenuadas y textos secundarios utilizan contraste calibrado `#475569` para lectura nítida.
          - El Artboard aísla su esquema tipográfico para evitar que herede clases de texto del contenedor principal de la aplicación, preservando la fidelidad del diseño web visualizado.
          - En modo azul (`blue`), los campos y controles integran fondos azul marino `#131c31` con tipografía clara `#f1f5f9` y bordes bien definidos para evitar textos negros o atenuaciones ilegibles.
+         - En modo oscuro (`dark`), el panel de propiedades del lienzo (`Canvas Settings Inspector`) cuenta con contraste reforzado: tarjetas en `#1b1c1e` con bordes `#3a3b40`, títulos de sección en `text-zinc-200` con viñeta azul cian, etiquetas secundarias en `text-zinc-300`, contenedores definidos para desplegables (`bg-[#25262a] border-[#3e3f46] text-white`), campos de ancho/alto con distintivo monoespaciado azul `#0d99ff`, swatches de paleta oscura con doble reborde visible (`border-2 border-white/25`), botones de dispositivos inactivos con fondo sólido delimitado (`bg-[#1e1e20] text-zinc-300 border-[#383838]`), e indicación global `:root, [data-app-theme="dark"] { color-scheme: dark; }` con reglas explícitas para elementos `option` que evitan fondos blancos nativos o texto desvanecido al abrir menús desplegables.
      - **Frame / Device Selector (Reposicionado)**: Controles de vista de dispositivo (*Desktop 1440px*, *Tablet 768px*, *Mobile 375px*) reubicados en el lateral derecho, situados estratégicamente al lado de los controles de Zoom y del botón Preview.
      - Selector de Nivel de Zoom (`ZoomOut`, porcentaje editable/clic para reset a `100%`, `ZoomIn`).
      - **Botón Present / Preview (Play `▶` / Eye)**: Alterna entre modo diseño y modo vista previa interactiva.
@@ -112,6 +114,7 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
      - **Tipografía Global (`fontFamily`)**: Selector de familia tipográfica predeterminada para el lienzo (*Inter / Sans*, *Roboto*, *Fira Code / Mono*, *Playfair / Serif*, *System UI*).
      - **Visualización de Guías**: Conmutador para activar o desactivar la cuadrícula de puntos guía de fondo (`showGrid`).
      - **Acciones Rápidas del Lienzo**: Botones dedicados para "+ Añadir Contenedor Raíz", "Exportar Código" y "Borrar Todo" (que borra de inmediato todos los elementos dentro del lienzo de forma directa y sin ventanas de confirmación).
+     - **Garantía de Alto Contraste en Modo Oscuro**: Tarjetas contenedoras en `#1b1c1e` con bordes delimitados `#3a3b40`, títulos de sección nítidos con viñeta indicadora azul cian, selectores y cajas numéricas con fondo `#25262a` y borde `#3e3f46`, etiquetas W y H resaltadas en azul neón `#0d99ff`, y muestras de color oscuro con borde exterior contrastado `border-white/25` para máxima visibilidad en temas oscuros.
 
 5. **Barra de Herramientas Flotante (`FloatingToolbox`) (Estilo Segmentado Modular Figma UI3 con Barra Contextual Acoplada)**:
    - **Ubicación y Estructura Visual Modular (Segmented Capsule Islands)**:

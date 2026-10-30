@@ -372,44 +372,47 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
         </div>
 
         {/* Contenido scrolleable de propiedades del Lienzo */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-4">
+        <div className="flex-1 overflow-y-auto p-3 space-y-3.5">
           {/* Tarjeta de Identificación */}
-          <div className="bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838] space-y-2">
+          <div className="bg-[#1b1c1e] p-2.5 rounded-lg border border-[#3a3b40] shadow-xs space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-zinc-200 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[11px] font-semibold text-zinc-100 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_#10b981] animate-pulse" />
                 Lienzo Artboard
               </span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#0d99ff]/15 text-[#0d99ff] border border-[#0d99ff]/30">
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#0d99ff]/20 text-[#0d99ff] border border-[#0d99ff]/40 font-medium">
                 {projectType === 'esp32' ? 'ESP32 / IoT' : projectType === 'html_css' ? 'HTML / Tailwind' : 'React / Shadcn'}
               </span>
             </div>
-            <div className="text-[11px] text-zinc-400 flex items-center justify-between pt-0.5 border-t border-[#2e2e2e]">
+            <div className="text-[11px] text-zinc-300 flex items-center justify-between pt-1 border-t border-[#2e2f33]">
               <span>Elementos raíz en lienzo:</span>
-              <span className="font-mono text-zinc-200 font-bold">{rootCount}</span>
+              <span className="font-mono text-white font-bold bg-[#25262a] px-2 py-0.5 rounded border border-[#3e3f46]">
+                {rootCount}
+              </span>
             </div>
           </div>
 
           {/* Selector de Dispositivo y Dimensiones del Lienzo */}
-          <div className="space-y-2.5 bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+          <div className="space-y-2.5 bg-[#1b1c1e] p-3 rounded-lg border border-[#3a3b40] shadow-xs">
             <div className="flex items-center justify-between">
-              <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">
+              <label className="text-[11px] font-semibold text-zinc-200 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#0d99ff]" />
                 Dispositivo y Tamaño
               </label>
-              <span className="text-[10px] font-mono text-[#0d99ff] font-semibold">
+              <span className="text-[11px] font-mono text-[#0d99ff] font-bold bg-[#0d99ff]/10 px-2 py-0.5 rounded border border-[#0d99ff]/30">
                 {currentWidth} × {currentHeight} px
               </span>
             </div>
 
             {/* Botonera de Dispositivo */}
-            <div className="grid grid-cols-3 gap-1 bg-[#252526] p-1 rounded-md border border-[#383838]">
+            <div className="grid grid-cols-3 gap-1.5 bg-[#25262a] p-1 rounded-md border border-[#3a3b40]">
               <button
                 type="button"
                 onClick={() => setViewportMode?.('desktop')}
-                className={`py-1.5 px-2 rounded flex flex-col items-center gap-1 text-[10px] font-medium transition-colors cursor-pointer ${
+                className={`py-1.5 px-2 rounded flex flex-col items-center gap-1 text-[10px] font-semibold transition-all cursor-pointer ${
                   currentDevice === 'desktop'
-                    ? 'bg-[#0d99ff] text-white shadow-xs'
-                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                    ? 'bg-[#0d99ff] text-white shadow-sm border border-[#0d99ff]'
+                    : 'text-zinc-300 hover:text-white bg-[#1e1e20] hover:bg-[#2d2e33] border border-[#383838]'
                 }`}
               >
                 <Monitor className="w-3.5 h-3.5" />
@@ -418,10 +421,10 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
               <button
                 type="button"
                 onClick={() => setViewportMode?.('tablet')}
-                className={`py-1.5 px-2 rounded flex flex-col items-center gap-1 text-[10px] font-medium transition-colors cursor-pointer ${
+                className={`py-1.5 px-2 rounded flex flex-col items-center gap-1 text-[10px] font-semibold transition-all cursor-pointer ${
                   currentDevice === 'tablet'
-                    ? 'bg-[#0d99ff] text-white shadow-xs'
-                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                    ? 'bg-[#0d99ff] text-white shadow-sm border border-[#0d99ff]'
+                    : 'text-zinc-300 hover:text-white bg-[#1e1e20] hover:bg-[#2d2e33] border border-[#383838]'
                 }`}
               >
                 <Tablet className="w-3.5 h-3.5" />
@@ -430,10 +433,10 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
               <button
                 type="button"
                 onClick={() => setViewportMode?.('mobile')}
-                className={`py-1.5 px-2 rounded flex flex-col items-center gap-1 text-[10px] font-medium transition-colors cursor-pointer ${
+                className={`py-1.5 px-2 rounded flex flex-col items-center gap-1 text-[10px] font-semibold transition-all cursor-pointer ${
                   currentDevice === 'mobile'
-                    ? 'bg-[#0d99ff] text-white shadow-xs'
-                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                    ? 'bg-[#0d99ff] text-white shadow-sm border border-[#0d99ff]'
+                    : 'text-zinc-300 hover:text-white bg-[#1e1e20] hover:bg-[#2d2e33] border border-[#383838]'
                 }`}
               >
                 <Smartphone className="w-3.5 h-3.5" />
@@ -443,7 +446,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
 
             {/* Tamaños por Defecto para el Dispositivo Activo */}
             <div className="space-y-1">
-              <span className="text-[10px] text-zinc-400 block font-medium">
+              <span className="text-[10px] text-zinc-300 block font-medium">
                 Tamaño Predefinido ({currentDevice === 'desktop' ? 'Desktop' : currentDevice === 'tablet' ? 'Tablet' : 'Móvil'})
               </span>
               <select
@@ -460,7 +463,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                     });
                   }
                 }}
-                className="w-full bg-[#252526] border border-[#383838] rounded-md px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-[#0d99ff] cursor-pointer"
+                className="w-full bg-[#25262a] border border-[#3e3f46] hover:border-zinc-500 rounded-md px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-[#0d99ff] cursor-pointer transition-colors"
               >
                 {presetsForCurrentDevice.map((p) => (
                   <option key={p.name} value={p.name}>
@@ -474,9 +477,9 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
             </div>
 
             {/* Dimensiones Manuales (Ancho / Alto) */}
-            <div className="space-y-1 pt-1 border-t border-[#2c2c2e]">
-              <div className="flex items-center justify-between text-[10px] text-zinc-400">
-                <span className="font-medium">Dimensiones Manuales</span>
+            <div className="space-y-1.5 pt-1.5 border-t border-[#2e2f33]">
+              <div className="flex items-center justify-between text-[10px] text-zinc-300">
+                <span className="font-semibold">Dimensiones Manuales</span>
                 <button
                   type="button"
                   onClick={() => {
@@ -488,7 +491,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                     });
                   }}
                   title="Invertir orientación (Horizontal / Vertical)"
-                  className="flex items-center gap-1 text-[9px] text-zinc-400 hover:text-[#0d99ff] transition-colors cursor-pointer"
+                  className="flex items-center gap-1 text-[10px] text-[#0d99ff] hover:text-[#38bdf8] bg-[#0d99ff]/10 hover:bg-[#0d99ff]/20 px-2 py-0.5 rounded border border-[#0d99ff]/30 transition-colors cursor-pointer font-medium"
                 >
                   <RotateCw className="w-3 h-3" />
                   <span>Rotar</span>
@@ -496,8 +499,8 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {/* Ancho W */}
-                <div className="flex items-center gap-1.5 bg-[#252526] border border-[#383838] rounded-md px-2 py-1 focus-within:border-[#0d99ff]">
-                  <span className="text-[10px] font-mono text-zinc-500 font-bold select-none">W</span>
+                <div className="flex items-center gap-2 bg-[#25262a] border border-[#3e3f46] rounded-md px-2.5 py-1.5 focus-within:border-[#0d99ff] focus-within:ring-1 focus-within:ring-[#0d99ff]/40">
+                  <span className="text-xs font-mono text-[#0d99ff] font-bold select-none">W</span>
                   <input
                     type="number"
                     min={200}
@@ -511,13 +514,13 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                         presetName: `Personalizado (${newW} × ${currentHeight})`,
                       });
                     }}
-                    className="w-full bg-transparent text-white font-mono text-xs focus:outline-none"
+                    className="w-full bg-transparent text-white font-mono text-xs font-semibold focus:outline-none"
                   />
-                  <span className="text-[10px] text-zinc-500 select-none">px</span>
+                  <span className="text-[10px] text-zinc-400 font-mono select-none">px</span>
                 </div>
                 {/* Alto H */}
-                <div className="flex items-center gap-1.5 bg-[#252526] border border-[#383838] rounded-md px-2 py-1 focus-within:border-[#0d99ff]">
-                  <span className="text-[10px] font-mono text-zinc-500 font-bold select-none">H</span>
+                <div className="flex items-center gap-2 bg-[#25262a] border border-[#3e3f46] rounded-md px-2.5 py-1.5 focus-within:border-[#0d99ff] focus-within:ring-1 focus-within:ring-[#0d99ff]/40">
+                  <span className="text-xs font-mono text-[#0d99ff] font-bold select-none">H</span>
                   <input
                     type="number"
                     min={200}
@@ -532,24 +535,27 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                         presetName: `Personalizado (${currentWidth} × ${newH})`,
                       });
                     }}
-                    className="w-full bg-transparent text-white font-mono text-xs focus:outline-none"
+                    className="w-full bg-transparent text-white font-mono text-xs font-semibold focus:outline-none"
                   />
-                  <span className="text-[10px] text-zinc-500 select-none">px</span>
+                  <span className="text-[10px] text-zinc-400 font-mono select-none">px</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Color de Fondo del Lienzo (Fill) */}
-          <div className="space-y-2">
+          <div className="space-y-2 bg-[#1b1c1e] p-3 rounded-lg border border-[#3a3b40] shadow-xs">
             <div className="flex items-center justify-between">
-              <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">
+              <label className="text-[11px] font-semibold text-zinc-200 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#0d99ff]" />
                 Fondo del Lienzo (Fill)
               </label>
-              <span className="text-[10px] font-mono text-zinc-500">{artboardBg}</span>
+              <span className="text-[11px] font-mono text-zinc-300 font-bold bg-[#25262a] px-2 py-0.5 rounded border border-[#3e3f46]">
+                {artboardBg}
+              </span>
             </div>
 
-            <div className="flex items-center gap-2 bg-[#1e1e1e] p-1.5 rounded-lg border border-[#383838]">
+            <div className="flex items-center gap-2 bg-[#25262a] p-1.5 rounded-lg border border-[#3e3f46]">
               <input
                 type="color"
                 value={artboardBg.startsWith('#') ? artboardBg : '#121214'}
@@ -561,7 +567,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                     artboardTextColor: isLight ? '#0f172a' : '#f1f5f9',
                   });
                 }}
-                className="w-7 h-7 rounded border border-[#383838] bg-transparent cursor-pointer"
+                className="w-7 h-7 rounded border-2 border-white/30 bg-transparent cursor-pointer shadow-sm"
               />
               <input
                 type="text"
@@ -574,7 +580,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                     artboardTextColor: isLight ? '#0f172a' : '#f1f5f9',
                   });
                 }}
-                className="flex-1 bg-transparent text-white font-mono text-xs px-2 focus:outline-none"
+                className="flex-1 bg-transparent text-white font-mono text-xs px-2 focus:outline-none font-semibold"
                 placeholder="#121214"
               />
             </div>
@@ -601,10 +607,10 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                   }}
                   title={`${preset.label} (${preset.color})`}
                   style={{ backgroundColor: preset.color }}
-                  className={`h-6 rounded border transition-all cursor-pointer ${
+                  className={`h-6 rounded border-2 transition-all cursor-pointer shadow-xs ${
                     artboardBg.toLowerCase() === preset.color.toLowerCase()
-                      ? 'border-[#0d99ff] ring-2 ring-[#0d99ff]/50 scale-105'
-                      : 'border-[#383838] hover:border-zinc-400'
+                      ? 'border-[#0d99ff] ring-2 ring-[#0d99ff] ring-offset-1 ring-offset-[#1b1c1e] scale-105'
+                      : 'border-white/20 hover:border-white/60 hover:scale-105'
                   }`}
                 />
               ))}
@@ -612,33 +618,34 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
           </div>
 
           {/* Color de Texto por Defecto */}
-          <div className="space-y-1.5 bg-[#1e1e1e] p-2 rounded-lg border border-[#383838]">
-            <div className="flex items-center justify-between text-[11px]">
-              <span className="text-zinc-400">Texto base del diseño:</span>
-              <div className="flex items-center gap-1.5">
+          <div className="space-y-1.5 bg-[#1b1c1e] p-2.5 rounded-lg border border-[#3a3b40] shadow-xs">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-zinc-200 font-medium">Color de Texto Base:</span>
+              <div className="flex items-center gap-2 bg-[#25262a] px-2 py-1 rounded-md border border-[#3e3f46]">
                 <input
                   type="color"
                   value={artboardTextColor.startsWith('#') ? artboardTextColor : '#f1f5f9'}
                   onChange={(e) => onUpdateCanvasSettings?.({ artboardTextColor: e.target.value })}
-                  className="w-5 h-5 rounded border border-[#383838] bg-transparent cursor-pointer"
+                  className="w-5 h-5 rounded border border-white/25 bg-transparent cursor-pointer"
                 />
-                <span className="font-mono text-[10px] text-zinc-300">{artboardTextColor}</span>
+                <span className="font-mono text-xs text-white font-bold">{artboardTextColor}</span>
               </div>
             </div>
           </div>
 
           {/* Espaciado y Distribución */}
-          <div className="space-y-2">
-            <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">
+          <div className="space-y-2 bg-[#1b1c1e] p-3 rounded-lg border border-[#3a3b40] shadow-xs">
+            <label className="text-[11px] font-semibold text-zinc-200 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#0d99ff]" />
               Espaciado Interno del Lienzo
             </label>
             <div className="grid grid-cols-2 gap-2">
-              <div className="bg-[#1e1e1e] p-2 rounded-lg border border-[#383838] space-y-1">
-                <span className="text-[10px] text-zinc-400 block">Padding</span>
+              <div className="bg-[#25262a] p-2 rounded-md border border-[#3e3f46] space-y-1">
+                <span className="text-[10px] text-zinc-300 block font-medium">Padding</span>
                 <select
                   value={padding}
                   onChange={(e) => onUpdateCanvasSettings?.({ padding: parseInt(e.target.value) || 0 })}
-                  className="w-full bg-transparent text-white text-xs focus:outline-none cursor-pointer"
+                  className="w-full bg-[#1e1e20] border border-[#3a3b40] hover:border-zinc-500 rounded px-2 py-1 text-white text-xs focus:outline-none focus:border-[#0d99ff] cursor-pointer"
                 >
                   <option value={0}>0px (Full)</option>
                   <option value={8}>8px</option>
@@ -649,12 +656,12 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                 </select>
               </div>
 
-              <div className="bg-[#1e1e1e] p-2 rounded-lg border border-[#383838] space-y-1">
-                <span className="text-[10px] text-zinc-400 block">Separación (Gap)</span>
+              <div className="bg-[#25262a] p-2 rounded-md border border-[#3e3f46] space-y-1">
+                <span className="text-[10px] text-zinc-300 block font-medium">Separación (Gap)</span>
                 <select
                   value={gap}
                   onChange={(e) => onUpdateCanvasSettings?.({ gap: parseInt(e.target.value) || 0 })}
-                  className="w-full bg-transparent text-white text-xs focus:outline-none cursor-pointer"
+                  className="w-full bg-[#1e1e20] border border-[#3a3b40] hover:border-zinc-500 rounded px-2 py-1 text-white text-xs focus:outline-none focus:border-[#0d99ff] cursor-pointer"
                 >
                   <option value={0}>0px</option>
                   <option value={8}>8px</option>
@@ -667,15 +674,16 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
           </div>
 
           {/* Tipografía Global */}
-          <div className="space-y-2">
-            <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">
+          <div className="space-y-2 bg-[#1b1c1e] p-3 rounded-lg border border-[#3a3b40] shadow-xs">
+            <label className="text-[11px] font-semibold text-zinc-200 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#0d99ff]" />
               Tipografía Global
             </label>
-            <div className="bg-[#1e1e1e] p-2 rounded-lg border border-[#383838]">
+            <div className="bg-[#25262a] p-1.5 rounded-md border border-[#3e3f46]">
               <select
                 value={fontFamily}
                 onChange={(e) => onUpdateCanvasSettings?.({ fontFamily: e.target.value })}
-                className="w-full bg-transparent text-white text-xs focus:outline-none cursor-pointer"
+                className="w-full bg-[#1e1e20] border border-[#3a3b40] hover:border-zinc-500 rounded px-2.5 py-1 text-white text-xs focus:outline-none focus:border-[#0d99ff] cursor-pointer"
               >
                 <option value="Inter">Inter (Sans-serif moderna)</option>
                 <option value="Roboto">Roboto</option>
@@ -687,12 +695,13 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
           </div>
 
           {/* Cuadrícula Visual */}
-          <div className="space-y-2">
-            <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">
+          <div className="space-y-2 bg-[#1b1c1e] p-3 rounded-lg border border-[#3a3b40] shadow-xs">
+            <label className="text-[11px] font-semibold text-zinc-200 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#0d99ff]" />
               Asistentes Visuales
             </label>
-            <div className="flex items-center justify-between bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
-              <span className="text-[11px] text-zinc-300">Cuadrícula de Puntos (Dots)</span>
+            <div className="flex items-center justify-between bg-[#25262a] p-2.5 rounded-md border border-[#3e3f46]">
+              <span className="text-xs text-zinc-200 font-medium">Cuadrícula de Puntos (Dots)</span>
               <input
                 type="checkbox"
                 checked={showGrid}
@@ -704,7 +713,8 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
 
           {/* Acciones Rápidas del Lienzo */}
           <div className="pt-2 space-y-2 border-t border-[#383838]">
-            <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">
+            <label className="text-[11px] font-semibold text-zinc-200 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#0d99ff]" />
               Acciones Rápidas
             </label>
             <button
@@ -719,7 +729,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
               <button
                 type="button"
                 onClick={onOpenExport}
-                className="py-1.5 px-2 rounded-lg bg-[#2c2c2c] hover:bg-[#383838] text-zinc-200 border border-[#383838] text-xs font-medium flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                className="py-1.5 px-2 rounded-lg bg-[#25262a] hover:bg-[#2e2f33] text-zinc-200 border border-[#3e3f46] text-xs font-medium flex items-center justify-center gap-1 transition-colors cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Exportar</span>
