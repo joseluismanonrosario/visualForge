@@ -28,13 +28,14 @@ import { LeftSidebar } from './components/LeftSidebar';
 import { RightSidebar } from './components/RightSidebar';
 import { Canvas } from './components/Canvas';
 import { ExportModal } from './components/ExportModal';
-import { NewProjectModal } from './components/NewProjectModal';
+import { ProjectCreationScreen } from './components/ProjectCreationScreen';
 import { FloatingToolbox } from './components/FloatingToolbox';
 
 export function App() {
   const [projectName, setProjectName] = useState('VisualForge Studio - Project');
-  const [projectType, setProjectType] = useState<ProjectType>('hybrid');
-  const [isNewProjectOpen, setIsNewProjectOpen] = useState(false);
+  const [projectType, setProjectType] = useState<ProjectType>('html_css');
+  const [isProjectLoaded, setIsProjectLoaded] = useState(false);
+  const [isWelcomeOpen, setIsWelcomeOpen] = useState(true);
   const [appTheme, setAppTheme] = useState<AppTheme>(() => {
     return (localStorage.getItem('vf_app_theme') as AppTheme) || 'system';
   });
@@ -488,6 +489,13 @@ export function App() {
   // Global Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (isWelcomeOpen) {
+        if (e.key === 'Escape' && isProjectLoaded) {
+          setIsWelcomeOpen(false);
+        }
+        return;
+      }
+
       const activeEl = document.activeElement;
       const isInput =
         activeEl?.tagName === 'INPUT' ||
@@ -559,14 +567,16 @@ export function App() {
   }, [handleUndo, handleRedo, selectedId, handleDeleteNode, handleDuplicateNode, handleMoveSibling]);
 
   const handleCreateProject = useCallback(
-    (name: string, type: ProjectType, iconLibrary: string, template: 'iot' | 'saas' | 'blank') => {
+    (name: string, type: ProjectType, template: 'iot' | 'saas' | 'blank') => {
       setProjectName(name);
       setProjectType(type);
       let initialTree: CanvasNode[] = [];
-      if (template === 'iot' || (type === 'esp32' && template !== 'blank')) {
-        initialTree = ESP32_CANVAS_TREE;
-      } else if (template === 'saas') {
-        initialTree = INITIAL_CANVAS_TREE;
+      if (template === 'blank') {
+        initialTree = [];
+      } else if (template === 'iot' || type === 'esp32') {
+        initialTree = JSON.parse(JSON.stringify(ESP32_CANVAS_TREE));
+      } else {
+        initialTree = JSON.parse(JSON.stringify(INITIAL_CANVAS_TREE));
       }
       setTree(initialTree);
       setHistory([initialTree]);
@@ -578,119 +588,139 @@ export function App() {
 
   return (
     <div className="h-screen w-screen overflow-hidden flex flex-col bg-[#1e1e1e] text-zinc-100 font-sans select-none">
-      {/* Figma Top Toolbar */}
-      <TopBar
-        projectName={projectName}
-        setProjectName={setProjectName}
-        projectType={projectType}
-        onOpenNewProject={() => setIsNewProjectOpen(true)}
-        toolMode={toolMode}
-        setToolMode={setToolMode}
-        viewportMode={viewportMode}
-        setViewportMode={handleSetViewportMode}
-        zoom={zoom}
-        setZoom={setZoom}
-        resetZoom={() => setZoom(1.0)}
-        canUndo={historyIdx > 0}
-        canRedo={historyIdx < history.length - 1}
-        onUndo={handleUndo}
-        onRedo={handleRedo}
-        isPreviewMode={isPreviewMode}
-        setIsPreviewMode={setIsPreviewMode}
-        onOpenExport={() => setIsExportOpen(true)}
-        appTheme={appTheme}
-        resolvedTheme={resolvedTheme}
-        setAppTheme={setAppTheme}
-      />
+      {isWelcomeOpen ? (
+        <>
+          {/* TopBar en modo crear proyecto: solo logo y texto en web, y botones en versión ejecutable */}
+          <TopBar
+            isCreationMode={true}
+            resolvedTheme={resolvedTheme}
+            appTheme={appTheme}
+          />
 
-      {/* Main Studio Body: Left Sidebar + Canvas + Right Sidebar */}
-      <div className="flex-1 flex overflow-hidden relative">
-        <LeftSidebar
-          tree={tree}
-          projectType={projectType}
-          selectedId={selectedId}
-          onSelectNode={setSelectedId}
-          onDeleteNode={handleDeleteNode}
-          onToggleVisibility={handleToggleVisibility}
-          onToggleLock={handleToggleLock}
-          onInsertComponent={(comp) => handleInsertComponent(comp, selectedId, 'inside')}
-          onReorderNode={handleReorderNode}
-          onMoveSibling={handleMoveSibling}
-          isOpen={isLeftOpen}
-          setIsOpen={setIsLeftOpen}
-        />
+          {/* Pantalla de crear proyecto centrada con recuadro sobre el canvas */}
+          <div className="flex-1 relative w-full h-[calc(100vh-44px)] bg-[#1e1e1e] canvas-dots flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+            <ProjectCreationScreen
+              isOpen={isWelcomeOpen}
+              canCancel={isProjectLoaded}
+              onCancel={() => setIsWelcomeOpen(false)}
+              onCreateProject={(name, type, template) => {
+                handleCreateProject(name, type, template);
+                setIsProjectLoaded(true);
+                setIsWelcomeOpen(false);
+              }}
+              currentType={projectType}
+            />
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Figma Top Toolbar */}
+          <TopBar
+            projectName={projectName}
+            setProjectName={setProjectName}
+            projectType={projectType}
+            onOpenNewProject={() => setIsWelcomeOpen(true)}
+            toolMode={toolMode}
+            setToolMode={setToolMode}
+            viewportMode={viewportMode}
+            setViewportMode={handleSetViewportMode}
+            zoom={zoom}
+            setZoom={setZoom}
+            resetZoom={() => setZoom(1.0)}
+            canUndo={historyIdx > 0}
+            canRedo={historyIdx < history.length - 1}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            isPreviewMode={isPreviewMode}
+            setIsPreviewMode={setIsPreviewMode}
+            onOpenExport={() => setIsExportOpen(true)}
+            appTheme={appTheme}
+            resolvedTheme={resolvedTheme}
+            setAppTheme={setAppTheme}
+          />
 
-        <Canvas
-          tree={tree}
-          projectType={projectType}
-          selectedId={selectedId}
-          onSelectNode={setSelectedId}
-          viewportMode={viewportMode}
-          toolMode={toolMode}
-          onInsertTool={handleInsertTool}
-          zoom={zoom}
-          onZoom={setZoom}
-          isPreviewMode={isPreviewMode}
-          onDropAsset={handleDropAsset}
-          onReorderNode={handleReorderNode}
-          onDuplicateNode={handleDuplicateNode}
-          onDeleteNode={handleDeleteNode}
-          onMoveSibling={handleMoveSibling}
-          canvasSettings={canvasSettings}
-          onUpdateCanvasSettings={handleUpdateCanvasSettings}
-        />
+          {/* Main Studio Body: Left Sidebar + Canvas + Right Sidebar */}
+          <div className="flex-1 flex overflow-hidden relative">
+            <LeftSidebar
+              tree={tree}
+              projectType={projectType}
+              selectedId={selectedId}
+              onSelectNode={setSelectedId}
+              onDeleteNode={handleDeleteNode}
+              onToggleVisibility={handleToggleVisibility}
+              onToggleLock={handleToggleLock}
+              onInsertComponent={(comp) => handleInsertComponent(comp, selectedId, 'inside')}
+              onReorderNode={handleReorderNode}
+              onMoveSibling={handleMoveSibling}
+              isOpen={isLeftOpen}
+              setIsOpen={setIsLeftOpen}
+            />
 
-        <RightSidebar
-          selectedNode={selectedNode}
-          selectedId={selectedId}
-          projectType={projectType}
-          onUpdateStyle={handleUpdateStyle}
-          onUpdateProps={handleUpdateProps}
-          onUpdateNode={handleUpdateNode}
-          canvasSettings={canvasSettings}
-          onUpdateCanvasSettings={handleUpdateCanvasSettings}
-          viewportMode={viewportMode}
-          setViewportMode={handleSetViewportMode}
-          zoom={zoom}
-          setZoom={setZoom}
-          tree={tree}
-          onClearCanvas={handleClearCanvas}
-          onAddRootContainer={handleAddRootContainer}
-          onOpenExport={() => setIsExportOpen(true)}
-          isOpen={isRightOpen}
-          setIsOpen={setIsRightOpen}
-        />
-      </div>
+            <Canvas
+              tree={tree}
+              projectType={projectType}
+              selectedId={selectedId}
+              onSelectNode={setSelectedId}
+              viewportMode={viewportMode}
+              toolMode={toolMode}
+              onInsertTool={handleInsertTool}
+              zoom={zoom}
+              onZoom={setZoom}
+              isPreviewMode={isPreviewMode}
+              onDropAsset={handleDropAsset}
+              onReorderNode={handleReorderNode}
+              onDuplicateNode={handleDuplicateNode}
+              onDeleteNode={handleDeleteNode}
+              onMoveSibling={handleMoveSibling}
+              canvasSettings={canvasSettings}
+              onUpdateCanvasSettings={handleUpdateCanvasSettings}
+            />
 
-      {/* Floating Smart Toolbox (Figma / VisionOS Style) */}
-      {!isPreviewMode && (
-        <FloatingToolbox
-          toolMode={toolMode}
-          setToolMode={setToolMode}
-          onInsertComponent={(comp) => handleInsertComponent(comp, selectedId, 'inside')}
-          selectedId={selectedId}
-          onDuplicateNode={handleDuplicateNode}
-          onDeleteNode={handleDeleteNode}
-          onMoveSibling={handleMoveSibling}
-          onClearCanvas={handleClearCanvas}
-        />
+            <RightSidebar
+              selectedNode={selectedNode}
+              selectedId={selectedId}
+              projectType={projectType}
+              onUpdateStyle={handleUpdateStyle}
+              onUpdateProps={handleUpdateProps}
+              onUpdateNode={handleUpdateNode}
+              canvasSettings={canvasSettings}
+              onUpdateCanvasSettings={handleUpdateCanvasSettings}
+              viewportMode={viewportMode}
+              setViewportMode={handleSetViewportMode}
+              zoom={zoom}
+              setZoom={setZoom}
+              tree={tree}
+              onClearCanvas={handleClearCanvas}
+              onAddRootContainer={handleAddRootContainer}
+              onOpenExport={() => setIsExportOpen(true)}
+              isOpen={isRightOpen}
+              setIsOpen={setIsRightOpen}
+            />
+          </div>
+
+          {/* Floating Smart Toolbox (Figma / VisionOS Style) */}
+          {!isPreviewMode && (
+            <FloatingToolbox
+              toolMode={toolMode}
+              setToolMode={setToolMode}
+              onInsertComponent={(comp) => handleInsertComponent(comp, selectedId, 'inside')}
+              selectedId={selectedId}
+              onDuplicateNode={handleDuplicateNode}
+              onDeleteNode={handleDeleteNode}
+              onMoveSibling={handleMoveSibling}
+              onClearCanvas={handleClearCanvas}
+            />
+          )}
+
+          {/* Export Code Modal */}
+          <ExportModal
+            tree={tree}
+            projectType={projectType}
+            isOpen={isExportOpen}
+            onClose={() => setIsExportOpen(false)}
+          />
+        </>
       )}
-
-      {/* Export Code Modal */}
-      <ExportModal
-        tree={tree}
-        projectType={projectType}
-        isOpen={isExportOpen}
-        onClose={() => setIsExportOpen(false)}
-      />
-
-      {/* New Project & Environment Configuration Modal */}
-      <NewProjectModal
-        isOpen={isNewProjectOpen}
-        onClose={() => setIsNewProjectOpen(false)}
-        onCreateProject={handleCreateProject}
-        currentType={projectType}
-      />
     </div>
   );
 }

@@ -43,12 +43,18 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
      - Selector de Nivel de Zoom (`ZoomOut`, porcentaje editable/clic para reset a `100%`, `ZoomIn`).
      - **Botón Present / Preview (Play `▶` / Eye)**: Alterna entre modo diseño y modo vista previa interactiva.
      - **Botón Share / Export Code**: Abre el modal de exportación de código fuente.
-     - **Extensión al Borde y Controles de Ventana de Escritorio (Window Controls)**:
+     - **Extensión al Borde y Controles de Ventana Exclusivos para Versión Ejecutable (Window Controls)**:
        - La barra superior se extiende de borde a borde (`pl-3 pr-0`), eliminando márgenes derechos para acoplar directamente en la esquina superior derecha los 3 botones estándar de control de ventana de Windows:
          * **Minimizar** (`Minus` / `-`): Minimiza la ventana al hacer clic.
          * **Maximizar / Restaurar** (`Square` / `Copy`): Alterna entre el estado maximizado a pantalla completa y el tamaño restaurado con detección reactiva de estado (`isMaximized`).
          * **Cerrar** (`X`): Botón de cierre posicionado exactamente en el vértice superior derecho con efecto hover rojo nativo de Windows `#e81123` y texto blanco.
-       - En la versión de escritorio nativa (Electron), la barra superior funciona como barra de título frameless arrastrable (`-webkit-app-region: drag` en la cabecera con exclusión `no-drag` en elementos interactivos) comunicándose por IPC seguro para gobernar la ventana del sistema operativo.
+       - **Diferenciación Estricta Web vs. Producción Ejecutable**:
+         * **Versión Web**: Los 3 botones de ventana se ocultan por completo en el navegador. En la pantalla de creación de proyecto, la barra superior aparece **únicamente con el logo y el texto de VisualForge**.
+         * **Versión de Producción Ejecutable (Desktop / Electron)**: Los 3 botones de control de ventana aparecen de forma exclusiva en la esquina superior derecha tanto en el editor como en la pantalla de bienvenida/crear proyecto, funcionando como barra de título frameless arrastrable (`-webkit-app-region: drag` en la cabecera con exclusión `no-drag` en elementos interactivos) comunicándose por IPC seguro para gobernar la ventana del sistema operativo.
+     - **Pantalla Centrada de Crear Proyecto (`ProjectCreationScreen`)**:
+       - Centrada con precisión tanto horizontal como verticalmente en la pantalla sobre el canvas interactivo con microcuadrícula de puntos.
+       - Dimensión delimitada (`max-w-4xl`) evitando ocupar la pantalla completa.
+       - Enmarcada en un único recuadro protector que cubre todo el contenido (`bg-[#1b1c1e] border border-[#38393e] rounded-2xl shadow-2xl p-6 sm:p-7`), integrando cabecera con botón de cancelar si hay proyecto cargado, las 3 columnas de opciones (Acciones & Recientes, Tipos de Proyecto y Plantillas dinámicas) y el pie de navegación (Cancelar y Siguiente).
 
 2. **Panel Lateral Izquierdo: Capas & Assets (`w-72 bg-[#252526] border-r border-[#383838] flex flex-col`)**:
    - Cabecera con pestañas conmutables estilo Figma:
@@ -831,15 +837,26 @@ const handleCopyCode = async (textToCopy) => {
 
 VisualForge Studio soporta proyectos orientados a diferentes destinos de compilación y ejecución desde el momento de su creación.
 
-### Selector de Tipos de Proyecto (Modal Nuevo Proyecto)
-Al crear un nuevo proyecto (`NewProjectModal`), el usuario puede elegir entre 3 arquitecturas principales:
-1. **ESP32 / IoT (Microcontroladores)**:
-   - Optimizado para tableros de control de hardware, relés, sensores y automatización embebida.
-   - Proporciona la plantilla inicial *ESP32 IoT Hardware Dashboard* con relé en GPIO 4, LED Integrado en GPIO 2, dimmer PWM en GPIO 5 y tarjetas de telemetría.
-2. **HTML / CSS Tradicional**:
-   - Orientado a páginas web estáticas ultraligeras, emails o sistemas embebidos simples sin frameworks.
-3. **React Web (Frontend Moderno)**:
-   - Orientado a aplicaciones web modernas basadas en React 19, componentes shadcn/ui y Tailwind CSS v4.
+### Selector de Tipos de Proyecto y Pantalla de Inicio / "Nuevo" (`ProjectCreationScreen`)
+Al iniciar la aplicación o al hacer clic en el botón "Nuevo" de la barra superior, la interfaz oculta todas las barras de herramientas (`TopBar`, `LeftSidebar`, `RightSidebar`, `FloatingToolbox`) y despliega una pantalla de bienvenida fija sobre el fondo del lienzo (`bg-[#1e1e1e] canvas-dots`) con diseño inspirado en la pantalla de bienvenida de Visual Studio:
+1. **Columna Izquierda (Acciones Principales y Proyectos Recientes)**:
+   - **Crear un proyecto**: Botón activo destacado con borde cian neón brillante (`#00d2ff`) y resplandor suave.
+   - **Abrir un proyecto o una solución**: Botón secundario con icono de carpeta abierta (`FolderOpen`) en estado deshabilitado/no funcional.
+   - **Lista de Recientes**: Historial visual con nombre de archivo, fecha/hora y ruta local (en estado no funcional/solo lectura para futuras integraciones).
+2. **Columna Central (Tipos de Proyecto)**:
+   - **ESP32 / IoT (Microcontroladores)**: Interfaces web embebidas para ESP32 con control GPIO, firmware C++ ESPAsyncWebServer y SVGs inline (icono microchip `Cpu`).
+   - **HTML / CSS Tradicional**: Sitios web y páginas estáticas optimizadas, con SVGs en línea y sin dependencias de frameworks (icono escudo HTML5).
+   - **React Web (Frontend Moderno)**: Aplicaciones web modernas modulares con componentes JSX limpios, shadcn/ui y Tailwind CSS v4 (icono átomo React).
+   - Tarjeta seleccionada con resplandor cian `border-2 border-[#00d2ff] shadow-[0_0_20px_rgba(0,210,255,0.28)]`.
+3. **Columna Derecha (Plantillas Dinámicas Reactivas)**:
+   - Cambia dinámicamente según el tipo de proyecto seleccionado en la columna central:
+     - Para **HTML / CSS Tradicional**: "Lienzo en Blanco" y "SaaS Landing Page".
+     - Para **ESP32 / IoT**: "Lienzo en Blanco" y "Dashboard IoT ESP32" (con interruptores GPIO y telemetría).
+     - Para **React Web**: "Lienzo en Blanco" y "SaaS Landing Page (Shadcn/ui)".
+   - Selección visual de plantilla y soporte para doble clic para apertura inmediata.
+4. **Botones de Acción Inferiores**:
+   - **Cancelar**: Deshabilitado con `opacity-40` al iniciar la aplicación (al no haber proyecto abierto); plenamente funcional al invocarse desde el botón "Nuevo" para regresar al proyecto activo sin perder cambios.
+   - **Siguiente**: Botón de acento púrpura/índigo (`bg-[#5b32e8]`) que crea e inicializa el proyecto, desplegando el entorno de trabajo completo del estudio con todas sus barras de herramientas.
 
 ### Panel de Propiedades Condicional: Inspector de Hardware (GPIO)
 Cuando el proyecto activo es de tipo `esp32`:

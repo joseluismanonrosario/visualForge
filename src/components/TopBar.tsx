@@ -39,44 +39,46 @@ export const getLogoForTheme = (theme?: ResolvedTheme | AppTheme) => {
 };
 
 interface TopBarProps {
-  projectName: string;
-  setProjectName: (name: string) => void;
-  projectType: ProjectType;
-  onOpenNewProject: () => void;
+  isCreationMode?: boolean;
+  projectName?: string;
+  setProjectName?: (name: string) => void;
+  projectType?: ProjectType;
+  onOpenNewProject?: () => void;
   toolMode?: ToolMode;
   setToolMode?: (tool: ToolMode) => void;
-  viewportMode: ViewportMode;
-  setViewportMode: (viewport: ViewportMode) => void;
-  zoom: number;
-  setZoom: (zoom: number | ((prev: number) => number)) => void;
-  resetZoom: () => void;
-  canUndo: boolean;
-  canRedo: boolean;
-  onUndo: () => void;
-  onRedo: () => void;
-  isPreviewMode: boolean;
-  setIsPreviewMode: (val: boolean | ((prev: boolean) => boolean)) => void;
-  onOpenExport: () => void;
+  viewportMode?: ViewportMode;
+  setViewportMode?: (viewport: ViewportMode) => void;
+  zoom?: number;
+  setZoom?: (zoom: number | ((prev: number) => number)) => void;
+  resetZoom?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  isPreviewMode?: boolean;
+  setIsPreviewMode?: (val: boolean | ((prev: boolean) => boolean)) => void;
+  onOpenExport?: () => void;
   appTheme?: AppTheme;
   resolvedTheme?: ResolvedTheme;
   setAppTheme?: (theme: AppTheme) => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
-  projectName,
+  isCreationMode = false,
+  projectName = 'VisualForge Project',
   setProjectName,
-  projectType,
+  projectType = 'react',
   onOpenNewProject,
-  viewportMode,
+  viewportMode = 'desktop',
   setViewportMode,
-  zoom,
+  zoom = 1,
   setZoom,
   resetZoom,
-  canUndo,
-  canRedo,
+  canUndo = false,
+  canRedo = false,
   onUndo,
   onRedo,
-  isPreviewMode,
+  isPreviewMode = false,
   setIsPreviewMode,
   onOpenExport,
   appTheme = 'system',
@@ -85,10 +87,20 @@ export const TopBar: React.FC<TopBarProps> = ({
 }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
+  const [isElectron, setIsElectron] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return Boolean(
+      (window as any).electronAPI ||
+      (window as any).isElectron ||
+      navigator.userAgent.toLowerCase().includes('electron') ||
+      window.location.search.includes('electron=true')
+    );
+  });
 
   useEffect(() => {
     const api = (window as any).electronAPI;
     if (api) {
+      setIsElectron(true);
       api.isMaximized?.().then?.((max: boolean) => {
         setIsMaximized(max);
       });
@@ -133,6 +145,63 @@ export const TopBar: React.FC<TopBarProps> = ({
       window.close();
     }
   };
+
+  // Modo Crear Proyecto: Solo logo + texto para web, y botones de ventana para versión ejecutable
+  if (isCreationMode) {
+    return (
+      <header className="h-11 bg-[#2c2c2c] border-b border-[#383838] pl-3 pr-0 flex items-center justify-between select-none z-30 flex-shrink-0 text-xs text-zinc-200">
+        {/* Left: Brand */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <img
+              src={getLogoForTheme(resolvedTheme)}
+              alt="VisualForge"
+              className="w-5 h-5 aspect-square object-contain flex-shrink-0 select-none pointer-events-none translate-y-[0.5px] transition-transform duration-200"
+            />
+            <span className="font-semibold text-zinc-100 hidden sm:inline-block tracking-tight text-[13px] leading-none">
+              VisualForge
+            </span>
+          </div>
+        </div>
+
+        {/* Right: Botones de ventana SOLAMENTE para la versión de producción ejecutable */}
+        <div className="flex items-center h-full">
+          {isElectron && (
+            <div className="flex items-center h-full ml-1 border-l border-[#383838]">
+              <button
+                type="button"
+                onClick={handleMinimize}
+                title="Minimizar"
+                className="h-11 w-11 flex items-center justify-center hover:bg-white/10 active:bg-white/15 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <Minus className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={handleMaximize}
+                title={isMaximized ? 'Restaurar' : 'Maximizar'}
+                className="h-11 w-11 flex items-center justify-center hover:bg-white/10 active:bg-white/15 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+              >
+                {isMaximized ? (
+                  <Copy className="w-3.5 h-3.5 rotate-90" />
+                ) : (
+                  <Square className="w-3.5 h-3.5" />
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={handleClose}
+                title="Cerrar"
+                className="h-11 w-11 flex items-center justify-center btn-window-close text-zinc-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header className="h-11 bg-[#2c2c2c] border-b border-[#383838] pl-3 pr-0 flex items-center justify-between select-none z-30 flex-shrink-0 text-xs text-zinc-200">
@@ -383,37 +452,39 @@ export const TopBar: React.FC<TopBarProps> = ({
           <span>Export</span>
         </button>
 
-        {/* Window Controls (Minimizar, Maximizar/Restaurar, Cerrar) */}
-        <div className="flex items-center h-full ml-1 border-l border-[#383838]">
-          <button
-            type="button"
-            onClick={handleMinimize}
-            title="Minimizar"
-            className="h-11 w-11 flex items-center justify-center hover:bg-white/10 active:bg-white/15 text-zinc-400 hover:text-white transition-colors cursor-pointer"
-          >
-            <Minus className="w-3.5 h-3.5" />
-          </button>
-          <button
-            type="button"
-            onClick={handleMaximize}
-            title={isMaximized ? 'Restaurar' : 'Maximizar'}
-            className="h-11 w-11 flex items-center justify-center hover:bg-white/10 active:bg-white/15 text-zinc-400 hover:text-white transition-colors cursor-pointer"
-          >
-            {isMaximized ? (
-              <Copy className="w-3.5 h-3.5 rotate-90" />
-            ) : (
-              <Square className="w-3.5 h-3.5" />
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={handleClose}
-            title="Cerrar"
-            className="h-11 w-11 flex items-center justify-center btn-window-close text-zinc-400 hover:text-white transition-colors cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+        {/* Window Controls (Minimizar, Maximizar/Restaurar, Cerrar) - SOLAMENTE para versión ejecutable */}
+        {isElectron && (
+          <div className="flex items-center h-full ml-1 border-l border-[#383838]">
+            <button
+              type="button"
+              onClick={handleMinimize}
+              title="Minimizar"
+              className="h-11 w-11 flex items-center justify-center hover:bg-white/10 active:bg-white/15 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+            >
+              <Minus className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={handleMaximize}
+              title={isMaximized ? 'Restaurar' : 'Maximizar'}
+              className="h-11 w-11 flex items-center justify-center hover:bg-white/10 active:bg-white/15 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+            >
+              {isMaximized ? (
+                <Copy className="w-3.5 h-3.5 rotate-90" />
+              ) : (
+                <Square className="w-3.5 h-3.5" />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={handleClose}
+              title="Cerrar"
+              className="h-11 w-11 flex items-center justify-center btn-window-close text-zinc-400 hover:text-white transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );
