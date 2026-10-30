@@ -598,7 +598,7 @@ export function App() {
           />
 
           {/* Pantalla de crear proyecto centrada con recuadro sobre el canvas */}
-          <div className="flex-1 relative w-full h-[calc(100vh-44px)] bg-[#1e1e1e] canvas-dots flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+          <div className="flex-1 relative w-full h-[calc(100vh-44px)] canvas-dots flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
             <ProjectCreationScreen
               isOpen={isWelcomeOpen}
               canCancel={isProjectLoaded}
@@ -609,6 +609,7 @@ export function App() {
                 setIsWelcomeOpen(false);
               }}
               currentType={projectType}
+              resolvedTheme={resolvedTheme}
             />
           </div>
         </>

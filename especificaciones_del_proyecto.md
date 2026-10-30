@@ -51,10 +51,20 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
        - **Diferenciación Estricta Web vs. Producción Ejecutable**:
          * **Versión Web**: Los 3 botones de ventana se ocultan por completo en el navegador. En la pantalla de creación de proyecto, la barra superior aparece **únicamente con el logo y el texto de VisualForge**.
          * **Versión de Producción Ejecutable (Desktop / Electron)**: Los 3 botones de control de ventana aparecen de forma exclusiva en la esquina superior derecha tanto en el editor como en la pantalla de bienvenida/crear proyecto, funcionando como barra de título frameless arrastrable (`-webkit-app-region: drag` en la cabecera con exclusión `no-drag` en elementos interactivos) comunicándose por IPC seguro para gobernar la ventana del sistema operativo.
-     - **Pantalla Centrada de Crear Proyecto (`ProjectCreationScreen`)**:
+     - **Pantalla Centrada de Iniciar / Crear Proyecto (`ProjectCreationScreen`)**:
        - Centrada con precisión tanto horizontal como verticalmente en la pantalla sobre el canvas interactivo con microcuadrícula de puntos.
        - Dimensión delimitada (`max-w-4xl`) evitando ocupar la pantalla completa.
-       - Enmarcada en un único recuadro protector que cubre todo el contenido (`bg-[#1b1c1e] border border-[#38393e] rounded-2xl shadow-2xl p-6 sm:p-7`), integrando cabecera con botón de cancelar si hay proyecto cargado, las 3 columnas de opciones (Acciones & Recientes, Tipos de Proyecto y Plantillas dinámicas) y el pie de navegación (Cancelar y Siguiente).
+       - Enmarcada en un único recuadro protector que cubre todo el contenido con adaptación armónica según el tema activo (`dark`, `light`, `blue`), integrando:
+         * **Cabecera de Marca y Título**: Logotipo oficial de VisualForge contiguo al nombre de marca **"VisualForge"** (`text-xl sm:text-2xl font-bold`) y debajo subtítulo en `<h2>Iniciar</h2>` (`text-xs sm:text-sm font-semibold`), aplicando los colores correspondientes al tema seleccionado o por defecto:
+           - **Modo Oscuro (`dark` / por defecto)**: Isotipo gris grafito (`/logos/logo-gray.png`), "VisualForge" en blanco, `<h2>Iniciar</h2>` en azul cian `#0d99ff` y divisor `#2e2f33`.
+           - **Modo Claro (`light`)**: Isotipo azul cobalto (`/logos/logo-blue.png`), "VisualForge" en carbón oscuro `#0f172a`, `<h2>Iniciar</h2>` en azul `#0d99ff` y divisor `#e2e8f0`.
+           - **Modo Azul (`blue`)**: Isotipo blanco plateado (`/logos/logo-white.png`), "VisualForge" en blanco, `<h2>Iniciar</h2>` en celeste cielo `#38bdf8` y divisor `#1e293b`.
+         * **Botón Cerrar/Cancelar (`X`)**: Visible en la esquina derecha de la cabecera si hay un proyecto actualmente cargado.
+         * **Tres Columnas de Opciones**:
+           1. Acciones (Crear un proyecto destacado, Abrir proyecto deshabilitado) y Proyectos Recientes.
+           2. Tipos de Proyecto en orden jerárquico estricto: **1. HTML / CSS Tradicional**, **2. React Web**, **3. ESP32 / IoT**.
+           3. Plantillas dinámicas reactivas al tipo de proyecto seleccionado.
+         * **Pie de Navegación**: Botones de Cancelar y Siguiente estilizados con sombras y colores del tema activo.
 
 2. **Panel Lateral Izquierdo: Capas & Assets (`w-72 bg-[#252526] border-r border-[#383838] flex flex-col`)**:
    - Cabecera con pestañas conmutables estilo Figma:
@@ -838,25 +848,26 @@ const handleCopyCode = async (textToCopy) => {
 VisualForge Studio soporta proyectos orientados a diferentes destinos de compilación y ejecución desde el momento de su creación.
 
 ### Selector de Tipos de Proyecto y Pantalla de Inicio / "Nuevo" (`ProjectCreationScreen`)
-Al iniciar la aplicación o al hacer clic en el botón "Nuevo" de la barra superior, la interfaz oculta todas las barras de herramientas (`TopBar`, `LeftSidebar`, `RightSidebar`, `FloatingToolbox`) y despliega una pantalla de bienvenida fija sobre el fondo del lienzo (`bg-[#1e1e1e] canvas-dots`) con diseño inspirado en la pantalla de bienvenida de Visual Studio:
+Al iniciar la aplicación o al hacer clic en el botón "Nuevo" de la barra superior, la interfaz oculta las barras de diseño secundarias y despliega una pantalla de bienvenida fija sobre el fondo del lienzo (`canvas-dots`) con diseño centrado enmarcado en un recuadro armónico adaptado al tema activo (`dark`, `light`, `blue`):
+- **Cabecera de Pantalla de Inicio**: Logotipo oficial de VisualForge adaptado al tema (`logo-gray.png` en oscuro, `logo-blue.png` en claro, `logo-white.png` en azul) junto al nombre **VisualForge** (`text-xl sm:text-2xl font-bold`) y subtítulo directo en `<h2>Iniciar</h2>` (`text-xs sm:text-sm font-semibold`), garantizando contraste cromático óptimo según el tema seleccionado o por defecto.
 1. **Columna Izquierda (Acciones Principales y Proyectos Recientes)**:
-   - **Crear un proyecto**: Botón activo destacado con borde cian neón brillante (`#00d2ff`) y resplandor suave.
+   - **Crear un proyecto**: Botón activo destacado con borde cian neón brillante (`#00d2ff`) o azul cian (`#0d99ff`) y resplandor suave.
    - **Abrir un proyecto o una solución**: Botón secundario con icono de carpeta abierta (`FolderOpen`) en estado deshabilitado/no funcional.
    - **Lista de Recientes**: Historial visual con nombre de archivo, fecha/hora y ruta local (en estado no funcional/solo lectura para futuras integraciones).
-2. **Columna Central (Tipos de Proyecto)**:
-   - **ESP32 / IoT (Microcontroladores)**: Interfaces web embebidas para ESP32 con control GPIO, firmware C++ ESPAsyncWebServer y SVGs inline (icono microchip `Cpu`).
-   - **HTML / CSS Tradicional**: Sitios web y páginas estáticas optimizadas, con SVGs en línea y sin dependencias de frameworks (icono escudo HTML5).
-   - **React Web (Frontend Moderno)**: Aplicaciones web modernas modulares con componentes JSX limpios, shadcn/ui y Tailwind CSS v4 (icono átomo React).
-   - Tarjeta seleccionada con resplandor cian `border-2 border-[#00d2ff] shadow-[0_0_20px_rgba(0,210,255,0.28)]`.
+2. **Columna Central (Tipos de Proyecto - Orden de Selección)**:
+   - **1. HTML / CSS Tradicional**: Sitios web y páginas estáticas optimizadas, con SVGs en línea y sin dependencias de frameworks (icono escudo HTML5).
+   - **2. React Web (Frontend Moderno)**: Aplicaciones web modernas modulares con componentes JSX limpios, shadcn/ui y Tailwind CSS v4 (icono átomo React).
+   - **3. ESP32 / IoT (Microcontroladores)**: Interfaces web embebidas para ESP32 con control GPIO, firmware C++ ESPAsyncWebServer y SVGs inline (icono microchip `Cpu`).
+   - Tarjeta seleccionada con resplandor temático y borde de doble píxel activo.
 3. **Columna Derecha (Plantillas Dinámicas Reactivas)**:
    - Cambia dinámicamente según el tipo de proyecto seleccionado en la columna central:
      - Para **HTML / CSS Tradicional**: "Lienzo en Blanco" y "SaaS Landing Page".
-     - Para **ESP32 / IoT**: "Lienzo en Blanco" y "Dashboard IoT ESP32" (con interruptores GPIO y telemetría).
      - Para **React Web**: "Lienzo en Blanco" y "SaaS Landing Page (Shadcn/ui)".
+     - Para **ESP32 / IoT**: "Lienzo en Blanco" y "Dashboard IoT ESP32" (con interruptores GPIO y telemetría).
    - Selección visual de plantilla y soporte para doble clic para apertura inmediata.
 4. **Botones de Acción Inferiores**:
-   - **Cancelar**: Deshabilitado con `opacity-40` al iniciar la aplicación (al no haber proyecto abierto); plenamente funcional al invocarse desde el botón "Nuevo" para regresar al proyecto activo sin perder cambios.
-   - **Siguiente**: Botón de acento púrpura/índigo (`bg-[#5b32e8]`) que crea e inicializa el proyecto, desplegando el entorno de trabajo completo del estudio con todas sus barras de herramientas.
+   - **Cancelar**: Visible y plenamente funcional cuando ya existe un proyecto cargado para regresar al espacio de trabajo.
+   - **Siguiente**: Botón de acento azul (`#0d99ff`) con elevación que inicializa el proyecto y despliega el entorno de diseño completo.
 
 ### Panel de Propiedades Condicional: Inspector de Hardware (GPIO)
 Cuando el proyecto activo es de tipo `esp32`:

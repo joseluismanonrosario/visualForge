@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { ProjectType } from '../types';
+import { ProjectType, ResolvedTheme } from '../types';
 import {
   FilePlus2,
   FolderOpen,
   File,
   PanelsTopLeft,
   Activity,
-  Boxes,
   Code2,
   X,
 } from 'lucide-react';
+import { getLogoForTheme } from './TopBar';
 
 interface TemplateOption {
   id: 'blank' | 'saas' | 'iot';
@@ -27,28 +27,6 @@ interface ProjectTypeOption {
 }
 
 const PROJECT_TYPE_OPTIONS: ProjectTypeOption[] = [
-  {
-    id: 'esp32',
-    title: 'ESP32 / IoT (Microcontroladores)',
-    description:
-      'Interfaces web embebidas para ESP32 con control GPIO, firmware C++ ESPAsyncWebServer y SVGs inline.',
-    defaultName: 'ESP32 IoT WebServer',
-    templates: [
-      {
-        id: 'blank',
-        title: 'Lienzo en Blanco',
-        description: 'Empieza con un artboard limpio para microcontroladores.',
-        icon: 'file',
-      },
-      {
-        id: 'iot',
-        title: 'Dashboard IoT ESP32',
-        description:
-          'Interruptores GPIO, sliders PWM, medidores y telemetría en tiempo real.',
-        icon: 'activity',
-      },
-    ],
-  },
   {
     id: 'html_css',
     title: 'HTML / CSS Tradicional',
@@ -89,6 +67,28 @@ const PROJECT_TYPE_OPTIONS: ProjectTypeOption[] = [
         description:
           'Componentes modulares de Shadcn UI, Hero y Sección de Características.',
         icon: 'panels',
+      },
+    ],
+  },
+  {
+    id: 'esp32',
+    title: 'ESP32 / IoT (Microcontroladores)',
+    description:
+      'Interfaces web embebidas para ESP32 con control GPIO, firmware C++ ESPAsyncWebServer y SVGs inline.',
+    defaultName: 'ESP32 IoT WebServer',
+    templates: [
+      {
+        id: 'blank',
+        title: 'Lienzo en Blanco',
+        description: 'Empieza con un artboard limpio para microcontroladores.',
+        icon: 'file',
+      },
+      {
+        id: 'iot',
+        title: 'Dashboard IoT ESP32',
+        description:
+          'Interruptores GPIO, sliders PWM, medidores y telemetría en tiempo real.',
+        icon: 'activity',
       },
     ],
   },
@@ -139,10 +139,12 @@ const RECENT_PROJECTS = [
 ];
 
 /* Custom SVG Icons matching reference screenshot */
-const Esp32ChipIcon: React.FC = () => (
+const Esp32ChipIcon: React.FC<{ className?: string }> = ({
+  className = 'text-zinc-200',
+}) => (
   <svg
     viewBox="0 0 24 24"
-    className="w-7 h-7 text-zinc-200 flex-shrink-0"
+    className={`w-7 h-7 flex-shrink-0 ${className}`}
     fill="none"
     stroke="currentColor"
     strokeWidth="1.7"
@@ -155,10 +157,12 @@ const Esp32ChipIcon: React.FC = () => (
   </svg>
 );
 
-const Html5ShieldIcon: React.FC = () => (
+const Html5ShieldIcon: React.FC<{ className?: string }> = ({
+  className = 'text-zinc-100',
+}) => (
   <svg
     viewBox="0 0 24 24"
-    className="w-7 h-7 text-zinc-100 flex-shrink-0"
+    className={`w-7 h-7 flex-shrink-0 ${className}`}
     fill="none"
     stroke="currentColor"
     strokeWidth="1.6"
@@ -170,10 +174,12 @@ const Html5ShieldIcon: React.FC = () => (
   </svg>
 );
 
-const ReactAtomIcon: React.FC = () => (
+const ReactAtomIcon: React.FC<{ className?: string }> = ({
+  className = 'text-zinc-100',
+}) => (
   <svg
     viewBox="-11.5 -10.23174 23 20.46348"
-    className="w-7 h-7 text-zinc-100 flex-shrink-0"
+    className={`w-7 h-7 flex-shrink-0 ${className}`}
     fill="none"
     stroke="currentColor"
     strokeWidth="1.4"
@@ -195,6 +201,7 @@ interface ProjectCreationScreenProps {
     template: 'iot' | 'saas' | 'blank'
   ) => void;
   currentType?: ProjectType;
+  resolvedTheme?: ResolvedTheme;
 }
 
 export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
@@ -203,8 +210,9 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
   onCancel,
   onCreateProject,
   currentType = 'html_css',
+  resolvedTheme = 'dark',
 }) => {
-  // Active selected project type (default to HTML/CSS as in screenshot or current)
+  // Active selected project type (default to HTML/CSS or current)
   const [selectedTypeId, setSelectedTypeId] = useState<ProjectType>(() => {
     if (currentType === 'esp32' || currentType === 'react') return currentType;
     return 'html_css';
@@ -213,7 +221,7 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
   // Current active project option object
   const activeProjectOption =
     PROJECT_TYPE_OPTIONS.find((p) => p.id === selectedTypeId) ||
-    PROJECT_TYPE_OPTIONS[1];
+    PROJECT_TYPE_OPTIONS[0];
 
   // Active selected template within the chosen project type
   const [selectedTemplateId, setSelectedTemplateId] = useState<
@@ -239,28 +247,90 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
 
   if (!isOpen) return null;
 
+  // Theme-aware styles for cards and elements
+  const isLight = resolvedTheme === 'light';
+  const isBlue = resolvedTheme === 'blue';
+
+  const cardBorder = isLight
+    ? 'border-zinc-200'
+    : isBlue
+    ? 'border-[#1e293b]'
+    : 'border-[#38393e]';
+
+  const cardBg = isLight
+    ? 'bg-white'
+    : isBlue
+    ? 'bg-[#0f172a]'
+    : 'bg-[#1b1c1e]';
+
+  const dividerBorder = isLight
+    ? 'border-zinc-200'
+    : isBlue
+    ? 'border-[#1e293b]'
+    : 'border-[#2e2f33]';
+
+  const titleColor = isLight ? 'text-zinc-900' : 'text-white';
+  const h2Color = isLight
+    ? 'text-[#0d99ff]'
+    : isBlue
+    ? 'text-[#38bdf8]'
+    : 'text-[#0d99ff]';
+
+  const textColor = isLight ? 'text-zinc-900' : 'text-white';
+  const textMuted = isLight
+    ? 'text-zinc-500'
+    : isBlue
+    ? 'text-slate-400'
+    : 'text-zinc-400';
+
+  const itemActiveClass = isLight
+    ? 'bg-sky-50/70 border-2 border-[#0d99ff] ring-1 ring-[#0d99ff]/30 shadow-[0_0_16px_rgba(13,153,255,0.15)]'
+    : isBlue
+    ? 'bg-[#131c31] border-2 border-[#38bdf8] ring-1 ring-[#38bdf8]/40 shadow-[0_0_18px_rgba(56,189,248,0.25)]'
+    : 'bg-[#1e1e22] border-2 border-[#00d2ff] ring-1 ring-[#00d2ff]/40 shadow-[0_0_18px_rgba(0,210,255,0.25)]';
+
+  const itemInactiveClass = isLight
+    ? 'bg-zinc-50 border border-zinc-200 hover:border-zinc-400 hover:bg-zinc-100'
+    : isBlue
+    ? 'bg-[#131c31] border border-[#1f2c4a] hover:border-sky-500/50 hover:bg-[#1a2542]'
+    : 'bg-[#1e1e22] border border-[#333336] hover:border-zinc-500 hover:bg-[#25252a]';
+
+  const iconClass = isLight ? 'text-zinc-700' : 'text-zinc-100';
+
   return (
-    <div className="w-full max-w-4xl mx-auto my-auto bg-[#1b1c1e] border border-[#38393e] rounded-2xl shadow-2xl p-6 sm:p-7 select-none animate-in fade-in zoom-in-95 duration-200 flex flex-col gap-5">
-      {/* Top Header inside Card */}
-      <div className="flex items-center justify-between pb-4 border-b border-[#2e2f33]">
+    <div
+      className={`w-full max-w-4xl mx-auto my-auto ${cardBg} border ${cardBorder} rounded-2xl shadow-2xl p-6 sm:p-7 select-none animate-in fade-in zoom-in-95 duration-200 flex flex-col gap-5`}
+    >
+      {/* Top Header inside Card: VisualForge branding + Logo, h2 Iniciar */}
+      <div className={`flex items-center justify-between pb-4 border-b ${dividerBorder}`}>
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#0d99ff] via-violet-600 to-indigo-500 flex items-center justify-center text-white shadow-md">
-            <FilePlus2 className="w-5 h-5 stroke-[2]" />
-          </div>
-          <div>
-            <h2 className="text-lg sm:text-xl font-semibold text-white tracking-tight">
-              Crear un proyecto
+          <img
+            src={getLogoForTheme(resolvedTheme)}
+            alt="VisualForge"
+            className="w-9 h-9 aspect-square object-contain flex-shrink-0 select-none pointer-events-none"
+          />
+          <div className="flex flex-col justify-center">
+            <span
+              className={`text-xl sm:text-2xl font-bold tracking-tight leading-none ${titleColor}`}
+            >
+              VisualForge
+            </span>
+            <h2
+              className={`text-xs sm:text-sm font-semibold tracking-wide mt-1 leading-none ${h2Color}`}
+            >
+              Iniciar
             </h2>
-            <p className="text-xs text-zinc-400">
-              Selecciona el entorno de trabajo y la plantilla inicial para comenzar
-            </p>
           </div>
         </div>
 
         {canCancel && (
           <button
             onClick={onCancel}
-            className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+              isLight
+                ? 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100'
+                : 'text-zinc-400 hover:text-white hover:bg-white/10'
+            }`}
             title="Regresar al proyecto actual"
           >
             <X className="w-4 h-4" />
@@ -274,17 +344,21 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
         <div className="lg:col-span-4 flex flex-col space-y-3.5">
           {/* Action 1: Crear un proyecto (Active) */}
           <div
-            className="p-3.5 rounded-xl bg-[#1e1e22] border-2 border-[#00d2ff] ring-1 ring-[#00d2ff]/40 shadow-[0_0_16px_rgba(0,210,255,0.2)] flex items-start gap-3 cursor-pointer transition-all"
+            className={`p-3.5 rounded-xl flex items-start gap-3 cursor-pointer transition-all ${itemActiveClass}`}
             title="Crear un nuevo proyecto desde una plantilla"
           >
-            <div className="p-0.5 rounded text-[#00d2ff] mt-0.5">
+            <div
+              className={`p-0.5 rounded mt-0.5 ${
+                isBlue ? 'text-[#38bdf8]' : 'text-[#0d99ff]'
+              }`}
+            >
               <FilePlus2 className="w-6 h-6 stroke-[1.5]" />
             </div>
             <div>
-              <h3 className="text-xs font-semibold text-white tracking-tight">
+              <h3 className={`text-xs font-semibold tracking-tight ${textColor}`}>
                 Crear un proyecto
               </h3>
-              <p className="text-[10px] text-zinc-400 leading-snug mt-1">
+              <p className={`text-[10px] leading-snug mt-1 ${textMuted}`}>
                 Siga una plantilla de proyecto para las librerías o scaffolding para comenzar.
               </p>
             </div>
@@ -292,17 +366,31 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
 
           {/* Action 2: Abrir un proyecto o una solución (Disabled as requested) */}
           <div
-            className="p-3.5 rounded-xl bg-[#1e1e22]/50 border border-[#333336] flex items-start gap-3 opacity-50 cursor-not-allowed select-none"
+            className={`p-3.5 rounded-xl flex items-start gap-3 opacity-50 cursor-not-allowed select-none ${
+              isLight
+                ? 'bg-zinc-100/70 border border-zinc-200'
+                : isBlue
+                ? 'bg-[#131c31]/50 border border-[#1e293b]'
+                : 'bg-[#1e1e22]/50 border border-[#333336]'
+            }`}
             title="Abrir proyecto local (Próximamente)"
           >
             <div className="p-0.5 rounded text-zinc-400 mt-0.5">
               <FolderOpen className="w-6 h-6 stroke-[1.5]" />
             </div>
             <div>
-              <h3 className="text-xs font-semibold text-zinc-300 tracking-tight">
+              <h3
+                className={`text-xs font-semibold tracking-tight ${
+                  isLight ? 'text-zinc-700' : 'text-zinc-300'
+                }`}
+              >
                 Abrir un proyecto
               </h3>
-              <p className="text-[10px] text-zinc-500 leading-snug mt-1">
+              <p
+                className={`text-[10px] leading-snug mt-1 ${
+                  isLight ? 'text-zinc-500' : 'text-zinc-500'
+                }`}
+              >
                 Abre un archivo o proyecto local de VisualForge.
               </p>
             </div>
@@ -310,27 +398,49 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
 
           {/* Recientes List (Disabled as requested) */}
           <div className="pt-1">
-            <h4 className="text-[11px] font-medium text-zinc-400 mb-1.5 px-1">
+            <h4 className={`text-[11px] font-medium mb-1.5 px-1 ${textMuted}`}>
               Recientes
             </h4>
-            <div className="bg-[#161618] border border-[#2e2e32] rounded-xl p-2 max-h-[160px] overflow-hidden space-y-1 opacity-50 cursor-not-allowed select-none">
+            <div
+              className={`rounded-xl p-2 max-h-[160px] overflow-hidden space-y-1 opacity-50 cursor-not-allowed select-none ${
+                isLight
+                  ? 'bg-zinc-50 border border-zinc-200'
+                  : isBlue
+                  ? 'bg-[#0b1120] border border-[#1e293b]'
+                  : 'bg-[#161618] border border-[#2e2e32]'
+              }`}
+            >
               {RECENT_PROJECTS.slice(0, 4).map((proj, idx) => (
                 <div
                   key={idx}
-                  className="px-2 py-1 rounded-md hover:bg-zinc-800/40 flex flex-col gap-0.5 text-left"
+                  className={`px-2 py-1 rounded-md flex flex-col gap-0.5 text-left ${
+                    isLight ? 'hover:bg-zinc-200/50' : 'hover:bg-zinc-800/40'
+                  }`}
                 >
                   <div className="flex items-center justify-between gap-1.5">
                     <div className="flex items-center gap-1.5 truncate">
                       <Code2 className="w-3 h-3 text-violet-400 flex-shrink-0" />
-                      <span className="text-[10px] font-medium text-zinc-300 truncate">
+                      <span
+                        className={`text-[10px] font-medium truncate ${
+                          isLight ? 'text-zinc-800' : 'text-zinc-300'
+                        }`}
+                      >
                         {proj.name}
                       </span>
                     </div>
-                    <span className="text-[8px] text-zinc-500 flex-shrink-0 font-mono">
+                    <span
+                      className={`text-[8px] flex-shrink-0 font-mono ${
+                        isLight ? 'text-zinc-500' : 'text-zinc-500'
+                      }`}
+                    >
                       {proj.date}
                     </span>
                   </div>
-                  <span className="text-[8px] text-zinc-600 truncate font-mono pl-4.5">
+                  <span
+                    className={`text-[8px] truncate font-mono pl-4.5 ${
+                      isLight ? 'text-zinc-500' : 'text-zinc-600'
+                    }`}
+                  >
                     {proj.path}
                   </span>
                 </div>
@@ -339,7 +449,7 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
           </div>
         </div>
 
-        {/* Column 2: Tipos de Proyecto (Center, 4 cols) */}
+        {/* Column 2: Tipos de Proyecto (Center, 4 cols) - 1. HTML, 2. React, 3. ESP32 */}
         <div className="lg:col-span-4 flex flex-col space-y-3">
           {PROJECT_TYPE_OPTIONS.map((opt) => {
             const isSelected = selectedTypeId === opt.id;
@@ -348,24 +458,30 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
                 key={opt.id}
                 onClick={() => handleSelectType(opt.id)}
                 className={`p-3.5 rounded-xl transition-all cursor-pointer flex items-start gap-3 text-left ${
-                  isSelected
-                    ? 'bg-[#1e1e22] border-2 border-[#00d2ff] ring-1 ring-[#00d2ff]/40 shadow-[0_0_18px_rgba(0,210,255,0.25)]'
-                    : 'bg-[#1e1e22] border border-[#333336] hover:border-zinc-500 hover:bg-[#25252a]'
+                  isSelected ? itemActiveClass : itemInactiveClass
                 }`}
               >
                 {/* Icon */}
                 <div className="mt-0.5">
-                  {opt.id === 'esp32' && <Esp32ChipIcon />}
-                  {opt.id === 'html_css' && <Html5ShieldIcon />}
-                  {opt.id === 'react' && <ReactAtomIcon />}
+                  {opt.id === 'html_css' && (
+                    <Html5ShieldIcon className={iconClass} />
+                  )}
+                  {opt.id === 'react' && (
+                    <ReactAtomIcon className={iconClass} />
+                  )}
+                  {opt.id === 'esp32' && (
+                    <Esp32ChipIcon className={iconClass} />
+                  )}
                 </div>
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-xs font-semibold text-white tracking-tight">
+                  <h3
+                    className={`text-xs font-semibold tracking-tight ${textColor}`}
+                  >
                     {opt.title}
                   </h3>
-                  <p className="text-[10px] text-zinc-400 leading-relaxed mt-0.5">
+                  <p className={`text-[10px] leading-relaxed mt-0.5 ${textMuted}`}>
                     {opt.description}
                   </p>
                 </div>
@@ -384,13 +500,11 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
                 onClick={() => setSelectedTemplateId(tpl.id)}
                 onDoubleClick={handleNext}
                 className={`p-3.5 rounded-xl transition-all cursor-pointer flex items-start gap-3 text-left ${
-                  isSelected
-                    ? 'bg-[#1e1e22] border-2 border-[#00d2ff] ring-1 ring-[#00d2ff]/40 shadow-[0_0_16px_rgba(0,210,255,0.22)]'
-                    : 'bg-[#1e1e22] border border-[#333336] hover:border-zinc-500 hover:bg-[#25252a]'
+                  isSelected ? itemActiveClass : itemInactiveClass
                 }`}
               >
                 {/* Icon */}
-                <div className="p-0.5 rounded text-zinc-200 mt-0.5">
+                <div className={`p-0.5 rounded mt-0.5 ${iconClass}`}>
                   {tpl.icon === 'file' && <File className="w-5 h-5 stroke-[1.5]" />}
                   {tpl.icon === 'panels' && (
                     <PanelsTopLeft className="w-5 h-5 stroke-[1.5]" />
@@ -402,10 +516,12 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-xs font-semibold text-white tracking-tight">
+                  <h3
+                    className={`text-xs font-semibold tracking-tight ${textColor}`}
+                  >
                     {tpl.title}
                   </h3>
-                  <p className="text-[10px] text-zinc-400 leading-relaxed mt-0.5">
+                  <p className={`text-[10px] leading-relaxed mt-0.5 ${textMuted}`}>
                     {tpl.description}
                   </p>
                 </div>
@@ -416,13 +532,19 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
       </div>
 
       {/* Bottom Footer Actions inside Card */}
-      <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#2e2f33]">
+      <div className={`flex items-center justify-end gap-3 pt-3 border-t ${dividerBorder}`}>
         {/* Cancelar Button */}
         {canCancel && (
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 rounded-lg text-xs font-medium bg-[#2a2a2e] hover:bg-[#38383e] text-zinc-200 transition-colors cursor-pointer"
+            className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+              isLight
+                ? 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'
+                : isBlue
+                ? 'bg-[#1e293b] hover:bg-[#334155] text-slate-200'
+                : 'bg-[#2a2a2e] hover:bg-[#38383e] text-zinc-200'
+            }`}
             title="Regresar al proyecto actual"
           >
             Cancelar
