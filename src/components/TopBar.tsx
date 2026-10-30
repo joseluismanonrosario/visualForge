@@ -25,12 +25,12 @@ import { ViewportMode, ToolMode, ProjectType, AppTheme, ResolvedTheme } from '..
 export const getLogoForTheme = (theme?: ResolvedTheme | AppTheme) => {
   switch (theme) {
     case 'light':
-      return '/logos/logo-gray.png';
-    case 'blue':
       return '/logos/logo-blue.png';
+    case 'blue':
+      return '/logos/logo-white.png';
     case 'dark':
     default:
-      return '/logos/logo-white.png';
+      return '/logos/logo-gray.png';
   }
 };
 

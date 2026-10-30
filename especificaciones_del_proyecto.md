@@ -13,9 +13,9 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
 1. **Top Bar / Barra Superior de Figma (`h-11 bg-[#2c2c2c] border-b border-[#383838] px-3 flex items-center justify-between`)**:
    - **Izquierda**:
      - Botón de Menú y Logo dinámico oficial de VisualForge (cinta 3D formando brackets de código `{X}` con fondo 100% transparente sin recuadros ni fondos sólidos), adaptativo según el tema activo de la aplicación:
-       - **Tema Oscuro (`dark`)**: Isotipo `{X}` blanco brillante / plateado de alto contraste (`/logos/logo-white.png` o `/logos/logo-dark.png`).
-       - **Tema Claro / Neutral (`light`)**: Isotipo `{X}` gris grafito / slate metálico (`/logos/logo-gray.png` o `/logos/logo-light.png`).
-       - **Tema Azul / Brand (`blue`)**: Isotipo `{X}` azul cobalto / índigo (`/logos/logo-blue.png`).
+       - **Tema Oscuro (`dark`)**: Isotipo `{X}` gris grafito / slate metálico (`/logos/logo-gray.png`).
+       - **Tema Claro / Neutral (`light`)**: Isotipo `{X}` azul cobalto / índigo (`/logos/logo-blue.png`).
+       - **Tema Azul / Brand (`blue` / el otro)**: Isotipo `{X}` blanco brillante / plateado de alto contraste (`/logos/logo-white.png`).
        - **Dimensiones y Calibración Óptica**: Tamaño calibrado y ligeramente más compacto (`w-5 h-5` / 20px, relación de aspecto cuadrada estricta `aspect-square`, `object-contain` y alineación con micro-desplazamiento vertical `translate-y-[0.5px]`), evitando estiramientos hacia arriba y garantizando una integración y centrado óptico perfecto con el texto de marca contiguo.
      - Acompañado del texto de marca "VisualForge".
      - Sincronización reactiva en tiempo real del favicon del navegador (`<link rel="icon">`) con el logo del tema activo.
@@ -114,7 +114,10 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
      - **Tipografía Global (`fontFamily`)**: Selector de familia tipográfica predeterminada para el lienzo (*Inter / Sans*, *Roboto*, *Fira Code / Mono*, *Playfair / Serif*, *System UI*).
      - **Visualización de Guías**: Conmutador para activar o desactivar la cuadrícula de puntos guía de fondo (`showGrid`).
      - **Acciones Rápidas del Lienzo**: Botones dedicados para "+ Añadir Contenedor Raíz", "Exportar Código" y "Borrar Todo" (que borra de inmediato todos los elementos dentro del lienzo de forma directa y sin ventanas de confirmación).
-     - **Garantía de Alto Contraste en Modo Oscuro**: Tarjetas contenedoras en `#1b1c1e` con bordes delimitados `#3a3b40`, títulos de sección nítidos con viñeta indicadora azul cian, selectores y cajas numéricas con fondo `#25262a` y borde `#3e3f46`, etiquetas W y H resaltadas en azul neón `#0d99ff`, y muestras de color oscuro con borde exterior contrastado `border-white/25` para máxima visibilidad en temas oscuros.
+     - **Homogeneidad Total con las Demás Propiedades en Todos los Modos de Tema**: Las propiedades del lienzo siguen fielmente el mismo estándar visual, clases y comportamiento de diseño que el resto de los componentes en `RightSidebar`:
+       * **Modo Oscuro (`dark`)**: Tarjetas contenedoras en `bg-[#1e1e1e]` sobre panel `bg-[#252526]`, bordes nítidos `border-[#383838]`, campos de entrada y selectores en `bg-[#252526]`, tipografía en blanco y etiquetas secundarias en `text-zinc-400`.
+       * **Modo Claro (`light`)**: Adaptación limpia y automática mediante el motor de estilos a tarjetas blancas `#ffffff`, bordes claros `#e2e8f0`, inputs y selects en `#ffffff` con tipografía oscura `#0f172a` y etiquetas atenuadas `#475569`.
+       * **Modo Azul (`blue`)**: Adaptación homogénea a fondos azul medianoche `#131c31`, bordes `#1f2c4a` y tipografía nítida `#f1f5f9`.
 
 5. **Barra de Herramientas Flotante (`FloatingToolbox`) (Estilo Segmentado Modular Figma UI3 con Barra Contextual Acoplada)**:
    - **Ubicación y Estructura Visual Modular (Segmented Capsule Islands)**:

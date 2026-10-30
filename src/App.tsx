@@ -67,10 +67,10 @@ export function App() {
     if (favicon) {
       favicon.href =
         resolvedTheme === 'blue'
-          ? '/logos/logo-blue.png'
+          ? '/logos/logo-white.png'
           : resolvedTheme === 'light'
-          ? '/logos/logo-gray.png'
-          : '/logos/logo-white.png';
+          ? '/logos/logo-blue.png'
+          : '/logos/logo-gray.png';
     }
   }, [appTheme, resolvedTheme]);
 
