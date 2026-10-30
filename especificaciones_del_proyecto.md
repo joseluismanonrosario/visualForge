@@ -22,6 +22,8 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
      - Zona despejada y limpia: Los botones de selección (`MousePointer`) y mover lienzo (`Hand`) se trasladan exclusivamente a la barra flotante `FloatingToolbox` para evitar redundancias y mantener la cabecera despejada.
    - **Centro**:
      - Botón para crear o configurar proyecto ("Nuevo").
+     - Botón para abrir archivo de proyecto ("Abrir" / `Ctrl+O`).
+     - Botón para guardar proyecto en archivo local ("Guardar" / `Ctrl+S`).
      - Badge selector de entorno de proyecto (*React Web*, *HTML / CSS*, *ESP32 / IoT*).
      - Título del proyecto editable en línea (ej. `Landing Page - v1`).
      - Indicador verde de guardado y estado sincronizado.
@@ -64,7 +66,7 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
            - **Modo Azul (`blue`)**: Isotipo blanco plateado (`/logos/logo-white.png`), "VisualForge" en blanco, `<h2>Iniciar</h2>` en celeste cielo `#38bdf8` y divisor `#1e293b`.
          * **Botón Cerrar/Cancelar (`X`)**: Visible en la esquina derecha de la cabecera si hay un proyecto actualmente cargado.
          * **Tres Columnas de Opciones**:
-           1. Acciones (Crear un proyecto destacado, Abrir proyecto deshabilitado) y Proyectos Recientes.
+           1. Acciones (Crear un proyecto destacado, Abrir proyecto .vforge funcional con explorador de archivos nativo) y Proyectos Recientes.
            2. Tipos de Proyecto en orden jerárquico estricto: **1. HTML / CSS Tradicional**, **2. React Web**, **3. ESP32 / IoT**.
            3. Plantillas dinámicas reactivas al tipo de proyecto seleccionado.
          * **Pie de Navegación**: Botones de Cancelar y Siguiente estilizados con sombras y colores del tema activo.
@@ -869,7 +871,7 @@ Al iniciar la aplicación o al hacer clic en el botón "Nuevo" de la barra super
 - **Cabecera de Pantalla de Inicio**: Logotipo oficial de VisualForge adaptado al tema (`logo-gray.png` en oscuro, `logo-blue.png` en claro, `logo-white.png` en azul) alineado horizontalmente con el nombre **VisualForge** (`text-xl sm:text-2xl font-bold`), con el subtítulo directo en `<h2>Iniciar</h2>` (`text-base sm:text-lg font-semibold`) alineado verticalmente con el logo (en el mismo margen izquierdo) y acompañado inmediatamente debajo por un texto descriptivo (*"Selecciona el entorno de trabajo y la plantilla inicial para comenzar"*), garantizando contraste cromático óptimo según el tema seleccionado o por defecto.
 1. **Columna Izquierda (Acciones Principales y Proyectos Recientes)**:
    - **Crear un proyecto**: Botón activo destacado con borde cian neón brillante (`#00d2ff`) o azul cian (`#0d99ff`) y resplandor suave.
-   - **Abrir un proyecto o una solución**: Botón secundario con icono de carpeta abierta (`FolderOpen`) en estado deshabilitado/no funcional.
+   - **Abrir un proyecto**: Botón interactivo con icono `FolderOpen` que invoca el explorador nativo de archivos para seleccionar, deserializar y restaurar proyectos `.vforge` locales inmediatamente en el lienzo.
    - **Lista de Recientes**: Historial visual con nombre de archivo, fecha/hora y ruta local (en estado no funcional/solo lectura para futuras integraciones).
 2. **Columna Central (Tipos de Proyecto - Orden de Selección)**:
    - **1. HTML / CSS Tradicional**: Sitios web y páginas estáticas optimizadas, con SVGs en línea y sin dependencias de frameworks (icono escudo HTML5).
@@ -991,3 +993,46 @@ Funciones inmutables y puras para manipular el árbol de capas:
   - **Ejecutables Generados y Verificados**:
     - `release/VisualForge Studio 1.0.0.exe` (Versión Portable, ~179.3 MB).
     - `release/VisualForge Studio Setup 1.0.0.exe` (Instalador NSIS, ~202.9 MB).
+
+---
+
+## 14. SISTEMA DE PERSISTENCIA Y FORMATO DE ARCHIVOS (.vforge)
+
+VisualForge implementa un motor de persistencia completo para guardar y abrir proyectos en archivos JSON estructurados con extensión personalizada obligatoria `.vforge` ([src/utils/projectPersistence.ts](file:///C:/Users/manom/OneDrive/Desktop/Workspace/winWebFormApp/src/utils/projectPersistence.ts)):
+
+### A. Proceso de Guardar (Serialización)
+1. **Disparadores de Usuario**:
+   - Clic en el botón **"Guardar"** (`Save` icon en verde esmeralda) en la barra superior `TopBar`.
+   - Atajo de teclado global **`Ctrl + S`** (o `Cmd + S` en macOS).
+2. **Recopilación y Estructura del Estado en Memoria**:
+   - Reúne todos los datos actuales del proyecto en un objeto tipado `VForgeProjectData`:
+     - Metadatos del archivo: `format: "visualforge"`, `version: "1.0"`, `generator: "VisualForge Studio"`, marcas de tiempo `createdAt` y `updatedAt`.
+     - Metadatos del proyecto: `name` (nombre editable) y `type` (`html_css`, `react`, `esp32`).
+     - Configuración del lienzo: Objeto `canvas.settings` (`artboardBg`, `artboardTextColor`, `minHeight`, `padding`, `gap`, `fontFamily`, `showGrid`, `width`, `height`, `presetName`), `viewportMode` y nivel de `zoom`.
+     - Árbol jerárquico de componentes (`elements`): Coordenadas x/y, anchos, altos, estilos CSS en memoria, textos, capas, jerarquías de anidamiento (`children`), banderas de bloqueo (`locked`) y visibilidad (`hidden`), y props de componentes (incluyendo configuraciones GPIO para proyectos ESP32).
+3. **Conversión a JSON**:
+   - Transformación del objeto estructurado en una cadena JSON formateada y legible con indentación de 2 espacios (`JSON.stringify(data, null, 2)`).
+4. **Diálogo Nativo de Guardado y Extensión Obligatoria `.vforge`**:
+   - **En Ejecutable de Escritorio (Electron)**: Invoca `dialog.showSaveDialog` a través del canal IPC `project-save` (`electron/preload.cjs` y `electron/main.cjs`), asegurando filtros de archivo `*.vforge` y escritura directa en el sistema de archivos con Node.js `fs.promises.writeFile`.
+   - **En Navegador Web**: Utiliza la API nativa del sistema `showSaveFilePicker` con filtro `{ 'application/json': ['.vforge'] }` y fallback universal de descarga Blob forzando la extensión `.vforge`.
+   - Notificación emergente toast en pantalla con retroalimentación del resultado.
+
+### B. Proceso de Cargar / Abrir (Deserialización)
+1. **Disparadores de Usuario**:
+   - Clic en el botón **"Abrir"** (`FolderOpen` icon en ámbar) en la barra superior `TopBar`.
+   - Clic en la tarjeta interactiva **"Abrir un proyecto"** en la pantalla de bienvenida / inicio (`ProjectCreationScreen`).
+   - Atajo de teclado global **`Ctrl + O`** (o `Cmd + O` en macOS), accesible tanto en el lienzo activo como en la pantalla de inicio.
+2. **Explorador y Lectura**:
+   - En Electron: Invoca el diálogo nativo `dialog.showOpenDialog` con filtro `*.vforge`, leyendo el texto plano del archivo seleccionado mediante `fs.promises.readFile`.
+   - En Web: Invoca `showOpenFilePicker` o fallback mediante `<input type="file" accept=".vforge,application/json">` con `FileReader.readAsText`.
+3. **Parseo y Validación**:
+   - Convierte el texto JSON en objeto JavaScript mediante `deserializeProject()`, comprobando la validez del esquema y la presencia del array de elementos (`elements` o `tree`).
+4. **Restauración y Renderizado Inmediato en el Lienzo**:
+   - Reconstruye atómicamente el estado en memoria:
+     - `tree`: Restaura todos los componentes con sus coordenadas, dimensiones, textos, estilos y capas originales.
+     - `history`: Reinicializa la pila de deshacer/rehacer con el estado cargado.
+     - `projectName` y `projectType`: Restaura el nombre del proyecto y adapta la iconografía y catálogos de componentes.
+     - `canvasSettings`: Restaura dimensiones, fondo del lienzo, padding y tipografía.
+     - `selectedId`: Selecciona automáticamente el nodo principal para permitir edición instantánea.
+     - `isWelcomeOpen`: Cierra la pantalla de inicio si estaba activa.
+     - Muestra un toast informativo confirmando la carga exitosa y el número de componentes restaurados.

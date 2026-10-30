@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, shell, ipcMain } = require('electron');
+const { app, BrowserWindow, Menu, shell, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
@@ -158,6 +158,65 @@ ipcMain.handle('window-close', () => {
 
 ipcMain.handle('window-is-maximized', () => {
   return mainWindow ? mainWindow.isMaximized() : false;
+});
+
+// Handlers IPC para Guardar y Abrir proyectos .vforge
+ipcMain.handle('project-save', async (_event, { defaultName, content }) => {
+  if (!mainWindow) return { canceled: true };
+  try {
+    const rawName = (defaultName || 'VisualForge_Project')
+      .replace(/[<>:"/\\|?*]+/g, '_')
+      .trim();
+    const defaultPath = rawName.endsWith('.vforge') ? rawName : `${rawName}.vforge`;
+
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: 'Guardar Proyecto VisualForge',
+      defaultPath,
+      filters: [
+        { name: 'VisualForge Project (*.vforge)', extensions: ['vforge'] },
+        { name: 'JSON Project File (*.json)', extensions: ['json'] },
+      ],
+    });
+
+    if (result.canceled || !result.filePath) {
+      return { canceled: true };
+    }
+
+    let targetPath = result.filePath;
+    if (!targetPath.endsWith('.vforge') && !targetPath.endsWith('.json')) {
+      targetPath += '.vforge';
+    }
+
+    await fs.promises.writeFile(targetPath, content, 'utf8');
+    return { canceled: false, filePath: targetPath };
+  } catch (err) {
+    return { canceled: true, error: err.message };
+  }
+});
+
+ipcMain.handle('project-open', async () => {
+  if (!mainWindow) return { canceled: true };
+  try {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: 'Abrir Proyecto VisualForge',
+      filters: [
+        { name: 'VisualForge Project (*.vforge)', extensions: ['vforge'] },
+        { name: 'JSON Project File (*.json)', extensions: ['json'] },
+        { name: 'Todos los Archivos (*.*)', extensions: ['*'] },
+      ],
+      properties: ['openFile'],
+    });
+
+    if (result.canceled || !result.filePaths || result.filePaths.length === 0) {
+      return { canceled: true };
+    }
+
+    const filePath = result.filePaths[0];
+    const content = await fs.promises.readFile(filePath, 'utf8');
+    return { canceled: false, filePath, content };
+  } catch (err) {
+    return { canceled: true, error: err.message };
+  }
 });
 
 // Bloqueo de instancia única

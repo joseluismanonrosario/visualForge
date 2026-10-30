@@ -23,6 +23,8 @@ import {
   Square,
   Copy,
   X,
+  Save,
+  FolderOpen,
 } from 'lucide-react';
 import { ViewportMode, ToolMode, ProjectType, AppTheme, ResolvedTheme } from '../types';
 
@@ -44,6 +46,8 @@ interface TopBarProps {
   setProjectName?: (name: string) => void;
   projectType?: ProjectType;
   onOpenNewProject?: () => void;
+  onSaveProject?: () => void;
+  onOpenProject?: () => void;
   toolMode?: ToolMode;
   setToolMode?: (tool: ToolMode) => void;
   viewportMode?: ViewportMode;
@@ -69,6 +73,8 @@ export const TopBar: React.FC<TopBarProps> = ({
   setProjectName,
   projectType = 'react',
   onOpenNewProject,
+  onSaveProject,
+  onOpenProject,
   viewportMode = 'desktop',
   setViewportMode,
   zoom = 1,
@@ -225,12 +231,36 @@ export const TopBar: React.FC<TopBarProps> = ({
         {/* New Project Button */}
         <button
           onClick={onOpenNewProject}
-          className="flex items-center gap-1 px-2 py-1 rounded bg-[#1e1e1e] hover:bg-[#383838] border border-[#383838] text-zinc-200 text-xs font-medium transition-colors"
+          className="flex items-center gap-1 px-2 py-1 rounded bg-[#1e1e1e] hover:bg-[#383838] border border-[#383838] text-zinc-200 text-xs font-medium transition-colors cursor-pointer"
           title="Crear o configurar proyecto"
         >
           <Plus className="w-3.5 h-3.5 text-[#0d99ff]" />
           <span className="hidden sm:inline">Nuevo</span>
         </button>
+
+        {/* Open Project Button */}
+        {onOpenProject && (
+          <button
+            onClick={onOpenProject}
+            className="flex items-center gap-1 px-2 py-1 rounded bg-[#1e1e1e] hover:bg-[#383838] border border-[#383838] text-zinc-200 text-xs font-medium transition-colors cursor-pointer"
+            title="Abrir Proyecto .vforge (Ctrl+O)"
+          >
+            <FolderOpen className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">Abrir</span>
+          </button>
+        )}
+
+        {/* Save Project Button */}
+        {onSaveProject && (
+          <button
+            onClick={onSaveProject}
+            className="flex items-center gap-1 px-2 py-1 rounded bg-[#1e1e1e] hover:bg-[#383838] border border-[#383838] text-zinc-200 text-xs font-medium transition-colors cursor-pointer"
+            title="Guardar Proyecto .vforge (Ctrl+S)"
+          >
+            <Save className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="hidden sm:inline">Guardar</span>
+          </button>
+        )}
 
         {/* Project Type Badge */}
         <button

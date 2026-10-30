@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { CheckCircle2, AlertCircle } from 'lucide-react';
 import {
   CanvasNode,
   ViewportMode,
@@ -31,6 +32,12 @@ import { ExportModal } from './components/ExportModal';
 import { ProjectCreationScreen } from './components/ProjectCreationScreen';
 import { SplashScreen } from './components/SplashScreen';
 import { FloatingToolbox } from './components/FloatingToolbox';
+import {
+  serializeProject,
+  deserializeProject,
+  saveProjectFile,
+  openProjectFile,
+} from './utils/projectPersistence';
 
 export function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -488,9 +495,101 @@ export function App() {
     [handleInsertComponent, projectType]
   );
 
+  // Notificaciones Toast del Sistema
+  const [statusToast, setStatusToast] = useState<{
+    type: 'success' | 'error' | 'info';
+    message: string;
+  } | null>(null);
+
+  const showToast = useCallback(
+    (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+      setStatusToast({ message, type });
+      setTimeout(() => {
+        setStatusToast((prev) => (prev?.message === message ? null : prev));
+      }, 3500);
+    },
+    []
+  );
+
+  // Proceso de Guardar (Serialización a formato .vforge)
+  const handleSaveProject = useCallback(async () => {
+    try {
+      const jsonString = serializeProject({
+        projectName,
+        projectType,
+        tree,
+        canvasSettings,
+        viewportMode,
+        zoom,
+      });
+
+      const result = await saveProjectFile(projectName, jsonString);
+      if (result.success) {
+        showToast(
+          `Proyecto guardado con éxito: ${result.filePath || `${projectName}.vforge`}`,
+          'success'
+        );
+      } else if (result.error) {
+        showToast(`Error al guardar: ${result.error}`, 'error');
+      }
+    } catch (err: any) {
+      showToast(`Error de serialización: ${err.message}`, 'error');
+    }
+  }, [projectName, projectType, tree, canvasSettings, viewportMode, zoom, showToast]);
+
+  // Proceso de Cargar / Abrir (Deserialización y Restauración)
+  const handleOpenProject = useCallback(async () => {
+    try {
+      const result = await openProjectFile();
+      if (!result.success || !result.content) {
+        if (result.error) {
+          showToast(`Error al abrir archivo: ${result.error}`, 'error');
+        }
+        return;
+      }
+
+      const restored = deserializeProject(result.content);
+
+      // Restaurar estado completo de los componentes, posiciones y configuración
+      setTree(restored.tree);
+      setHistory([restored.tree]);
+      setHistoryIdx(0);
+      setProjectName(restored.projectName);
+      setProjectType(restored.projectType);
+      handleUpdateCanvasSettings(restored.canvasSettings);
+      setViewportMode(restored.viewportMode);
+      setZoom(restored.zoom);
+      setSelectedId(restored.tree[0]?.id || null);
+
+      setIsProjectLoaded(true);
+      setIsWelcomeOpen(false);
+
+      showToast(
+        `Proyecto "${restored.projectName}" cargado exitosamente (${restored.tree.length} componentes)`,
+        'success'
+      );
+    } catch (err: any) {
+      showToast(`Error al cargar el proyecto .vforge: ${err.message}`, 'error');
+    }
+  }, [handleUpdateCanvasSettings, showToast]);
+
   // Global Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Save: Ctrl+S or Cmd+S
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        handleSaveProject();
+        return;
+      }
+
+      // Open: Ctrl+O or Cmd+O (disponible tanto en el lienzo como en la pantalla de bienvenida)
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o') {
+        e.preventDefault();
+        handleOpenProject();
+        return;
+      }
+
       if (isWelcomeOpen) {
         if (e.key === 'Escape' && isProjectLoaded) {
           setIsWelcomeOpen(false);
@@ -566,7 +665,18 @@ export function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleUndo, handleRedo, selectedId, handleDeleteNode, handleDuplicateNode, handleMoveSibling]);
+  }, [
+    handleUndo,
+    handleRedo,
+    selectedId,
+    handleDeleteNode,
+    handleDuplicateNode,
+    handleMoveSibling,
+    handleSaveProject,
+    handleOpenProject,
+    isWelcomeOpen,
+    isProjectLoaded,
+  ]);
 
   const handleCreateProject = useCallback(
     (name: string, type: ProjectType, template: 'iot' | 'saas' | 'blank') => {
@@ -615,6 +725,7 @@ export function App() {
                 setIsProjectLoaded(true);
                 setIsWelcomeOpen(false);
               }}
+              onOpenProject={handleOpenProject}
               currentType={projectType}
               resolvedTheme={resolvedTheme}
             />
@@ -628,6 +739,8 @@ export function App() {
             setProjectName={setProjectName}
             projectType={projectType}
             onOpenNewProject={() => setIsWelcomeOpen(true)}
+            onSaveProject={handleSaveProject}
+            onOpenProject={handleOpenProject}
             toolMode={toolMode}
             setToolMode={setToolMode}
             viewportMode={viewportMode}
@@ -728,6 +841,26 @@ export function App() {
             onClose={() => setIsExportOpen(false)}
           />
         </>
+      )}
+
+      {/* Toast Notificación de Estado (Guardar / Cargar / Alertas) */}
+      {statusToast && (
+        <div
+          className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 px-4 py-2.5 rounded-xl shadow-2xl border text-xs font-medium animate-in fade-in slide-in-from-bottom-4 duration-200 backdrop-blur-md max-w-md ${
+            statusToast.type === 'error'
+              ? 'bg-red-950/90 border-red-500/50 text-red-200'
+              : statusToast.type === 'info'
+              ? 'bg-blue-950/90 border-blue-500/50 text-blue-200'
+              : 'bg-emerald-950/90 border-emerald-500/50 text-emerald-200'
+          }`}
+        >
+          {statusToast.type === 'error' ? (
+            <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+          ) : (
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+          )}
+          <span className="truncate">{statusToast.message}</span>
+        </div>
       )}
     </div>
   );

@@ -200,6 +200,7 @@ interface ProjectCreationScreenProps {
     type: ProjectType,
     template: 'iot' | 'saas' | 'blank'
   ) => void;
+  onOpenProject?: () => void;
   currentType?: ProjectType;
   resolvedTheme?: ResolvedTheme;
 }
@@ -209,6 +210,7 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
   canCancel,
   onCancel,
   onCreateProject,
+  onOpenProject,
   currentType = 'html_css',
   resolvedTheme = 'dark',
 }) => {
@@ -372,34 +374,31 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
             </div>
           </div>
 
-          {/* Action 2: Abrir un proyecto o una solución (Disabled as requested) */}
+          {/* Action 2: Abrir un proyecto .vforge */}
           <div
-            className={`p-3.5 rounded-xl flex items-start gap-3 opacity-50 cursor-not-allowed select-none ${
+            onClick={onOpenProject}
+            className={`p-3.5 rounded-xl flex items-start gap-3 cursor-pointer transition-all ${
               isLight
-                ? 'bg-zinc-100/70 border border-zinc-200'
+                ? 'bg-zinc-50 border border-zinc-200 hover:border-zinc-400 hover:bg-zinc-100 shadow-xs'
                 : isBlue
-                ? 'bg-[#131c31]/50 border border-[#1e293b]'
-                : 'bg-[#1e1e22]/50 border border-[#333336]'
+                ? 'bg-[#131c31] border border-[#1f2c4a] hover:border-sky-500/50 hover:bg-[#1a2542] shadow-xs'
+                : 'bg-[#1e1e22] border border-[#333336] hover:border-zinc-500 hover:bg-[#25252a] shadow-xs'
             }`}
-            title="Abrir proyecto local (Próximamente)"
+            title="Abrir proyecto existente (.vforge)"
           >
-            <div className="p-0.5 rounded text-zinc-400 mt-0.5">
+            <div className="p-0.5 rounded text-amber-400 mt-0.5">
               <FolderOpen className="w-6 h-6 stroke-[1.5]" />
             </div>
             <div>
               <h3
-                className={`text-xs font-semibold tracking-tight ${
-                  isLight ? 'text-zinc-700' : 'text-zinc-300'
-                }`}
+                className={`text-xs font-semibold tracking-tight ${textColor}`}
               >
                 Abrir un proyecto
               </h3>
               <p
-                className={`text-[10px] leading-snug mt-1 ${
-                  isLight ? 'text-zinc-500' : 'text-zinc-500'
-                }`}
+                className={`text-[10px] leading-snug mt-1 ${textMuted}`}
               >
-                Abre un archivo o proyecto local de VisualForge.
+                Abre un archivo de proyecto (.vforge) local de tu equipo.
               </p>
             </div>
           </div>
