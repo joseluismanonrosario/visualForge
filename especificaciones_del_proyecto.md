@@ -924,3 +924,15 @@ Funciones inmutables y puras para manipular el árbol de capas:
   - Configuración optimizada para scripts y archivos de entorno Node (`vite.config.ts`).
 - **`.vscode/settings.json`**:
   - Configuración de workspace que vincula automáticamente el Language Server de VS Code al SDK de TypeScript del proyecto (`node_modules/typescript/lib`).
+
+---
+
+## 13. SKILL DE PRODUCCIÓN: APP TO PRODUCCIÓN (WINDOWS .EXE)
+
+- **Identificador y Ubicación**: Skill modular en `.agents/skills/appToProduccion/SKILL.md` con recursos en `.agents/skills/appToProduccion/resources/` y scripts ejecutables en `.agents/skills/appToProduccion/scripts/`.
+- **Condición de Ejecución Exclusiva Bajo Demanda**: Configurado bajo progressive disclosure con activación estricta únicamente cuando el usuario llame explícitamente a `appToProduccion` o solicite empaquetar la aplicación a ejecutable de escritorio.
+- **Motor de Conversión y Arquitectura**:
+  - Basado en **Electron** y **Electron Builder** para empaquetado nativo en Windows x64.
+  - Servidor loopback embebido (`http://127.0.0.1`) en `electron/main.cjs` que garantiza compatibilidad al 100% con los iconos locales de Iconify offline (`/@iconify/json/`), assets estáticos y enrutamiento SPA sin bloqueos del esquema `file://`.
+  - Salida dual: Generación simultánea de instalador estándar para Windows (`VisualForge Studio Setup <versión>.exe`) y binario portable autocontenido (`VisualForge Studio <versión>.exe`) en la carpeta `release/`.
+  - Script automatizado en PowerShell: [build-exe.ps1](file:///C:/Users/manom/OneDrive/Desktop/Workspace/winWebFormApp/.agents/skills/appToProduccion/scripts/build-exe.ps1).
