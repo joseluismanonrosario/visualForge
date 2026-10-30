@@ -365,9 +365,20 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
           onDrop={handleLayersContainerDrop}
           className="flex-1 overflow-y-auto p-2 space-y-1"
         >
-          <div className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider px-2 py-1 flex items-center justify-between">
-            <span>Canvas Artboard</span>
-            <span className="text-[10px] text-zinc-600">{tree.length} items</span>
+          <div
+            onClick={() => onSelectNode('canvas')}
+            className={`text-[11px] font-semibold uppercase tracking-wider px-2 py-1.5 rounded-md flex items-center justify-between cursor-pointer transition-colors ${
+              selectedId === 'canvas'
+                ? 'bg-[#0d99ff]/20 text-[#0d99ff] border border-[#0d99ff]/40 shadow-xs'
+                : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'
+            }`}
+            title="Seleccionar Lienzo (Ver propiedades)"
+          >
+            <span className="flex items-center gap-1.5">
+              <span className={`w-2 h-2 rounded-xs ${selectedId === 'canvas' ? 'bg-[#0d99ff]' : 'bg-zinc-600'}`} />
+              <span>Lienzo Principal</span>
+            </span>
+            <span className="text-[10px] text-zinc-500 font-mono">{tree.length} items</span>
           </div>
           {tree.length === 0 ? (
             <div className="p-4 text-center text-zinc-500 text-xs">

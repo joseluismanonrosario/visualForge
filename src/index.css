@@ -40,3 +40,281 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #55555c;
 }
+
+/* ==========================================================================
+   THEME STYLING & COLOR SCHEMES (PREVENTS TEXT DISAPPEARING IN ALL THEMES)
+   ========================================================================== */
+
+/* Isolated Canvas Artboard Styling: Preserves Component Contrast & Styling */
+.canvas-artboard {
+  color: #f1f5f9;
+}
+
+/* --------------------------------------------------------------------------
+   Light Theme (Studio Light)
+   -------------------------------------------------------------------------- */
+[data-app-theme="light"] {
+  color-scheme: light;
+}
+
+[data-app-theme="light"] body {
+  background-color: #f1f3f5;
+  color: #0f172a;
+}
+
+[data-app-theme="light"] .h-screen.w-screen {
+  background-color: #f1f3f5 !important;
+  color: #0f172a !important;
+}
+
+/* Header & TopBar */
+[data-app-theme="light"] header {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+[data-app-theme="light"] header input,
+[data-app-theme="light"] header .text-white,
+[data-app-theme="light"] header .text-zinc-100,
+[data-app-theme="light"] header .text-zinc-200,
+[data-app-theme="light"] header .text-zinc-300 {
+  color: #0f172a !important;
+}
+
+[data-app-theme="light"] header .text-zinc-400,
+[data-app-theme="light"] header .text-zinc-500,
+[data-app-theme="light"] header .text-zinc-600 {
+  color: #475569 !important;
+}
+
+[data-app-theme="light"] header .bg-\[\#1e1e1e\],
+[data-app-theme="light"] header .bg-\[\#252526\] {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+[data-app-theme="light"] header .bg-\[\#383838\] {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+[data-app-theme="light"] header button:hover {
+  background-color: #f1f5f9 !important;
+}
+
+/* Sidebars (Left & Right) */
+[data-app-theme="light"] aside {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* Inputs, Textareas, and Selects in Sidebars: Dark text on White backgrounds */
+[data-app-theme="light"] aside input,
+[data-app-theme="light"] aside select,
+[data-app-theme="light"] aside textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+[data-app-theme="light"] aside input::placeholder,
+[data-app-theme="light"] aside textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Text and Label Contrast in Sidebars */
+[data-app-theme="light"] aside .text-zinc-100,
+[data-app-theme="light"] aside .text-zinc-200,
+[data-app-theme="light"] aside .text-zinc-300 {
+  color: #0f172a !important;
+}
+
+[data-app-theme="light"] aside .text-zinc-400,
+[data-app-theme="light"] aside .text-zinc-500,
+[data-app-theme="light"] aside .text-zinc-600 {
+  color: #475569 !important;
+}
+
+/* Ensure text-white inside aside switches to dark text UNLESS inside an active colored button (like blue, red, emerald) */
+[data-app-theme="light"] aside .text-white:not(.bg-\[\#0d99ff\]):not(.bg-blue-600):not(.bg-emerald-600):not(.bg-red-600):not(.bg-violet-600) {
+  color: #0f172a !important;
+}
+
+/* Preserve crisp white text on primary buttons */
+[data-app-theme="light"] aside .bg-\[\#0d99ff\] .text-white,
+[data-app-theme="light"] aside .bg-blue-600 .text-white,
+[data-app-theme="light"] aside .bg-emerald-600 .text-white,
+[data-app-theme="light"] aside .bg-red-600 .text-white,
+[data-app-theme="light"] aside .bg-\[\#0d99ff\] {
+  color: #ffffff !important;
+}
+
+/* Container cards inside Sidebars */
+[data-app-theme="light"] aside .bg-\[\#1e1e1e\],
+[data-app-theme="light"] aside .bg-\[\#252526\],
+[data-app-theme="light"] aside .bg-\[\#262626\],
+[data-app-theme="light"] aside .bg-\[\#2c2c2c\] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+[data-app-theme="light"] aside .border-\[\#383838\] {
+  border-color: #e2e8f0 !important;
+}
+
+[data-app-theme="light"] aside .hover\:bg-\[\#323232\]:hover,
+[data-app-theme="light"] aside .hover\:bg-\[\#2c2c2e\]:hover,
+[data-app-theme="light"] aside .hover\:bg-\[\#383838\]:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+/* Canvas viewport area */
+[data-app-theme="light"] .canvas-dots {
+  background-image: radial-gradient(rgba(0, 0, 0, 0.14) 1px, transparent 1px) !important;
+  background-color: #e9ecef !important;
+}
+
+[data-app-theme="light"] ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+
+[data-app-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Protect Canvas Artboard Content in Light Studio Theme */
+[data-app-theme="light"] .canvas-artboard {
+  border-color: #cbd5e1 !important;
+}
+
+[data-app-theme="light"] .canvas-artboard .text-white {
+  color: #ffffff !important;
+}
+
+[data-app-theme="light"] .canvas-artboard .text-zinc-100 {
+  color: #f4f4f5 !important;
+}
+
+[data-app-theme="light"] .canvas-artboard .text-zinc-200 {
+  color: #e4e4e7 !important;
+}
+
+[data-app-theme="light"] .canvas-artboard .text-zinc-300 {
+  color: #d4d4d8 !important;
+}
+
+/* Modals */
+[data-app-theme="light"] .fixed.inset-0 .bg-\[\#252526\],
+[data-app-theme="light"] .fixed.inset-0 .bg-\[\#1e1e1e\] {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+}
+
+[data-app-theme="light"] .fixed.inset-0 .text-zinc-100,
+[data-app-theme="light"] .fixed.inset-0 .text-zinc-200,
+[data-app-theme="light"] .fixed.inset-0 .text-zinc-300,
+[data-app-theme="light"] .fixed.inset-0 .text-white {
+  color: #0f172a !important;
+}
+
+[data-app-theme="light"] .fixed.inset-0 .text-zinc-400,
+[data-app-theme="light"] .fixed.inset-0 .text-zinc-500 {
+  color: #475569 !important;
+}
+
+/* --------------------------------------------------------------------------
+   Blue Theme (Midnight Indigo)
+   -------------------------------------------------------------------------- */
+[data-app-theme="blue"] {
+  color-scheme: dark;
+}
+
+[data-app-theme="blue"] body {
+  background-color: #0b0f19;
+  color: #f1f5f9;
+}
+
+[data-app-theme="blue"] .h-screen.w-screen {
+  background-color: #0b0f19 !important;
+  color: #f1f5f9 !important;
+}
+
+[data-app-theme="blue"] header {
+  background-color: #111827 !important;
+  border-color: #1f293d !important;
+  color: #f1f5f9 !important;
+}
+
+[data-app-theme="blue"] header .bg-\[\#1e1e1e\] {
+  background-color: #162036 !important;
+  border-color: #24324f !important;
+  color: #f1f5f9 !important;
+}
+
+[data-app-theme="blue"] header .bg-\[\#383838\] {
+  background-color: #1e293b !important;
+  color: #ffffff !important;
+}
+
+[data-app-theme="blue"] aside {
+  background-color: #0e1526 !important;
+  border-color: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+
+[data-app-theme="blue"] aside input,
+[data-app-theme="blue"] aside select,
+[data-app-theme="blue"] aside textarea {
+  background-color: #131c31 !important;
+  color: #f1f5f9 !important;
+  border-color: #1f2c4a !important;
+}
+
+[data-app-theme="blue"] aside input::placeholder,
+[data-app-theme="blue"] aside textarea::placeholder {
+  color: #64748b !important;
+}
+
+[data-app-theme="blue"] aside .bg-\[\#1e1e1e\],
+[data-app-theme="blue"] aside .bg-\[\#252526\],
+[data-app-theme="blue"] aside .bg-\[\#262626\],
+[data-app-theme="blue"] aside .bg-\[\#2c2c2c\] {
+  background-color: #131c31 !important;
+  border-color: #1f2c4a !important;
+}
+
+[data-app-theme="blue"] aside .border-\[\#383838\] {
+  border-color: #1f2c4a !important;
+}
+
+/* Ensure secondary and muted labels have crisp contrast in blue theme */
+[data-app-theme="blue"] aside .text-zinc-400,
+[data-app-theme="blue"] aside .text-zinc-500,
+[data-app-theme="blue"] aside .text-zinc-600 {
+  color: #94a3b8 !important;
+}
+
+[data-app-theme="blue"] header .text-zinc-400,
+[data-app-theme="blue"] header .text-zinc-500,
+[data-app-theme="blue"] header .text-zinc-600 {
+  color: #94a3b8 !important;
+}
+
+[data-app-theme="blue"] .canvas-dots {
+  background-image: radial-gradient(rgba(59, 130, 246, 0.22) 1px, transparent 1px) !important;
+  background-color: #080c14 !important;
+}
+
+[data-app-theme="blue"] ::-webkit-scrollbar-thumb {
+  background: #1e293b;
+}
+
+[data-app-theme="blue"] ::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}

@@ -6,6 +6,7 @@ import {
   DropPosition,
   DragState,
   ProjectType,
+  CanvasSettings,
 } from '../types';
 import { NodeRenderer } from './NodeRenderer';
 import { COMPONENT_CATALOG } from '../data/componentCatalog';
@@ -28,6 +29,8 @@ interface CanvasProps {
   onDuplicateNode: (id: string) => void;
   onDeleteNode: (id: string) => void;
   onMoveSibling: (id: string, direction: 'up' | 'down') => void;
+  canvasSettings?: CanvasSettings;
+  onUpdateCanvasSettings?: (settings: Partial<CanvasSettings>) => void;
 }
 
 export const Canvas: React.FC<CanvasProps> = ({
@@ -46,6 +49,8 @@ export const Canvas: React.FC<CanvasProps> = ({
   onDuplicateNode,
   onDeleteNode,
   onMoveSibling,
+  canvasSettings,
+  onUpdateCanvasSettings,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -409,7 +414,7 @@ export const Canvas: React.FC<CanvasProps> = ({
           onSelectNode(null);
         }
       }}
-      className={`flex-1 relative overflow-hidden bg-[#1e1e1e] canvas-dots flex flex-col items-center select-none ${getCanvasCursor()}`}
+      className={`flex-1 relative overflow-hidden bg-[#1e1e1e] ${canvasSettings?.showGrid !== false ? 'canvas-dots' : ''} flex flex-col items-center select-none ${getCanvasCursor()}`}
     >
       {/* Pan & Zoom Canvas Container */}
       <div
@@ -422,23 +427,30 @@ export const Canvas: React.FC<CanvasProps> = ({
         <div
           style={{ width: getViewportWidth(), maxWidth: '1440px' }}
           className="relative transition-all duration-200"
-          onClick={(e) => {
-            if (isHandActive) return;
-            e.stopPropagation();
-            if (['container', 'heading', 'paragraph', 'image'].includes(toolMode)) {
-              onInsertTool?.(toolMode, null);
-              return;
-            }
-          }}
         >
-          {/* Frame Label Header (Figma Artboard Tag) */}
-          <div className="flex items-center justify-between mb-2 px-1 text-[11px] text-zinc-400 font-medium">
+          {/* Frame Label Header (Figma Artboard Tag) - Clickeable para seleccionar Lienzo */}
+          <div
+            onClick={(e) => {
+              if (isHandActive) return;
+              e.stopPropagation();
+              onSelectNode('canvas');
+            }}
+            className={`flex items-center justify-between mb-2 px-2.5 py-1 rounded-md text-[11px] font-medium cursor-pointer transition-all ${
+              selectedId === 'canvas'
+                ? 'bg-[#0d99ff]/20 text-[#0d99ff] border border-[#0d99ff]/50 shadow-sm'
+                : 'text-zinc-400 hover:text-white hover:bg-white/5'
+            }`}
+            title="Haz clic para seleccionar el Lienzo y ver sus propiedades"
+          >
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-xs bg-[#0d99ff]" />
-              {getViewportTitle()}
+              <span className={`w-2 h-2 rounded-xs ${selectedId === 'canvas' ? 'bg-[#0d99ff] shadow-[0_0_8px_#0d99ff]' : 'bg-[#0d99ff]'}`} />
+              <span className="font-semibold">{getViewportTitle()}</span>
+              <span className="text-[10px] text-zinc-500 font-normal ml-1">
+                {selectedId === 'canvas' ? '(Lienzo Seleccionado)' : '(Clic para propiedades)'}
+              </span>
             </span>
-            <span className="text-zinc-600 font-mono text-[10px]">
-              {tree.length} Root Elements
+            <span className="text-zinc-500 font-mono text-[10px]">
+              {tree.length} Elementos Raíz
             </span>
           </div>
 
@@ -464,7 +476,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             </div>
           )}
 
-          {/* Canvas Artboard Body - When isHandActive is true, disable pointer events to enable panning everywhere without selecting */}
+          {/* Canvas Artboard Body - When clicked on empty area, selects Lienzo and deselects child components */}
           <div
             onClick={(e) => {
               if (isHandActive) return;
@@ -473,10 +485,27 @@ export const Canvas: React.FC<CanvasProps> = ({
                 onInsertTool?.(toolMode, null);
                 return;
               }
+              // Al hacer clic en un área vacía del lienzo donde no hay componentes hijos,
+              // se deselecciona cualquier componente activo y se selecciona el lienzo.
+              e.stopPropagation();
+              onSelectNode('canvas');
             }}
-            className={`min-h-[800px] w-full bg-[#121214] border border-[#2e2e32] rounded-xl shadow-2xl relative transition-shadow ${
+            style={{
+              backgroundColor: canvasSettings?.artboardBg || '#121214',
+              color: canvasSettings?.artboardTextColor || '#f1f5f9',
+              minHeight: `${canvasSettings?.minHeight || 800}px`,
+              padding: `${canvasSettings?.padding ?? 16}px`,
+              fontFamily: canvasSettings?.fontFamily || 'Inter',
+            }}
+            className={`canvas-artboard w-full rounded-xl shadow-2xl relative transition-all duration-200 ${
               isHandActive ? 'pointer-events-none' : ''
-            } ${isPreviewMode ? '' : 'hover:border-[#3e3e42]'}`}
+            } ${
+              selectedId === 'canvas'
+                ? 'ring-2 ring-[#0d99ff] ring-offset-2 ring-offset-[#1e1e1e] border border-[#0d99ff]'
+                : isPreviewMode
+                ? 'border border-[#2e2e32]'
+                : 'border border-[#2e2e32] hover:border-[#3e3e42]'
+            }`}
           >
             {tree.length === 0 ? (
               <div className="h-96 flex flex-col items-center justify-center text-zinc-500 text-xs">

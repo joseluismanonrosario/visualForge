@@ -15,8 +15,24 @@ import {
   Layers,
   Sparkles,
   Plus,
+  Moon,
+  Sun,
+  Palette,
+  Laptop,
 } from 'lucide-react';
-import { ViewportMode, ToolMode, ProjectType } from '../types';
+import { ViewportMode, ToolMode, ProjectType, AppTheme, ResolvedTheme } from '../types';
+
+export const getLogoForTheme = (theme?: ResolvedTheme | AppTheme) => {
+  switch (theme) {
+    case 'light':
+      return '/logos/logo-gray.png';
+    case 'blue':
+      return '/logos/logo-blue.png';
+    case 'dark':
+    default:
+      return '/logos/logo-white.png';
+  }
+};
 
 interface TopBarProps {
   projectName: string;
@@ -37,6 +53,9 @@ interface TopBarProps {
   isPreviewMode: boolean;
   setIsPreviewMode: (val: boolean | ((prev: boolean) => boolean)) => void;
   onOpenExport: () => void;
+  appTheme?: AppTheme;
+  resolvedTheme?: ResolvedTheme;
+  setAppTheme?: (theme: AppTheme) => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -56,6 +75,9 @@ export const TopBar: React.FC<TopBarProps> = ({
   isPreviewMode,
   setIsPreviewMode,
   onOpenExport,
+  appTheme = 'system',
+  resolvedTheme = 'dark',
+  setAppTheme,
 }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
 
@@ -65,9 +87,11 @@ export const TopBar: React.FC<TopBarProps> = ({
       <div className="flex items-center gap-3">
         {/* Figma Style Logo */}
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded bg-gradient-to-tr from-violet-600 via-indigo-500 to-blue-400 flex items-center justify-center font-bold text-white shadow-sm text-[11px]">
-            VF
-          </div>
+          <img
+            src={getLogoForTheme(resolvedTheme)}
+            alt="VisualForge"
+            className="w-6 h-6 object-contain flex-shrink-0 transition-all duration-200"
+          />
           <span className="font-semibold text-zinc-100 hidden sm:inline-block tracking-tight">
             VisualForge
           </span>
@@ -157,6 +181,57 @@ export const TopBar: React.FC<TopBarProps> = ({
             <Redo2 className="w-3.5 h-3.5" />
           </button>
         </div>
+
+        {/* Theme Selector (Auto PC / Oscuro / Claro / Azul) */}
+        {setAppTheme && (
+          <div className="flex items-center bg-[#1e1e1e] rounded-lg border border-[#383838] p-0.5">
+            <button
+              onClick={() => setAppTheme('system')}
+              title={`Automático (Detecta PC: ${resolvedTheme === 'dark' ? 'Oscuro' : 'Claro'})`}
+              className={`px-1.5 py-1 rounded flex items-center gap-1 transition-colors ${
+                appTheme === 'system'
+                  ? 'bg-[#383838] text-white font-medium shadow-xs'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              <Laptop className="w-3.5 h-3.5" />
+              <span className="hidden xl:inline text-[10px]">Auto</span>
+            </button>
+            <button
+              onClick={() => setAppTheme('dark')}
+              title="Tema Oscuro (Logo Blanco)"
+              className={`px-1.5 py-1 rounded flex items-center gap-1 transition-colors ${
+                appTheme === 'dark'
+                  ? 'bg-[#383838] text-white font-medium shadow-xs'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              <Moon className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setAppTheme('light')}
+              title="Tema Claro / Neutral (Logo Gris)"
+              className={`px-1.5 py-1 rounded flex items-center gap-1 transition-colors ${
+                appTheme === 'light'
+                  ? 'bg-[#383838] text-white font-medium shadow-xs'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              <Sun className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setAppTheme('blue')}
+              title="Tema Azul / Brand (Logo Azul)"
+              className={`px-1.5 py-1 rounded flex items-center gap-1 transition-colors ${
+                appTheme === 'blue'
+                  ? 'bg-[#0d99ff] text-white font-medium shadow-xs'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              <Palette className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
         {/* Viewport Frame Dropdown - Positioned beside Zoom and Preview */}
         <div className="flex items-center bg-[#1e1e1e] rounded-lg border border-[#383838] p-0.5">

@@ -12,7 +12,12 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
 
 1. **Top Bar / Barra Superior de Figma (`h-11 bg-[#2c2c2c] border-b border-[#383838] px-3 flex items-center justify-between`)**:
    - **Izquierda**:
-     - Botón de Menú y Logo Figma (isotipo degradado violeta/azul con nombre "VisualForge").
+     - Botón de Menú y Logo dinámico oficial de VisualForge (cinta 3D formando brackets de código `{X}` con fondo 100% transparente sin recuadros ni fondos sólidos), adaptativo según el tema activo de la aplicación:
+       - **Tema Oscuro (`dark`)**: Isotipo `{X}` blanco brillante / plateado de alto contraste (`/logos/logo-white.png` o `/logos/logo-dark.png`).
+       - **Tema Claro / Neutral (`light`)**: Isotipo `{X}` gris grafito / slate metálico (`/logos/logo-gray.png` o `/logos/logo-light.png`).
+       - **Tema Azul / Brand (`blue`)**: Isotipo `{X}` azul cobalto / índigo (`/logos/logo-blue.png`).
+     - Acompañado del texto de marca "VisualForge".
+     - Sincronización reactiva en tiempo real del favicon del navegador (`<link rel="icon">`) con el logo del tema activo.
      - Zona despejada y limpia: Los botones de selección (`MousePointer`) y mover lienzo (`Hand`) se trasladan exclusivamente a la barra flotante `FloatingToolbox` para evitar redundancias y mantener la cabecera despejada.
    - **Centro**:
      - Botón para crear o configurar proyecto ("Nuevo").
@@ -21,6 +26,17 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
      - Indicador verde de guardado y estado sincronizado.
    - **Derecha**:
      - Historial de Estados (Undo `Ctrl+Z` / Redo `Ctrl+Shift+Z` o `Ctrl+Y`).
+     - **Selector de Tema de la Aplicación**: Botonera compacta integrada con soporte para 4 modos de tema:
+       - **Automático (`system`)**: Detecta automáticamente la configuración del sistema operativo/PC mediante `window.matchMedia('(prefers-color-scheme: dark)')` y escucha cambios en tiempo real.
+       - **Oscuro (`dark`)**: Tema visual clásico de Figma Studio con cromas oscuros y logo blanco.
+       - **Claro (`light`)**: Tema visual limpio y luminoso con cromas claros, fondo neutral y logo gris grafito.
+       - **Azul (`blue`)**: Tema Midnight Indigo con tonalidades azuladas oscuras y logo azul cobalto.
+       - Persistencia automática de la preferencia en `localStorage` (`vf_app_theme`), resolución reactiva y marcado en atributos HTML (`data-app-theme` y `data-theme-setting`).
+       - **Garantía Integral de Contraste y Legibilidad Sin Pérdida de Texto**:
+         - En modo claro (`light`), todos los campos de texto, inputs, selectores y textareas en paneles laterales y modales cuentan con fondo blanco `#ffffff` y tipografía oscura `#0f172a` de alto contraste, evitando textos blancos invisibles sobre fondo claro.
+         - Las etiquetas atenuadas y textos secundarios utilizan contraste calibrado `#475569` para lectura nítida.
+         - El Artboard aísla su esquema tipográfico para evitar que herede clases de texto del contenedor principal de la aplicación, preservando la fidelidad del diseño web visualizado.
+         - En modo azul (`blue`), los campos y controles integran fondos azul marino `#131c31` con tipografía clara `#f1f5f9` y bordes bien definidos para evitar textos negros o atenuaciones ilegibles.
      - **Frame / Device Selector (Reposicionado)**: Controles de vista de dispositivo (*Desktop 1440px*, *Tablet 768px*, *Mobile 375px*) reubicados en el lateral derecho, situados estratégicamente al lado de los controles de Zoom y del botón Preview.
      - Selector de Nivel de Zoom (`ZoomOut`, porcentaje editable/clic para reset a `100%`, `ZoomIn`).
      - **Botón Present / Preview (Play `▶` / Eye)**: Alterna entre modo diseño y modo vista previa interactiva.
@@ -70,12 +86,24 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
      - Borde de selección azul/violeta (`border-[#0d99ff]` o `ring-2 ring-violet-500`).
      - 8 tiradores de redimensionamiento (corners y bordes) con esquinas redondeadas.
      - Etiqueta flotante con dimensiones en tiempo real (ej. `w: 320px h: 48px`).
+   - **Selección del Lienzo y Deselección Global (Click en Vacío)**:
+     - **Deselección de Componentes**: Al hacer clic en cualquier área despejada sin elementos (tanto en el área libre del Artboard central como en el lienzo exterior infinito `<main>`), se deselecciona automáticamente cualquier componente activo, limpiando la selección.
+     - **Selección del Artboard / Lienzo**: Al hacer clic directamente en la etiqueta de cabecera del Artboard (ej. *"Desktop - 1440 × 900"*), en el área vacía del Artboard, o en la fila "Lienzo Principal / Canvas Artboard" del panel de Capas, el Lienzo pasa al estado activo (`selectedId === 'canvas'`), enmarcándose con un anillo de selección azul cian (`ring-2 ring-[#0d99ff]`).
 
 4. **Panel Lateral Derecho: Inspector de Diseño (Figma Design & Inspect Panel, `w-80 bg-[#252526] border-l border-[#383838] flex flex-col`)**:
    - Pestañas superiores:
      - **Design (Diseño)**: Control de alineación, Auto-layout, dimensiones, tipografía, rellenos, bordes y sombras.
      - **Inspect / Code (Inspección)**: Vista previa instantánea del código CSS / Tailwind generado del elemento seleccionado.
    - Colapsable para enfoque en pantalla completa.
+   - **Inspector de Propiedades del Lienzo (Canvas Settings Inspector)**:
+     - Se activa automáticamente cuando se selecciona el Lienzo (`selectedId === 'canvas'`) o cuando no hay ningún elemento hijo seleccionado en el lienzo.
+     - **Dimensiones y Dispositivo**: Selector interactivo de modo viewport (*Desktop 1440px*, *Tablet 768px*, *Mobile 375px*) y control de altura mínima (`minHeight`) configurable (Auto, 600px, 800px, 900px, 1200px, 1600px, 2000px).
+     - **Color de Fondo del Lienzo (`artboardBg`)**: Selector nativo de color hexadecimal con paleta de colores predefinidos (Dark `#121214`, Midnight `#0b0f19`, Pure White `#ffffff`, Slate `#f8fafc`, Cream `#fafaf9`).
+     - **Contraste Tipográfico Automático**: Cálculo automático del color de texto por defecto del lienzo en función de la luminosidad del fondo elegido, garantizando que el texto nunca desaparezca ni pierda contraste.
+     - **Espaciados Globales**: Configuración directa de relleno interno (`padding`: None, Compact 16px, Normal 24px, Spaced 32px, Relaxed 48px) y separación entre secciones (`gap`: 0, 12px, 16px, 24px, 32px, 48px).
+     - **Tipografía Global (`fontFamily`)**: Selector de familia tipográfica predeterminada para el lienzo (*Inter / Sans*, *Roboto*, *Fira Code / Mono*, *Playfair / Serif*, *System UI*).
+     - **Visualización de Guías**: Conmutador para activar o desactivar la cuadrícula de puntos guía de fondo (`showGrid`).
+     - **Acciones Rápidas del Lienzo**: Botones dedicados para "+ Añadir Contenedor Raíz", "Exportar Código" y "Limpiar Lienzo" con confirmación de seguridad.
 
 5. **Barra de Herramientas Flotante (`FloatingToolbox`) (Estilo Segmentado Modular Figma UI3 con Barra Contextual Acoplada)**:
    - **Ubicación y Estructura Visual Modular (Segmented Capsule Islands)**:

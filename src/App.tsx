@@ -6,6 +6,9 @@ import {
   DropPosition,
   ComponentDefinition,
   ProjectType,
+  AppTheme,
+  ResolvedTheme,
+  CanvasSettings,
 } from './types';
 import { INITIAL_CANVAS_TREE, ESP32_CANVAS_TREE } from './data/initialTemplate';
 import { COMPONENT_CATALOG, getCatalogForProject } from './data/componentCatalog';
@@ -32,6 +35,44 @@ export function App() {
   const [projectName, setProjectName] = useState('VisualForge Studio - Project');
   const [projectType, setProjectType] = useState<ProjectType>('hybrid');
   const [isNewProjectOpen, setIsNewProjectOpen] = useState(false);
+  const [appTheme, setAppTheme] = useState<AppTheme>(() => {
+    return (localStorage.getItem('vf_app_theme') as AppTheme) || 'system';
+  });
+
+  const [systemIsDark, setSystemIsDark] = useState<boolean>(() => {
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = (e: MediaQueryListEvent) => {
+      setSystemIsDark(e.matches);
+    };
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
+
+  const resolvedTheme: ResolvedTheme =
+    appTheme === 'system' ? (systemIsDark ? 'dark' : 'light') : appTheme;
+
+  useEffect(() => {
+    localStorage.setItem('vf_app_theme', appTheme);
+    document.documentElement.setAttribute('data-app-theme', resolvedTheme);
+    document.documentElement.setAttribute('data-theme-setting', appTheme);
+    const favicon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    if (favicon) {
+      favicon.href =
+        resolvedTheme === 'blue'
+          ? '/logos/logo-blue.png'
+          : resolvedTheme === 'light'
+          ? '/logos/logo-gray.png'
+          : '/logos/logo-white.png';
+    }
+  }, [appTheme, resolvedTheme]);
 
   // Tree and History State for Undo / Redo
   const [tree, setTree] = useState<CanvasNode[]>(INITIAL_CANVAS_TREE);
@@ -77,8 +118,68 @@ export function App() {
     }
   }, [historyIdx, history]);
 
-  // Selected node lookup
-  const selectedNode = selectedId ? findNodeInTree(tree, selectedId) : null;
+  // Canvas & Artboard Settings State
+  const [canvasSettings, setCanvasSettings] = useState<CanvasSettings>(() => {
+    try {
+      const saved = localStorage.getItem('vf_canvas_settings');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return {
+      artboardBg: '#121214',
+      artboardTextColor: '#f1f5f9',
+      minHeight: 800,
+      padding: 16,
+      gap: 16,
+      fontFamily: 'Inter',
+      showGrid: true,
+    };
+  });
+
+  const handleUpdateCanvasSettings = useCallback((updates: Partial<CanvasSettings>) => {
+    setCanvasSettings((prev) => {
+      const next = { ...prev, ...updates };
+      try {
+        localStorage.setItem('vf_canvas_settings', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  }, []);
+
+  const handleClearCanvas = useCallback(() => {
+    if (window.confirm('¿Deseas vaciar el lienzo y eliminar todos los componentes?')) {
+      updateTreeWithHistory([]);
+      setSelectedId('canvas');
+    }
+  }, [updateTreeWithHistory]);
+
+  const handleAddRootContainer = useCallback(() => {
+    const newContainer: CanvasNode = {
+      id: `container_${Date.now()}`,
+      name: 'Contenedor',
+      type: 'container',
+      library: 'shadcn',
+      isContainer: true,
+      style: {
+        display: 'flex',
+        flexDirection: 'column',
+        padding: '24px',
+        gap: '16px',
+        width: '100%',
+      },
+      props: {
+        label: 'Contenedor',
+        containerType: 'container',
+        action: '#',
+        method: 'POST',
+      },
+      children: [],
+    };
+    updateTreeWithHistory([...tree, newContainer]);
+    setSelectedId(newContainer.id);
+  }, [tree, updateTreeWithHistory]);
+
+  // Selected node lookup (null if canvas is selected)
+  const selectedNode = selectedId && selectedId !== 'canvas' ? findNodeInTree(tree, selectedId) : null;
 
   // Insert component from catalog
   const handleInsertComponent = useCallback(
@@ -472,6 +573,9 @@ export function App() {
         isPreviewMode={isPreviewMode}
         setIsPreviewMode={setIsPreviewMode}
         onOpenExport={() => setIsExportOpen(true)}
+        appTheme={appTheme}
+        resolvedTheme={resolvedTheme}
+        setAppTheme={setAppTheme}
       />
 
       {/* Main Studio Body: Left Sidebar + Canvas + Right Sidebar */}
@@ -507,14 +611,27 @@ export function App() {
           onDuplicateNode={handleDuplicateNode}
           onDeleteNode={handleDeleteNode}
           onMoveSibling={handleMoveSibling}
+          canvasSettings={canvasSettings}
+          onUpdateCanvasSettings={handleUpdateCanvasSettings}
         />
 
         <RightSidebar
           selectedNode={selectedNode}
+          selectedId={selectedId}
           projectType={projectType}
           onUpdateStyle={handleUpdateStyle}
           onUpdateProps={handleUpdateProps}
           onUpdateNode={handleUpdateNode}
+          canvasSettings={canvasSettings}
+          onUpdateCanvasSettings={handleUpdateCanvasSettings}
+          viewportMode={viewportMode}
+          setViewportMode={setViewportMode}
+          zoom={zoom}
+          setZoom={setZoom}
+          tree={tree}
+          onClearCanvas={handleClearCanvas}
+          onAddRootContainer={handleAddRootContainer}
+          onOpenExport={() => setIsExportOpen(true)}
           isOpen={isRightOpen}
           setIsOpen={setIsRightOpen}
         />

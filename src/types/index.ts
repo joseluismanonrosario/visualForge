@@ -1,5 +1,8 @@
 export type ComponentLibrary = 'shadcn' | 'bootstrap' | 'both';
 
+export type AppTheme = 'system' | 'dark' | 'light' | 'blue';
+export type ResolvedTheme = 'dark' | 'light' | 'blue';
+
 export type ProjectType = 'esp32' | 'html_css' | 'react' | 'framework' | 'hybrid';
 
 export type GpioAction = 'TOGGLE_PIN' | 'SET_HIGH' | 'SET_LOW' | 'PWM' | 'READ_PIN';
@@ -50,6 +53,16 @@ export interface CanvasNode {
 export type ViewportMode = 'desktop' | 'tablet' | 'mobile';
 export type ToolMode = 'select' | 'hand' | 'container' | 'heading' | 'paragraph' | 'image';
 export type DropPosition = 'before' | 'inside' | 'after';
+
+export interface CanvasSettings {
+  artboardBg: string;
+  artboardTextColor: string;
+  minHeight: number;
+  padding: number;
+  gap: number;
+  fontFamily: string;
+  showGrid: boolean;
+}
 
 export interface DragState {
   isDragging: boolean;

@@ -65,8 +65,22 @@ import {
   Activity,
   Power,
   Gauge,
+  Monitor,
+  Tablet,
+  Smartphone,
+  Plus,
+  Trash2,
+  Download,
 } from 'lucide-react';
-import { CanvasNode, ProjectType, GpioConfig, GpioAction, GpioCommMode } from '../types';
+import {
+  CanvasNode,
+  ProjectType,
+  GpioConfig,
+  GpioAction,
+  GpioCommMode,
+  CanvasSettings,
+  ViewportMode,
+} from '../types';
 import {
   ICON_LIBRARIES,
   getLibrariesForWorkflow,
@@ -88,10 +102,21 @@ import {
 
 interface RightSidebarProps {
   selectedNode: CanvasNode | null;
+  selectedId?: string | null;
   projectType: ProjectType;
   onUpdateStyle: (styleUpdates: Record<string, any>) => void;
   onUpdateProps: (propUpdates: Record<string, any>) => void;
   onUpdateNode?: (updates: { props?: Record<string, any>; style?: Record<string, any>; name?: string }) => void;
+  canvasSettings?: CanvasSettings;
+  onUpdateCanvasSettings?: (settings: Partial<CanvasSettings>) => void;
+  viewportMode?: ViewportMode;
+  setViewportMode?: (mode: ViewportMode) => void;
+  zoom?: number;
+  setZoom?: (zoom: number | ((prev: number) => number)) => void;
+  tree?: CanvasNode[];
+  onClearCanvas?: () => void;
+  onAddRootContainer?: () => void;
+  onOpenExport?: () => void;
   isOpen: boolean;
   setIsOpen: (val: boolean) => void;
 }
@@ -120,10 +145,21 @@ const COMMON_ESP32_GPIOS = [
 
 export const RightSidebar: React.FC<RightSidebarProps> = ({
   selectedNode,
+  selectedId,
   projectType,
   onUpdateStyle,
   onUpdateProps,
   onUpdateNode,
+  canvasSettings,
+  onUpdateCanvasSettings,
+  viewportMode = 'desktop',
+  setViewportMode,
+  zoom = 1,
+  setZoom,
+  tree,
+  onClearCanvas,
+  onAddRootContainer,
+  onOpenExport,
   isOpen,
   setIsOpen,
 }) => {
@@ -252,22 +288,324 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
     );
   }
 
-  if (!selectedNode) {
+  function isColorLight(hexColor: string): boolean {
+    if (!hexColor || !hexColor.startsWith('#')) return false;
+    let hex = hexColor.replace('#', '');
+    if (hex.length === 3) {
+      hex = hex.split('').map((c) => c + c).join('');
+    }
+    const r = parseInt(hex.substring(0, 2), 16) || 0;
+    const g = parseInt(hex.substring(2, 4), 16) || 0;
+    const b = parseInt(hex.substring(4, 6), 16) || 0;
+    return (r * 299 + g * 587 + b * 114) / 1000 > 155;
+  }
+
+  // Si no hay nodo seleccionado o el nodo seleccionado es el Lienzo ('canvas')
+  if (!selectedNode || selectedId === 'canvas') {
+    const artboardBg = canvasSettings?.artboardBg || '#121214';
+    const artboardTextColor = canvasSettings?.artboardTextColor || '#f1f5f9';
+    const minHeight = canvasSettings?.minHeight || 800;
+    const padding = canvasSettings?.padding ?? 16;
+    const gap = canvasSettings?.gap ?? 16;
+    const fontFamily = canvasSettings?.fontFamily || 'Inter';
+    const showGrid = canvasSettings?.showGrid !== false;
+    const rootCount = tree?.length || 0;
+
     return (
-      <aside className="w-80 bg-[#252526] border-l border-[#383838] flex flex-col h-[calc(100vh-44px)] select-none z-20 flex-shrink-0 text-xs text-zinc-400">
+      <aside className="w-80 bg-[#252526] border-l border-[#383838] flex flex-col h-[calc(100vh-44px)] select-none z-20 flex-shrink-0 text-xs text-zinc-300">
+        {/* Cabecera del Inspector de Lienzo */}
         <div className="h-10 border-b border-[#383838] flex items-center justify-between px-3 bg-[#2c2c2c]">
-          <span className="font-semibold text-zinc-200">Design</span>
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-xs bg-[#0d99ff] shadow-[0_0_8px_#0d99ff]" />
+            <span className="font-semibold text-zinc-200">Propiedades del Lienzo</span>
+          </div>
           <button
             onClick={() => setIsOpen(false)}
-            className="p-1 hover:bg-[#383838] rounded text-zinc-400 hover:text-white"
+            className="p-1 hover:bg-[#383838] rounded text-zinc-400 hover:text-white transition-colors cursor-pointer"
+            title="Cerrar panel lateral"
           >
             <PanelRightClose className="w-4 h-4" />
           </button>
         </div>
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-zinc-500">
-          <Layers className="w-8 h-8 mb-3 opacity-30 text-zinc-400" />
-          <p className="font-medium text-zinc-300 mb-1">No element selected</p>
-          <p className="text-[11px]">Select any component in the canvas or layers to inspect and style it.</p>
+
+        {/* Contenido scrolleable de propiedades del Lienzo */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-4">
+          {/* Tarjeta de Identificación */}
+          <div className="bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838] space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-zinc-200 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                Lienzo Artboard
+              </span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#0d99ff]/15 text-[#0d99ff] border border-[#0d99ff]/30">
+                {projectType === 'esp32' ? 'ESP32 / IoT' : projectType === 'html_css' ? 'HTML / Tailwind' : 'React / Shadcn'}
+              </span>
+            </div>
+            <div className="text-[11px] text-zinc-400 flex items-center justify-between pt-0.5 border-t border-[#2e2e2e]">
+              <span>Elementos raíz en lienzo:</span>
+              <span className="font-mono text-zinc-200 font-bold">{rootCount}</span>
+            </div>
+          </div>
+
+          {/* Selector de Dispositivo y Dimensiones */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">
+              Dispositivo y Vista
+            </label>
+            <div className="grid grid-cols-3 gap-1 bg-[#1e1e1e] p-1 rounded-lg border border-[#383838]">
+              <button
+                type="button"
+                onClick={() => setViewportMode?.('desktop')}
+                className={`py-1.5 px-2 rounded flex flex-col items-center gap-1 text-[10px] font-medium transition-colors cursor-pointer ${
+                  viewportMode === 'desktop'
+                    ? 'bg-[#0d99ff] text-white shadow-xs'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Monitor className="w-3.5 h-3.5" />
+                <span>Desktop</span>
+                <span className="text-[9px] opacity-75 font-mono">1440px</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewportMode?.('tablet')}
+                className={`py-1.5 px-2 rounded flex flex-col items-center gap-1 text-[10px] font-medium transition-colors cursor-pointer ${
+                  viewportMode === 'tablet'
+                    ? 'bg-[#0d99ff] text-white shadow-xs'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Tablet className="w-3.5 h-3.5" />
+                <span>Tablet</span>
+                <span className="text-[9px] opacity-75 font-mono">768px</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewportMode?.('mobile')}
+                className={`py-1.5 px-2 rounded flex flex-col items-center gap-1 text-[10px] font-medium transition-colors cursor-pointer ${
+                  viewportMode === 'mobile'
+                    ? 'bg-[#0d99ff] text-white shadow-xs'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+                <span>Mobile</span>
+                <span className="text-[9px] opacity-75 font-mono">375px</span>
+              </button>
+            </div>
+
+            {/* Altura mínima del lienzo */}
+            <div className="flex items-center justify-between text-[11px] pt-1">
+              <span className="text-zinc-400">Altura mínima:</span>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min={400}
+                  max={3000}
+                  step={50}
+                  value={minHeight}
+                  onChange={(e) => onUpdateCanvasSettings?.({ minHeight: parseInt(e.target.value) || 800 })}
+                  className="w-20 bg-[#1e1e1e] border border-[#383838] rounded px-2 py-0.5 text-white font-mono text-center text-xs focus:outline-none focus:border-[#0d99ff]"
+                />
+                <span className="text-zinc-500 font-mono text-[10px]">px</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Color de Fondo del Lienzo (Fill) */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">
+                Fondo del Lienzo (Fill)
+              </label>
+              <span className="text-[10px] font-mono text-zinc-500">{artboardBg}</span>
+            </div>
+
+            <div className="flex items-center gap-2 bg-[#1e1e1e] p-1.5 rounded-lg border border-[#383838]">
+              <input
+                type="color"
+                value={artboardBg.startsWith('#') ? artboardBg : '#121214'}
+                onChange={(e) => {
+                  const newBg = e.target.value;
+                  const isLight = isColorLight(newBg);
+                  onUpdateCanvasSettings?.({
+                    artboardBg: newBg,
+                    artboardTextColor: isLight ? '#0f172a' : '#f1f5f9',
+                  });
+                }}
+                className="w-7 h-7 rounded border border-[#383838] bg-transparent cursor-pointer"
+              />
+              <input
+                type="text"
+                value={artboardBg}
+                onChange={(e) => {
+                  const newBg = e.target.value;
+                  const isLight = isColorLight(newBg);
+                  onUpdateCanvasSettings?.({
+                    artboardBg: newBg,
+                    artboardTextColor: isLight ? '#0f172a' : '#f1f5f9',
+                  });
+                }}
+                className="flex-1 bg-transparent text-white font-mono text-xs px-2 focus:outline-none"
+                placeholder="#121214"
+              />
+            </div>
+
+            {/* Presets de Color */}
+            <div className="grid grid-cols-6 gap-1.5 pt-1">
+              {[
+                { label: 'Oscuro Figma', color: '#121214' },
+                { label: 'Carbón', color: '#1e1e24' },
+                { label: 'Medianoche', color: '#0b0f19' },
+                { label: 'Blanco', color: '#ffffff' },
+                { label: 'Gris Suave', color: '#f8fafc' },
+                { label: 'Zinc 900', color: '#18181b' },
+              ].map((preset) => (
+                <button
+                  key={preset.color}
+                  type="button"
+                  onClick={() => {
+                    const isLight = isColorLight(preset.color);
+                    onUpdateCanvasSettings?.({
+                      artboardBg: preset.color,
+                      artboardTextColor: isLight ? '#0f172a' : '#f1f5f9',
+                    });
+                  }}
+                  title={`${preset.label} (${preset.color})`}
+                  style={{ backgroundColor: preset.color }}
+                  className={`h-6 rounded border transition-all cursor-pointer ${
+                    artboardBg.toLowerCase() === preset.color.toLowerCase()
+                      ? 'border-[#0d99ff] ring-2 ring-[#0d99ff]/50 scale-105'
+                      : 'border-[#383838] hover:border-zinc-400'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Color de Texto por Defecto */}
+          <div className="space-y-1.5 bg-[#1e1e1e] p-2 rounded-lg border border-[#383838]">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-zinc-400">Texto base del diseño:</span>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="color"
+                  value={artboardTextColor.startsWith('#') ? artboardTextColor : '#f1f5f9'}
+                  onChange={(e) => onUpdateCanvasSettings?.({ artboardTextColor: e.target.value })}
+                  className="w-5 h-5 rounded border border-[#383838] bg-transparent cursor-pointer"
+                />
+                <span className="font-mono text-[10px] text-zinc-300">{artboardTextColor}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Espaciado y Distribución */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">
+              Espaciado Interno del Lienzo
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-[#1e1e1e] p-2 rounded-lg border border-[#383838] space-y-1">
+                <span className="text-[10px] text-zinc-400 block">Padding</span>
+                <select
+                  value={padding}
+                  onChange={(e) => onUpdateCanvasSettings?.({ padding: parseInt(e.target.value) || 0 })}
+                  className="w-full bg-transparent text-white text-xs focus:outline-none cursor-pointer"
+                >
+                  <option value={0}>0px (Full)</option>
+                  <option value={8}>8px</option>
+                  <option value={16}>16px (Normal)</option>
+                  <option value={24}>24px (Amplio)</option>
+                  <option value={32}>32px</option>
+                  <option value={48}>48px</option>
+                </select>
+              </div>
+
+              <div className="bg-[#1e1e1e] p-2 rounded-lg border border-[#383838] space-y-1">
+                <span className="text-[10px] text-zinc-400 block">Separación (Gap)</span>
+                <select
+                  value={gap}
+                  onChange={(e) => onUpdateCanvasSettings?.({ gap: parseInt(e.target.value) || 0 })}
+                  className="w-full bg-transparent text-white text-xs focus:outline-none cursor-pointer"
+                >
+                  <option value={0}>0px</option>
+                  <option value={8}>8px</option>
+                  <option value={16}>16px (Normal)</option>
+                  <option value={24}>24px</option>
+                  <option value={32}>32px</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Tipografía Global */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">
+              Tipografía Global
+            </label>
+            <div className="bg-[#1e1e1e] p-2 rounded-lg border border-[#383838]">
+              <select
+                value={fontFamily}
+                onChange={(e) => onUpdateCanvasSettings?.({ fontFamily: e.target.value })}
+                className="w-full bg-transparent text-white text-xs focus:outline-none cursor-pointer"
+              >
+                <option value="Inter">Inter (Sans-serif moderna)</option>
+                <option value="Roboto">Roboto</option>
+                <option value="Poppins">Poppins</option>
+                <option value="system-ui, sans-serif">Sistema Nativo</option>
+                <option value="ui-monospace, monospace">Monospace / Código</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Cuadrícula Visual */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">
+              Asistentes Visuales
+            </label>
+            <div className="flex items-center justify-between bg-[#1e1e1e] p-2.5 rounded-lg border border-[#383838]">
+              <span className="text-[11px] text-zinc-300">Cuadrícula de Puntos (Dots)</span>
+              <input
+                type="checkbox"
+                checked={showGrid}
+                onChange={(e) => onUpdateCanvasSettings?.({ showGrid: e.target.checked })}
+                className="w-4 h-4 rounded accent-[#0d99ff] cursor-pointer"
+              />
+            </div>
+          </div>
+
+          {/* Acciones Rápidas del Lienzo */}
+          <div className="pt-2 space-y-2 border-t border-[#383838]">
+            <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">
+              Acciones Rápidas
+            </label>
+            <button
+              type="button"
+              onClick={onAddRootContainer}
+              className="w-full py-2 px-3 rounded-lg bg-[#0d99ff] hover:bg-[#0088ee] text-white font-medium text-xs flex items-center justify-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Añadir Contenedor al Lienzo</span>
+            </button>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={onOpenExport}
+                className="py-1.5 px-2 rounded-lg bg-[#2c2c2c] hover:bg-[#383838] text-zinc-200 border border-[#383838] text-xs font-medium flex items-center justify-center gap-1 transition-colors cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Exportar</span>
+              </button>
+              <button
+                type="button"
+                onClick={onClearCanvas}
+                className="py-1.5 px-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-medium flex items-center justify-center gap-1 transition-colors cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Limpiar</span>
+              </button>
+            </div>
+          </div>
         </div>
       </aside>
     );
