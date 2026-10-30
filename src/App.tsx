@@ -23,6 +23,8 @@ import {
   cloneNodeWithNewIds,
   instantiateNodeWithFreshIds,
   reorderNodeInTree,
+  getNodeEffectiveStyle,
+  isNodeHiddenInViewport,
 } from './utils/treeUtils';
 import { TopBar } from './components/TopBar';
 import { LeftSidebar } from './components/LeftSidebar';
@@ -367,28 +369,74 @@ export function App() {
   const handleUpdateNode = useCallback(
     (updates: { props?: Record<string, any>; style?: Record<string, any>; name?: string }) => {
       if (!selectedId) return;
-      const newTree = mutateNodeInTree(tree, selectedId, (node) => ({
-        ...node,
-        ...(updates.name ? { name: updates.name } : {}),
-        props: updates.props ? { ...node.props, ...updates.props } : node.props,
-        style: updates.style ? { ...node.style, ...updates.style } : node.style,
-      }));
+      const newTree = mutateNodeInTree(tree, selectedId, (node) => {
+        let updatedStyle = node.style;
+        let updatedResponsive = node.responsiveStyles;
+
+        if (updates.style) {
+          if (viewportMode === 'desktop') {
+            const currentDesktop = node.responsiveStyles?.desktop || {};
+            updatedStyle = { ...node.style, ...updates.style };
+            updatedResponsive = {
+              ...(node.responsiveStyles || {}),
+              desktop: { ...node.style, ...currentDesktop, ...updates.style },
+            };
+          } else {
+            const currentDeviceStyles = node.responsiveStyles?.[viewportMode] || {};
+            updatedResponsive = {
+              ...(node.responsiveStyles || {}),
+              [viewportMode]: { ...currentDeviceStyles, ...updates.style },
+            };
+          }
+        }
+
+        return {
+          ...node,
+          ...(updates.name ? { name: updates.name } : {}),
+          props: updates.props ? { ...node.props, ...updates.props } : node.props,
+          style: updatedStyle,
+          ...(updatedResponsive ? { responsiveStyles: updatedResponsive } : {}),
+        };
+      });
       updateTreeWithHistory(newTree);
     },
-    [tree, selectedId, updateTreeWithHistory]
+    [tree, selectedId, updateTreeWithHistory, viewportMode]
   );
 
-  // Update Style of Selected Node
+  // Update Style of Selected Node with Decoupled Responsive Breakpoint Isolation
   const handleUpdateStyle = useCallback(
     (styleUpdates: Record<string, any>) => {
       if (!selectedId) return;
-      const newTree = mutateNodeInTree(tree, selectedId, (node) => ({
-        ...node,
-        style: { ...node.style, ...styleUpdates },
-      }));
+      const newTree = mutateNodeInTree(tree, selectedId, (node) => {
+        if (viewportMode === 'desktop') {
+          // En Desktop, actualiza el estilo base y sobreescrituras desktop
+          const currentDesktop = node.responsiveStyles?.desktop || {};
+          const updatedDesktop = { ...node.style, ...currentDesktop, ...styleUpdates };
+          return {
+            ...node,
+            style: { ...node.style, ...styleUpdates },
+            responsiveStyles: {
+              ...(node.responsiveStyles || {}),
+              desktop: updatedDesktop,
+            },
+          };
+        } else {
+          // En Tablet o Móvil, guarda exclusivamente en el breakpoint del dispositivo
+          // sin sobrescribir ni alterar los valores configurados en Desktop
+          const currentDeviceStyles = node.responsiveStyles?.[viewportMode] || {};
+          const updatedDeviceStyles = { ...currentDeviceStyles, ...styleUpdates };
+          return {
+            ...node,
+            responsiveStyles: {
+              ...(node.responsiveStyles || {}),
+              [viewportMode]: updatedDeviceStyles,
+            },
+          };
+        }
+      });
       updateTreeWithHistory(newTree);
     },
-    [tree, selectedId, updateTreeWithHistory]
+    [tree, selectedId, updateTreeWithHistory, viewportMode]
   );
 
   // Update Props of Selected Node
@@ -431,16 +479,36 @@ export function App() {
     [tree, updateTreeWithHistory]
   );
 
-  // Toggle Visibility / Hidden
+  // Toggle Visibility / Hidden with Decoupled Responsive Breakpoint Isolation
   const handleToggleVisibility = useCallback(
     (id: string) => {
-      const newTree = mutateNodeInTree(tree, id, (node) => ({
-        ...node,
-        hidden: !node.hidden,
-      }));
+      const newTree = mutateNodeInTree(tree, id, (node) => {
+        if (viewportMode === 'desktop') {
+          const newHidden = !node.hidden;
+          return {
+            ...node,
+            hidden: newHidden,
+            responsiveVisibility: {
+              ...(node.responsiveVisibility || {}),
+              desktop: newHidden,
+            },
+          };
+        } else {
+          // Aislamiento de visibilidad independiente por dispositivo
+          const currentHidden = isNodeHiddenInViewport(node, viewportMode);
+          const newHidden = !currentHidden;
+          return {
+            ...node,
+            responsiveVisibility: {
+              ...(node.responsiveVisibility || {}),
+              [viewportMode]: newHidden,
+            },
+          };
+        }
+      });
       updateTreeWithHistory(newTree);
     },
-    [tree, updateTreeWithHistory]
+    [tree, updateTreeWithHistory, viewportMode]
   );
 
   // Toggle Lock
@@ -766,6 +834,7 @@ export function App() {
               tree={tree}
               projectType={projectType}
               selectedId={selectedId}
+              viewportMode={viewportMode}
               onSelectNode={setSelectedId}
               onDeleteNode={handleDeleteNode}
               onToggleVisibility={handleToggleVisibility}

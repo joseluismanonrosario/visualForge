@@ -16,8 +16,8 @@ import {
   ArrowDown,
   GripVertical,
 } from 'lucide-react';
-import { CanvasNode, ProjectType, ComponentDefinition, DropPosition } from '../types';
-import { findNodeInTree } from '../utils/treeUtils';
+import { CanvasNode, ProjectType, ComponentDefinition, DropPosition, ViewportMode } from '../types';
+import { findNodeInTree, isNodeHiddenInViewport } from '../utils/treeUtils';
 import { AssetsToolbar } from './AssetsToolbar';
 
 interface LeftSidebarProps {
@@ -31,6 +31,7 @@ interface LeftSidebarProps {
   onInsertComponent: (compDef: ComponentDefinition) => void;
   onReorderNode: (draggedId: string, targetId: string, position: DropPosition) => void;
   onMoveSibling?: (id: string, direction: 'up' | 'down') => void;
+  viewportMode?: ViewportMode;
   isOpen: boolean;
   setIsOpen: (val: boolean) => void;
 }
@@ -46,6 +47,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   onInsertComponent,
   onReorderNode,
   onMoveSibling,
+  viewportMode = 'desktop',
   isOpen,
   setIsOpen,
 }) => {
@@ -178,6 +180,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
     const hasChildren = node.children && node.children.length > 0;
     const isDragging = draggedLayerId === node.id;
     const isTarget = dropTargetLayerId === node.id && draggedLayerId !== node.id;
+    const isHidden = isNodeHiddenInViewport(node, viewportMode);
 
     return (
       <div key={node.id} className="text-xs relative">
@@ -204,7 +207,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
               : isSelected
               ? 'bg-[#0d99ff] text-white font-medium'
               : 'text-zinc-300 hover:bg-[#323232]'
-          } ${node.hidden ? 'opacity-40' : ''}`}
+          } ${isHidden ? 'opacity-40' : ''}`}
           style={{ paddingLeft: `${depth * 14 + 8}px` }}
         >
           <div className="flex items-center gap-1.5 truncate">
@@ -261,10 +264,10 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                 e.stopPropagation();
                 onToggleVisibility(node.id);
               }}
-              title={node.hidden ? 'Show element' : 'Hide element'}
+              title={isHidden ? 'Show element' : 'Hide element'}
               className="p-0.5 hover:bg-black/30 rounded"
             >
-              {node.hidden ? (
+              {isHidden ? (
                 <EyeOff className="w-3 h-3 text-zinc-400" />
               ) : (
                 <Eye className="w-3 h-3 text-zinc-300" />

@@ -37,6 +37,18 @@ export interface GpioConfig {
   pwmValue?: number;
 }
 
+export interface ResponsiveStyles {
+  desktop?: Record<string, any>;
+  tablet?: Record<string, any>;
+  mobile?: Record<string, any>;
+}
+
+export interface ResponsiveVisibility {
+  desktop?: boolean;
+  tablet?: boolean;
+  mobile?: boolean;
+}
+
 export interface CanvasNode {
   id: string;
   name: string;
@@ -44,6 +56,8 @@ export interface CanvasNode {
   library: ComponentLibrary;
   isContainer: boolean;
   style: Record<string, any>;
+  responsiveStyles?: ResponsiveStyles;
+  responsiveVisibility?: ResponsiveVisibility;
   props: Record<string, any>;
   children: CanvasNode[];
   locked?: boolean;

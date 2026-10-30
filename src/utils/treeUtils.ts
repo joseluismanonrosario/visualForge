@@ -1,4 +1,4 @@
-import { CanvasNode, DropPosition } from '../types';
+import { CanvasNode, DropPosition, ViewportMode } from '../types';
 
 export function findNodeInTree(nodes: CanvasNode[], id: string): CanvasNode | null {
   for (const node of nodes) {
@@ -187,6 +187,17 @@ export function cloneNodeWithNewIds(node: CanvasNode): CanvasNode {
     ...node,
     id: newId,
     name: `${node.name} (Copy)`,
+    style: { ...(node.style || {}) },
+    responsiveStyles: node.responsiveStyles
+      ? {
+          desktop: node.responsiveStyles.desktop ? { ...node.responsiveStyles.desktop } : undefined,
+          tablet: node.responsiveStyles.tablet ? { ...node.responsiveStyles.tablet } : undefined,
+          mobile: node.responsiveStyles.mobile ? { ...node.responsiveStyles.mobile } : undefined,
+        }
+      : undefined,
+    responsiveVisibility: node.responsiveVisibility
+      ? { ...node.responsiveVisibility }
+      : undefined,
     children: (node.children || []).map(cloneNodeWithNewIds),
   };
 }
@@ -197,6 +208,17 @@ export function instantiateNodeWithFreshIds(node: CanvasNode): CanvasNode {
     ...node,
     id: newId,
     name: node.name,
+    style: { ...(node.style || {}) },
+    responsiveStyles: node.responsiveStyles
+      ? {
+          desktop: node.responsiveStyles.desktop ? { ...node.responsiveStyles.desktop } : undefined,
+          tablet: node.responsiveStyles.tablet ? { ...node.responsiveStyles.tablet } : undefined,
+          mobile: node.responsiveStyles.mobile ? { ...node.responsiveStyles.mobile } : undefined,
+        }
+      : undefined,
+    responsiveVisibility: node.responsiveVisibility
+      ? { ...node.responsiveVisibility }
+      : undefined,
     children: (node.children || []).map(instantiateNodeWithFreshIds),
   };
 }
@@ -219,4 +241,55 @@ export function reorderNodeInTree(
 
   const cleanTree = deleteNodeInTree(nodes, draggedId);
   return insertNodeRelative(cleanTree, targetId, nodeToMove, position);
+}
+
+/**
+ * Retorna el estilo efectivo para un nodo en el punto de interrupción actual (ViewportMode).
+ * Sigue la arquitectura de breakpoints desacoplados:
+ * - 'desktop': Retorna el estilo base / desktop.
+ * - 'tablet': Combina el estilo desktop con las sobreescrituras específicas de 'tablet'.
+ * - 'mobile': Combina desktop + tablet con las sobreescrituras específicas de 'mobile'.
+ */
+export function getNodeEffectiveStyle(
+  node: CanvasNode | null | undefined,
+  viewport: ViewportMode = 'desktop'
+): Record<string, any> {
+  if (!node) return {};
+
+  const baseStyle = node.style || {};
+  const desktopOverrides = node.responsiveStyles?.desktop || {};
+  const desktopStyle = { ...baseStyle, ...desktopOverrides };
+
+  if (viewport === 'desktop') {
+    return desktopStyle;
+  }
+
+  if (viewport === 'tablet') {
+    const tabletOverrides = node.responsiveStyles?.tablet || {};
+    return { ...desktopStyle, ...tabletOverrides };
+  }
+
+  if (viewport === 'mobile') {
+    const tabletOverrides = node.responsiveStyles?.tablet || {};
+    const mobileOverrides = node.responsiveStyles?.mobile || {};
+    return { ...desktopStyle, ...tabletOverrides, ...mobileOverrides };
+  }
+
+  return desktopStyle;
+}
+
+/**
+ * Determina si un nodo está oculto en el punto de interrupción actual.
+ * Cada dispositivo soporta visibilidad independiente sin afectar a los demás.
+ */
+export function isNodeHiddenInViewport(
+  node: CanvasNode | null | undefined,
+  viewport: ViewportMode = 'desktop'
+): boolean {
+  if (!node) return false;
+
+  if (node.responsiveVisibility && typeof node.responsiveVisibility[viewport] === 'boolean') {
+    return node.responsiveVisibility[viewport]!;
+  }
+  return Boolean(node.hidden);
 }

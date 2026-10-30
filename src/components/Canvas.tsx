@@ -584,6 +584,7 @@ export const Canvas: React.FC<CanvasProps> = ({
                     toolMode={isHandActive ? 'hand' : toolMode}
                     onInsertTool={onInsertTool}
                     isPreviewMode={isPreviewMode}
+                    viewportMode={viewportMode}
                     dropTargetId={dropTargetId}
                     dropPosition={dropPosition}
                     draggedNodeId={draggedNodeId}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { CanvasNode, DropPosition, ProjectType, ToolMode } from '../types';
+import { CanvasNode, DropPosition, ProjectType, ToolMode, ViewportMode } from '../types';
 import { SvgIconRenderer } from '../utils/svgIconRenderer';
+import { getNodeEffectiveStyle, isNodeHiddenInViewport } from '../utils/treeUtils';
 import {
   Loader2,
   AlertCircle,
@@ -41,6 +42,7 @@ interface NodeRendererProps {
   toolMode?: ToolMode;
   onInsertTool?: (tool: ToolMode, targetId?: string | null) => void;
   isPreviewMode: boolean;
+  viewportMode?: ViewportMode;
   dropTargetId: string | null;
   dropPosition: DropPosition | null;
   draggedNodeId?: string | null;
@@ -58,6 +60,7 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
   toolMode = 'select',
   onInsertTool,
   isPreviewMode,
+  viewportMode = 'desktop',
   dropTargetId,
   dropPosition,
   draggedNodeId,
@@ -66,17 +69,19 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
   onDragOverNode,
   onDropNode,
 }) => {
-  if (node.hidden) return null;
+  const isHidden = isNodeHiddenInViewport(node, viewportMode);
+  if (isHidden) return null;
 
   const isHandMode = toolMode === 'hand';
   const isPlacementMode = Boolean(toolMode && ['container', 'heading', 'paragraph', 'image'].includes(toolMode) && !isPreviewMode);
   const isSelected = selectedId === node.id && !isPreviewMode && !isHandMode;
   const isDropTarget = dropTargetId === node.id && !isPreviewMode && !isHandMode && draggedNodeId !== node.id;
 
+  const effectiveStyle = getNodeEffectiveStyle(node, viewportMode);
   const style: React.CSSProperties = isPreviewMode
-    ? (node.style || {})
+    ? effectiveStyle
     : {
-        ...(node.style || {}),
+        ...effectiveStyle,
         marginTop: undefined,
         marginRight: undefined,
         marginBottom: undefined,
@@ -191,6 +196,7 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
         toolMode={toolMode}
         onInsertTool={onInsertTool}
         isPreviewMode={isPreviewMode}
+        viewportMode={viewportMode}
         dropTargetId={dropTargetId}
         dropPosition={dropPosition}
         draggedNodeId={draggedNodeId}
@@ -1955,11 +1961,11 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
   }
 
   const isInline =
-    node.style?.display === 'block'
+    effectiveStyle?.display === 'block'
       ? false
-      : node.style?.display === 'inline-flex' ||
-        node.style?.display === 'inline-block' ||
-        node.style?.display === 'inline' ||
+      : effectiveStyle?.display === 'inline-flex' ||
+        effectiveStyle?.display === 'inline-block' ||
+        effectiveStyle?.display === 'inline' ||
         node.type === 'button' ||
         node.type === 'link' ||
         node.type === 'badge' ||
@@ -1981,15 +1987,15 @@ export const NodeRenderer: React.FC<NodeRendererProps> = ({
       onDrop={handleDrop}
       onClick={handleClick}
       style={{
-        ...(node.style?.marginTop ? { marginTop: node.style.marginTop } : {}),
-        ...(node.style?.marginRight ? { marginRight: node.style.marginRight } : {}),
-        ...(node.style?.marginBottom ? { marginBottom: node.style.marginBottom } : {}),
-        ...(node.style?.marginLeft ? { marginLeft: node.style.marginLeft } : {}),
-        ...(node.style?.margin ? { margin: node.style.margin } : {}),
-        ...(node.style?.width && node.style.width !== '100%' ? { width: node.style.width } : {}),
-        ...(node.style?.maxWidth ? { maxWidth: node.style.maxWidth } : {}),
-        ...(node.style?.minWidth ? { minWidth: node.style.minWidth } : {}),
-        ...(node.style?.flex ? { flex: node.style.flex } : {}),
+        ...(effectiveStyle?.marginTop ? { marginTop: effectiveStyle.marginTop } : {}),
+        ...(effectiveStyle?.marginRight ? { marginRight: effectiveStyle.marginRight } : {}),
+        ...(effectiveStyle?.marginBottom ? { marginBottom: effectiveStyle.marginBottom } : {}),
+        ...(effectiveStyle?.marginLeft ? { marginLeft: effectiveStyle.marginLeft } : {}),
+        ...(effectiveStyle?.margin ? { margin: effectiveStyle.margin } : {}),
+        ...(effectiveStyle?.width && effectiveStyle.width !== '100%' ? { width: effectiveStyle.width } : {}),
+        ...(effectiveStyle?.maxWidth ? { maxWidth: effectiveStyle.maxWidth } : {}),
+        ...(effectiveStyle?.minWidth ? { minWidth: effectiveStyle.minWidth } : {}),
+        ...(effectiveStyle?.flex ? { flex: effectiveStyle.flex } : {}),
       }}
       className={`relative group/node transition-all duration-75 ${
         isSelfDragging ? 'opacity-30 scale-[0.98]' : ''

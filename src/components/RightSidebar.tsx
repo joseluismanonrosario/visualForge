@@ -88,6 +88,7 @@ import {
 } from '../data/iconLibraries';
 import { copyToClipboardSafe } from '../utils/exportEngine';
 import { SvgIconRenderer, findCatalogIcon } from '../utils/svgIconRenderer';
+import { getNodeEffectiveStyle } from '../utils/treeUtils';
 import {
   getIconifyCategories,
   getCollectionsByCategory,
@@ -212,8 +213,8 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
       if (p.prefix) setSelectedCollection(p.prefix);
     }
 
-    if (selectedNode?.style) {
-      const s = selectedNode.style;
+    if (selectedNode) {
+      const s = getNodeEffectiveStyle(selectedNode, viewportMode);
       const pDiff =
         (s.paddingTop && s.paddingRight && s.paddingTop !== s.paddingRight) ||
         (s.paddingTop && s.paddingBottom && s.paddingTop !== s.paddingBottom) ||
@@ -740,7 +741,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
     );
   }
 
-  const style = selectedNode.style || {};
+  const style = getNodeEffectiveStyle(selectedNode, viewportMode);
   const props = selectedNode.props || {};
 
   // Quick 3x3 Auto-Layout matrix mapping
@@ -1149,19 +1150,33 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
           {/* 2. FRAME / DIMENSIONS & DISPLAY                          */}
           {/* ======================================================== */}
           <div className="space-y-3">
-            {/* Element identification header */}
+            {/* Element identification header + Responsive Breakpoint Indicator */}
             <div className="flex items-center justify-between pb-1">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#0d99ff]" />
-                <span className="text-xs font-semibold text-white truncate max-w-[170px]">
+                <span className="text-xs font-semibold text-white truncate max-w-[130px]">
                   {selectedNode.name || selectedNode.type}
                 </span>
               </div>
-              <span className="px-1.5 py-0.5 rounded bg-[#1e1e1e] border border-[#383838] font-mono text-[10px] text-zinc-400 uppercase">
-                {selectedNode.type === 'typography'
-                  ? `<${props.as || 'p'}>`
-                  : selectedNode.type}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span
+                  className={`px-1.5 py-0.5 rounded text-[9px] font-semibold tracking-wide uppercase border ${
+                    viewportMode === 'mobile'
+                      ? 'bg-amber-500/15 border-amber-500/40 text-amber-300'
+                      : viewportMode === 'tablet'
+                      ? 'bg-purple-500/15 border-purple-500/40 text-purple-300'
+                      : 'bg-blue-500/15 border-blue-500/40 text-blue-300'
+                  }`}
+                  title={`Editando estilos para el punto de interrupción ${viewportMode.toUpperCase()}`}
+                >
+                  {viewportMode}
+                </span>
+                <span className="px-1.5 py-0.5 rounded bg-[#1e1e1e] border border-[#383838] font-mono text-[10px] text-zinc-400 uppercase">
+                  {selectedNode.type === 'typography'
+                    ? `<${props.as || 'p'}>`
+                    : selectedNode.type}
+                </span>
+              </div>
             </div>
 
             {/* Display property */}

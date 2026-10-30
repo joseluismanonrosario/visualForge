@@ -1009,7 +1009,7 @@ VisualForge implementa un motor de persistencia completo para guardar y abrir pr
      - Metadatos del archivo: `format: "visualforge"`, `version: "1.0"`, `generator: "VisualForge Studio"`, marcas de tiempo `createdAt` y `updatedAt`.
      - Metadatos del proyecto: `name` (nombre editable) y `type` (`html_css`, `react`, `esp32`).
      - Configuración del lienzo: Objeto `canvas.settings` (`artboardBg`, `artboardTextColor`, `minHeight`, `padding`, `gap`, `fontFamily`, `showGrid`, `width`, `height`, `presetName`), `viewportMode` y nivel de `zoom`.
-     - Árbol jerárquico de componentes (`elements`): Coordenadas x/y, anchos, altos, estilos CSS en memoria, textos, capas, jerarquías de anidamiento (`children`), banderas de bloqueo (`locked`) y visibilidad (`hidden`), y props de componentes (incluyendo configuraciones GPIO para proyectos ESP32).
+     - Árbol jerárquico de componentes (`elements`): Coordenadas x/y, anchos, altos, estilos CSS en memoria, textos, capas, jerarquías de anidamiento (`children`), banderas de bloqueo (`locked`), visibilidad desacoplada por dispositivo (`hidden`, `responsiveVisibility`), estilos responsivos independientes (`responsiveStyles` para Desktop, Tablet y Mobile), y props de componentes (incluyendo configuraciones GPIO para proyectos ESP32).
 3. **Conversión a JSON**:
    - Transformación del objeto estructurado en una cadena JSON formateada y legible con indentación de 2 espacios (`JSON.stringify(data, null, 2)`).
 4. **Diálogo Nativo de Guardado y Extensión Obligatoria `.vforge`**:
@@ -1029,10 +1029,52 @@ VisualForge implementa un motor de persistencia completo para guardar y abrir pr
    - Convierte el texto JSON en objeto JavaScript mediante `deserializeProject()`, comprobando la validez del esquema y la presencia del array de elementos (`elements` o `tree`).
 4. **Restauración y Renderizado Inmediato en el Lienzo**:
    - Reconstruye atómicamente el estado en memoria:
-     - `tree`: Restaura todos los componentes con sus coordenadas, dimensiones, textos, estilos y capas originales.
+     - `tree`: Restaura todos los componentes con sus coordenadas, dimensiones, textos, estilos y capas originales, incluyendo sus `responsiveStyles` y `responsiveVisibility` desacoplados.
      - `history`: Reinicializa la pila de deshacer/rehacer con el estado cargado.
      - `projectName` y `projectType`: Restaura el nombre del proyecto y adapta la iconografía y catálogos de componentes.
      - `canvasSettings`: Restaura dimensiones, fondo del lienzo, padding y tipografía.
      - `selectedId`: Selecciona automáticamente el nodo principal para permitir edición instantánea.
      - `isWelcomeOpen`: Cierra la pantalla de inicio si estaba activa.
      - Muestra un toast informativo confirmando la carga exitosa y el número de componentes restaurados.
+
+---
+
+## 15. SISTEMA DE DISEÑO RESPONSIVO CON BREAKPOINTS DESACOPLADOS
+
+VisualForge implementa una arquitectura de diseño responsivo avanzada basada en **puntos de interrupción independientes y desacoplados (Decoupled Breakpoints)** para los tres contextos de pantalla: **Desktop (1440px)**, **Tablet (768px)** y **Móvil (375px)** ([src/types/index.ts](file:///C:/Users/manom/OneDrive/Desktop/Workspace/winWebFormApp/src/types/index.ts), [src/utils/treeUtils.ts](file:///C:/Users/manom/OneDrive/Desktop/Workspace/winWebFormApp/src/utils/treeUtils.ts), [src/components/NodeRenderer.tsx](file:///C:/Users/manom/OneDrive/Desktop/Workspace/winWebFormApp/src/components/NodeRenderer.tsx), [src/components/RightSidebar.tsx](file:///C:/Users/manom/OneDrive/Desktop/Workspace/winWebFormApp/src/components/RightSidebar.tsx)):
+
+1. **Estructura Compartida Global**:
+   - Todos los elementos del proyecto (textos, contenedores, imágenes, botones, etc.) forman parte del mismo árbol global de componentes (`tree: CanvasNode[]`).
+   - Comparten identificadores únicos (`node.id`), jerarquía de anidamiento (`node.children`), tipo de elemento (`node.type`) y contenido textual base (`node.props.text`, `node.props.content`, etc.).
+   - Agregar, eliminar o reorganizar elementos en cualquier vista afecta la estructura del proyecto de forma coherente.
+
+2. **Estilos Independientes por Dispositivo (`ResponsiveStyles`)**:
+   - Cada nodo del lienzo soporta definiciones de estilo independientes por dispositivo mediante la interfaz `ResponsiveStyles`:
+     ```typescript
+     export interface ResponsiveStyles {
+       desktop?: Record<string, any>;
+       tablet?: Record<string, any>;
+       mobile?: Record<string, any>;
+     }
+     ```
+   - Los estilos incluyen coordenadas de posicionamiento (`x`, `y`, `left`, `top`, `margin`), tamaños (`width`, `height`, `minWidth`, `maxWidth`), tipografías (`fontSize`, `fontWeight`, `lineHeight`, `textAlign`), distribución flexbox/grid (`display`, `flexDirection`, `gap`, `justifyContent`, `alignItems`), colores y decoraciones.
+
+3. **Aislamiento Estricto de Cambios**:
+   - **En Vista Desktop**: Cualquier cambio visual o de posición actualiza el estilo base global `node.style` y su sobreescritura `node.responsiveStyles.desktop`.
+   - **En Vistas Tablet o Móvil**: Cualquier modificación visual, de coordenadas x/y, tamaños, tipografías o alineaciones se almacena **exclusivamente** en `node.responsiveStyles[viewportMode]`. Los valores base y configurados en Desktop permanecen 100% inalterados e intactos.
+   - **Visibilidad Desacoplada (`ResponsiveVisibility`)**: Ocultar o mostrar un elemento mediante el árbol de capas o el inspector de propiedades en modo Tablet o Móvil se almacena exclusivamente en `node.responsiveVisibility[viewportMode]`, permitiendo ocultar elementos en pantallas reducidas sin eliminarlos ni ocultarlos en Desktop.
+
+4. **Motor de Resolución en Cascada (`getNodeEffectiveStyle`)**:
+   - El lienzo y el inspector resuelven dinámicamente los estilos aplicados según la jerarquía de herencia:
+     - `desktop`: Aplica `{ ...node.style, ...node.responsiveStyles?.desktop }`.
+     - `tablet`: Hereda los estilos de Desktop y sobreescribe con `{ ...desktopStyle, ...node.responsiveStyles?.tablet }`.
+     - `mobile`: Hereda los estilos de Desktop y Tablet, sobreescribiendo con `{ ...desktopStyle, ...tabletStyle, ...node.responsiveStyles?.mobile }`.
+   - Función `isNodeHiddenInViewport(node, viewport)`: Resuelve el estado de visibilidad del nodo en el dispositivo activo con fallback automático a `node.hidden`.
+
+5. **Actualización del Modelo de Datos en Archivos `.vforge`**:
+   - El modelo serializado en archivos `.vforge` (`CanvasNode`) almacena transparentemente las colecciones `responsiveStyles` y `responsiveVisibility` de cada componente.
+   - Compatibilidad retroactiva completa: Al abrir proyectos antiguos sin propiedades responsivas explícitas, el deserializador preserva sus estilos originales en Desktop y permite agregar variantes para Tablet y Móvil inmediatamente.
+
+6. **Experiencia de Usuario en la Interfaz (UI/UX)**:
+   - **Badge de Breakpoint Activo**: En la cabecera del inspector de propiedades (`RightSidebar`), se muestra una etiqueta distintiva que indica el dispositivo activo (`DESKTOP`, `TABLET` o `MOBILE`) y notifica al usuario si las ediciones actuales están aisladas para ese formato de pantalla.
+   - **Inspector Dinámico**: Los campos numéricos, selectores de tipografía y controles de color reflejan fielmente el valor efectivo calculado para el breakpoint visualizado.
