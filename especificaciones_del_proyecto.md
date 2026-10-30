@@ -850,6 +850,20 @@ const handleCopyCode = async (textToCopy) => {
 
 VisualForge Studio soporta proyectos orientados a diferentes destinos de compilación y ejecución desde el momento de su creación.
 
+### Pantalla de Carga y Splash Screen (`SplashScreen.tsx`)
+Al iniciar la aplicación, se despliega una pantalla de bienvenida flotante (Splash Screen) con bordes redondeados (`rounded-[26px]`) centrada sobre un fondo oscuro con desenfoque de cristal (`backdrop-blur-md`):
+- **Diseño Gráfico Bipartito**:
+  - **Lateral Izquierdo (Fondo Oscuro `#21211f`)**: Logotipo oficial de cinta 3D `{X}`, títulos de marca *"VisualForge"* y *"App Design Studio"*, avisos de copyright y legal, y área de estado de inicialización interactiva.
+  - **Lateral Derecho (Ilustración Isométrica `#ece6d6`)**: Arte conceptual isométrico que representa el estudio de diseño web, paneles flotantes, paletas de componentes, gráficos y código modular.
+- **Animación del Estado "Iniciando..."**:
+  - Mensajes secuenciales de carga en tiempo real: *"Iniciando aplicación..."*, *"Cargando catálogo de componentes y assets..."*, *"Inicializando motor de renderizado..."*, *"Iniciando VisualForge Studio..."*.
+  - Presentación limpia y directa del texto de estado sin puntos flotantes o saltarines distractores en la animación.
+  - Barra de progreso brillante con gradiente dinámico (`from-[#0d99ff] via-indigo-500 to-violet-500`) con resplandor neón.
+- **Duración y Transición**:
+  - Tiempo de permanencia estimado de 2.6 segundos mientras los assets e índices del sistema se inicializan.
+  - Transición suave de desvanecimiento (`fade-out`) al completarse, revelando la pantalla de selección de proyectos sin parpadeos.
+  - Soporte de omisión instantánea al hacer clic sobre la pantalla.
+
 ### Selector de Tipos de Proyecto y Pantalla de Inicio / "Nuevo" (`ProjectCreationScreen`)
 Al iniciar la aplicación o al hacer clic en el botón "Nuevo" de la barra superior, la interfaz oculta las barras de diseño secundarias y despliega una pantalla de bienvenida fija sobre el fondo del lienzo (`canvas-dots`) con diseño centrado enmarcado en un recuadro armónico adaptado al tema activo (`dark`, `light`, `blue`):
 - **Cabecera de Pantalla de Inicio**: Logotipo oficial de VisualForge adaptado al tema (`logo-gray.png` en oscuro, `logo-blue.png` en claro, `logo-white.png` en azul) alineado horizontalmente con el nombre **VisualForge** (`text-xl sm:text-2xl font-bold`), con el subtítulo directo en `<h2>Iniciar</h2>` (`text-base sm:text-lg font-semibold`) alineado verticalmente con el logo (en el mismo margen izquierdo) y acompañado inmediatamente debajo por un texto descriptivo (*"Selecciona el entorno de trabajo y la plantilla inicial para comenzar"*), garantizando contraste cromático óptimo según el tema seleccionado o por defecto.

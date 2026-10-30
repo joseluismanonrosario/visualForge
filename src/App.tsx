@@ -29,9 +29,11 @@ import { RightSidebar } from './components/RightSidebar';
 import { Canvas } from './components/Canvas';
 import { ExportModal } from './components/ExportModal';
 import { ProjectCreationScreen } from './components/ProjectCreationScreen';
+import { SplashScreen } from './components/SplashScreen';
 import { FloatingToolbox } from './components/FloatingToolbox';
 
 export function App() {
+  const [showSplash, setShowSplash] = useState(true);
   const [projectName, setProjectName] = useState('VisualForge Studio - Project');
   const [projectType, setProjectType] = useState<ProjectType>('html_css');
   const [isProjectLoaded, setIsProjectLoaded] = useState(false);
@@ -588,6 +590,11 @@ export function App() {
 
   return (
     <div className="h-screen w-screen overflow-hidden flex flex-col bg-[#1e1e1e] text-zinc-100 font-sans select-none">
+      {/* Splash Screen al iniciar la aplicación (dura 2 a 3 segundos con animación de carga) */}
+      {showSplash && (
+        <SplashScreen onComplete={() => setShowSplash(false)} />
+      )}
+
       {isWelcomeOpen ? (
         <>
           {/* TopBar en modo crear proyecto: solo logo y texto en web, y botones en versión ejecutable */}
