@@ -18,7 +18,7 @@ Write-Host "Directorio del proyecto: $WorkspaceRoot" -ForegroundColor Gray
 
 Set-Location $WorkspaceRoot
 
-# 1. Preparar directorio electron/ y main.cjs
+# 1. Preparar directorio electron/, main.cjs y preload.cjs
 $ElectronDir = "$WorkspaceRoot\electron"
 if (-not (Test-Path $ElectronDir)) {
     New-Item -ItemType Directory -Path $ElectronDir -Force | Out-Null
@@ -26,10 +26,13 @@ if (-not (Test-Path $ElectronDir)) {
 
 $MainTarget = "$ElectronDir\main.cjs"
 $MainSource = "$SkillDir\resources\main.cjs"
-if (-not (Test-Path $MainTarget)) {
-    Copy-Item -Path $MainSource -Destination $MainTarget -Force
-    Write-Host "[OK] electron/main.cjs generado con exito." -ForegroundColor Green
-}
+Copy-Item -Path $MainSource -Destination $MainTarget -Force
+Write-Host "[OK] electron/main.cjs sincronizado con exito." -ForegroundColor Green
+
+$PreloadTarget = "$ElectronDir\preload.cjs"
+$PreloadSource = "$SkillDir\resources\preload.cjs"
+Copy-Item -Path $PreloadSource -Destination $PreloadTarget -Force
+Write-Host "[OK] electron/preload.cjs sincronizado con exito." -ForegroundColor Green
 
 # 2. Preparar electron-builder.json
 $BuilderTarget = "$WorkspaceRoot\electron-builder.json"

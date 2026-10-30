@@ -63,6 +63,30 @@
    THEME STYLING & COLOR SCHEMES (PREVENTS TEXT DISAPPEARING IN ALL THEMES)
    ========================================================================== */
 
+/* Desktop Window & Titlebar Drag Settings */
+header {
+  -webkit-app-region: drag;
+}
+
+header button,
+header input,
+header select,
+header a,
+.no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* Red hover on Close window button across all themes */
+header button.btn-window-close:hover {
+  background-color: #e81123 !important;
+  color: #ffffff !important;
+}
+
+header button.btn-window-close:active {
+  background-color: #c4101f !important;
+  color: #ffffff !important;
+}
+
 /* Isolated Canvas Artboard Styling: Preserves Component Contrast & Styling */
 .canvas-artboard {
   color: #f1f5f9;

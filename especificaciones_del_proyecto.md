@@ -10,7 +10,7 @@ La aplicación es un **constructor visual de páginas web drag-and-drop con inte
 
 La pantalla se distribuye en una interfaz fija estilo herramienta de diseño moderna (`h-screen w-screen bg-[#1e1e1e] text-zinc-100 overflow-hidden flex flex-col font-sans select-none`):
 
-1. **Top Bar / Barra Superior de Figma (`h-11 bg-[#2c2c2c] border-b border-[#383838] px-3 flex items-center justify-between`)**:
+1. **Top Bar / Barra Superior de Figma (`h-11 bg-[#2c2c2c] border-b border-[#383838] pl-3 pr-0 flex items-center justify-between`)**:
    - **Izquierda**:
      - Botón de Menú y Logo dinámico oficial de VisualForge (cinta 3D formando brackets de código `{X}` con fondo 100% transparente sin recuadros ni fondos sólidos), adaptativo según el tema activo de la aplicación:
        - **Tema Oscuro (`dark`)**: Isotipo `{X}` gris grafito / slate metálico (`/logos/logo-gray.png`).
@@ -43,6 +43,12 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
      - Selector de Nivel de Zoom (`ZoomOut`, porcentaje editable/clic para reset a `100%`, `ZoomIn`).
      - **Botón Present / Preview (Play `▶` / Eye)**: Alterna entre modo diseño y modo vista previa interactiva.
      - **Botón Share / Export Code**: Abre el modal de exportación de código fuente.
+     - **Extensión al Borde y Controles de Ventana de Escritorio (Window Controls)**:
+       - La barra superior se extiende de borde a borde (`pl-3 pr-0`), eliminando márgenes derechos para acoplar directamente en la esquina superior derecha los 3 botones estándar de control de ventana de Windows:
+         * **Minimizar** (`Minus` / `-`): Minimiza la ventana al hacer clic.
+         * **Maximizar / Restaurar** (`Square` / `Copy`): Alterna entre el estado maximizado a pantalla completa y el tamaño restaurado con detección reactiva de estado (`isMaximized`).
+         * **Cerrar** (`X`): Botón de cierre posicionado exactamente en el vértice superior derecho con efecto hover rojo nativo de Windows `#e81123` y texto blanco.
+       - En la versión de escritorio nativa (Electron), la barra superior funciona como barra de título frameless arrastrable (`-webkit-app-region: drag` en la cabecera con exclusión `no-drag` en elementos interactivos) comunicándose por IPC seguro para gobernar la ventana del sistema operativo.
 
 2. **Panel Lateral Izquierdo: Capas & Assets (`w-72 bg-[#252526] border-r border-[#383838] flex flex-col`)**:
    - Cabecera con pestañas conmutables estilo Figma:
@@ -933,6 +939,7 @@ Funciones inmutables y puras para manipular el árbol de capas:
 - **Condición de Ejecución Exclusiva Bajo Demanda**: Configurado bajo progressive disclosure con activación estricta únicamente cuando el usuario llame explícitamente a `appToProduccion` o solicite empaquetar la aplicación a ejecutable de escritorio.
 - **Motor de Conversión y Arquitectura**:
   - Basado en **Electron** y **Electron Builder** para empaquetado nativo en Windows x64.
+  - **Ventana Frameless & Barra de Título Nativa**: Configurada con `frame: false` y `titleBarStyle: 'hidden'`, convirtiendo la barra superior `TopBar` en la barra de título principal de la ventana con arrastre nativo (`-webkit-app-region: drag`) y los 3 botones de control de ventana (Minimizar, Maximizar/Restaurar, Cerrar) en la esquina superior derecha comunicándose mediante el puente IPC seguro `electron/preload.cjs`.
   - Servidor loopback embebido (`http://127.0.0.1`) en `electron/main.cjs` que garantiza compatibilidad al 100% con los iconos locales de Iconify offline (`/@iconify/json/`), assets estáticos y enrutamiento SPA sin bloqueos del esquema `file://`.
   - Salida dual: Generación simultánea de instalador estándar para Windows (`VisualForge Studio Setup <versión>.exe`) y binario portable autocontenido (`VisualForge Studio <versión>.exe`) en la carpeta `release/`.
   - Script automatizado en PowerShell: [build-exe.ps1](file:///C:/Users/manom/OneDrive/Desktop/Workspace/winWebFormApp/.agents/skills/appToProduccion/scripts/build-exe.ps1).

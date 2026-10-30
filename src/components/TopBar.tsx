@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Monitor,
   Tablet,
@@ -19,6 +19,10 @@ import {
   Sun,
   Palette,
   Laptop,
+  Minus,
+  Square,
+  Copy,
+  X,
 } from 'lucide-react';
 import { ViewportMode, ToolMode, ProjectType, AppTheme, ResolvedTheme } from '../types';
 
@@ -80,9 +84,58 @@ export const TopBar: React.FC<TopBarProps> = ({
   setAppTheme,
 }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
+
+  useEffect(() => {
+    const api = (window as any).electronAPI;
+    if (api) {
+      api.isMaximized?.().then?.((max: boolean) => {
+        setIsMaximized(max);
+      });
+      const cleanup = api.onMaximizedChange?.((max: boolean) => {
+        setIsMaximized(max);
+      });
+      return () => {
+        if (typeof cleanup === 'function') cleanup();
+      };
+    }
+  }, []);
+
+  const handleMinimize = () => {
+    const api = (window as any).electronAPI;
+    if (api?.minimize) {
+      api.minimize();
+    }
+  };
+
+  const handleMaximize = () => {
+    const api = (window as any).electronAPI;
+    if (api?.maximize) {
+      api.maximize().then?.((max: boolean) => {
+        setIsMaximized(max);
+      });
+    } else {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+        setIsMaximized(false);
+      } else {
+        document.documentElement.requestFullscreen().catch(() => {});
+        setIsMaximized(true);
+      }
+    }
+  };
+
+  const handleClose = () => {
+    const api = (window as any).electronAPI;
+    if (api?.close) {
+      api.close();
+    } else {
+      window.close();
+    }
+  };
 
   return (
-    <header className="h-11 bg-[#2c2c2c] border-b border-[#383838] px-3 flex items-center justify-between select-none z-30 flex-shrink-0 text-xs text-zinc-200">
+    <header className="h-11 bg-[#2c2c2c] border-b border-[#383838] pl-3 pr-0 flex items-center justify-between select-none z-30 flex-shrink-0 text-xs text-zinc-200">
       {/* Left: Brand */}
       <div className="flex items-center gap-3">
         {/* Figma Style Logo */}
@@ -157,7 +210,7 @@ export const TopBar: React.FC<TopBarProps> = ({
       </div>
 
       {/* Right: History, Frames, Zoom, Preview & Export */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 h-full">
         {/* Undo / Redo */}
         <div className="flex items-center gap-0.5 border-r border-[#3e3e42] pr-2">
           <button
@@ -329,6 +382,38 @@ export const TopBar: React.FC<TopBarProps> = ({
           <Download className="w-3.5 h-3.5" />
           <span>Export</span>
         </button>
+
+        {/* Window Controls (Minimizar, Maximizar/Restaurar, Cerrar) */}
+        <div className="flex items-center h-full ml-1 border-l border-[#383838]">
+          <button
+            type="button"
+            onClick={handleMinimize}
+            title="Minimizar"
+            className="h-11 w-11 flex items-center justify-center hover:bg-white/10 active:bg-white/15 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+          >
+            <Minus className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={handleMaximize}
+            title={isMaximized ? 'Restaurar' : 'Maximizar'}
+            className="h-11 w-11 flex items-center justify-center hover:bg-white/10 active:bg-white/15 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+          >
+            {isMaximized ? (
+              <Copy className="w-3.5 h-3.5 rotate-90" />
+            ) : (
+              <Square className="w-3.5 h-3.5" />
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={handleClose}
+            title="Cerrar"
+            className="h-11 w-11 flex items-center justify-center btn-window-close text-zinc-400 hover:text-white transition-colors cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </header>
   );

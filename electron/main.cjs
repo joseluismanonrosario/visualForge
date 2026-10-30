@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, shell } = require('electron');
+const { app, BrowserWindow, Menu, shell, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
@@ -96,11 +96,14 @@ function createWindow(port) {
     icon: fs.existsSync(iconPath) ? iconPath : undefined,
     backgroundColor: '#1e1e1e',
     autoHideMenuBar: true,
+    frame: false,
+    titleBarStyle: 'hidden',
     show: false,
     webPreferences: {
+      preload: path.join(__dirname, 'preload.cjs'),
       nodeIntegration: false,
       contextIsolation: true,
-      sandbox: true,
+      sandbox: false,
     },
   });
 
@@ -110,6 +113,14 @@ function createWindow(port) {
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
+  });
+
+  mainWindow.on('maximize', () => {
+    mainWindow?.webContents.send('window-maximized-change', true);
+  });
+
+  mainWindow.on('unmaximize', () => {
+    mainWindow?.webContents.send('window-maximized-change', false);
   });
 
   // Abrir enlaces externos en el navegador predeterminado del sistema
@@ -124,6 +135,30 @@ function createWindow(port) {
     mainWindow = null;
   });
 }
+
+// Handlers IPC para controles de ventana (Minimizar, Maximizar, Cerrar)
+ipcMain.handle('window-minimize', () => {
+  if (mainWindow) mainWindow.minimize();
+});
+
+ipcMain.handle('window-maximize', () => {
+  if (!mainWindow) return false;
+  if (mainWindow.isMaximized()) {
+    mainWindow.unmaximize();
+    return false;
+  } else {
+    mainWindow.maximize();
+    return true;
+  }
+});
+
+ipcMain.handle('window-close', () => {
+  if (mainWindow) mainWindow.close();
+});
+
+ipcMain.handle('window-is-maximized', () => {
+  return mainWindow ? mainWindow.isMaximized() : false;
+});
 
 // Bloqueo de instancia única
 const gotTheLock = app.requestSingleInstanceLock();
