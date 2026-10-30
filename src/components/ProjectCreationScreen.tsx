@@ -301,32 +301,40 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
     <div
       className={`w-full max-w-4xl mx-auto my-auto ${cardBg} border ${cardBorder} rounded-2xl shadow-2xl p-6 sm:p-7 select-none animate-in fade-in zoom-in-95 duration-200 flex flex-col gap-5`}
     >
-      {/* Top Header inside Card: VisualForge branding + Logo, h2 Iniciar */}
-      <div className={`flex items-center justify-between pb-4 border-b ${dividerBorder}`}>
-        <div className="flex items-center gap-3">
-          <img
-            src={getLogoForTheme(resolvedTheme)}
-            alt="VisualForge"
-            className="w-9 h-9 aspect-square object-contain flex-shrink-0 select-none pointer-events-none"
-          />
-          <div className="flex flex-col justify-center">
+      {/* Top Header inside Card: VisualForge branding + Logo, h2 Iniciar alineado verticalmente con el logo y descripción */}
+      <div className={`flex items-start justify-between pb-4 border-b ${dividerBorder}`}>
+        <div className="flex flex-col gap-1.5">
+          {/* Fila 1: Logo alineado horizontalmente con VisualForge */}
+          <div className="flex items-center gap-2.5">
+            <img
+              src={getLogoForTheme(resolvedTheme)}
+              alt="VisualForge"
+              className="w-7 h-7 aspect-square object-contain flex-shrink-0 select-none pointer-events-none"
+            />
             <span
               className={`text-xl sm:text-2xl font-bold tracking-tight leading-none ${titleColor}`}
             >
               VisualForge
             </span>
+          </div>
+
+          {/* Fila 2: Iniciar alineado verticalmente con el logo y pequeña descripción debajo */}
+          <div className="flex flex-col gap-0.5">
             <h2
-              className={`text-xs sm:text-sm font-semibold tracking-wide mt-1 leading-none ${h2Color}`}
+              className={`text-base sm:text-lg font-semibold tracking-tight ${h2Color}`}
             >
               Iniciar
             </h2>
+            <p className={`text-xs ${textMuted}`}>
+              Selecciona el entorno de trabajo y la plantilla inicial para comenzar
+            </p>
           </div>
         </div>
 
         {canCancel && (
           <button
             onClick={onCancel}
-            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+            className={`p-1.5 rounded-lg transition-colors cursor-pointer mt-0.5 ${
               isLight
                 ? 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100'
                 : 'text-zinc-400 hover:text-white hover:bg-white/10'

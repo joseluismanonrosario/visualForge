@@ -55,7 +55,10 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
        - Centrada con precisión tanto horizontal como verticalmente en la pantalla sobre el canvas interactivo con microcuadrícula de puntos.
        - Dimensión delimitada (`max-w-4xl`) evitando ocupar la pantalla completa.
        - Enmarcada en un único recuadro protector que cubre todo el contenido con adaptación armónica según el tema activo (`dark`, `light`, `blue`), integrando:
-         * **Cabecera de Marca y Título**: Logotipo oficial de VisualForge contiguo al nombre de marca **"VisualForge"** (`text-xl sm:text-2xl font-bold`) y debajo subtítulo en `<h2>Iniciar</h2>` (`text-xs sm:text-sm font-semibold`), aplicando los colores correspondientes al tema seleccionado o por defecto:
+         * **Cabecera de Marca y Título (Alineación Estricta)**:
+           - **Fila Superior**: Logotipo oficial de VisualForge alineado horizontalmente con el nombre de marca **"VisualForge"** (`flex items-center gap-2.5`, `text-xl sm:text-2xl font-bold`).
+           - **Fila Inferior**: Subtítulo en `<h2>Iniciar</h2>` (`text-base sm:text-lg font-semibold`) alineado verticalmente con el logo (en el mismo eje y margen izquierdo inicial), seguido inmediatamente debajo por un texto breve de descripción (*"Selecciona el entorno de trabajo y la plantilla inicial para comenzar"*).
+           - Colores y logotipo reactivos según el tema seleccionado o por defecto:
            - **Modo Oscuro (`dark` / por defecto)**: Isotipo gris grafito (`/logos/logo-gray.png`), "VisualForge" en blanco, `<h2>Iniciar</h2>` en azul cian `#0d99ff` y divisor `#2e2f33`.
            - **Modo Claro (`light`)**: Isotipo azul cobalto (`/logos/logo-blue.png`), "VisualForge" en carbón oscuro `#0f172a`, `<h2>Iniciar</h2>` en azul `#0d99ff` y divisor `#e2e8f0`.
            - **Modo Azul (`blue`)**: Isotipo blanco plateado (`/logos/logo-white.png`), "VisualForge" en blanco, `<h2>Iniciar</h2>` en celeste cielo `#38bdf8` y divisor `#1e293b`.
@@ -849,7 +852,7 @@ VisualForge Studio soporta proyectos orientados a diferentes destinos de compila
 
 ### Selector de Tipos de Proyecto y Pantalla de Inicio / "Nuevo" (`ProjectCreationScreen`)
 Al iniciar la aplicación o al hacer clic en el botón "Nuevo" de la barra superior, la interfaz oculta las barras de diseño secundarias y despliega una pantalla de bienvenida fija sobre el fondo del lienzo (`canvas-dots`) con diseño centrado enmarcado en un recuadro armónico adaptado al tema activo (`dark`, `light`, `blue`):
-- **Cabecera de Pantalla de Inicio**: Logotipo oficial de VisualForge adaptado al tema (`logo-gray.png` en oscuro, `logo-blue.png` en claro, `logo-white.png` en azul) junto al nombre **VisualForge** (`text-xl sm:text-2xl font-bold`) y subtítulo directo en `<h2>Iniciar</h2>` (`text-xs sm:text-sm font-semibold`), garantizando contraste cromático óptimo según el tema seleccionado o por defecto.
+- **Cabecera de Pantalla de Inicio**: Logotipo oficial de VisualForge adaptado al tema (`logo-gray.png` en oscuro, `logo-blue.png` en claro, `logo-white.png` en azul) alineado horizontalmente con el nombre **VisualForge** (`text-xl sm:text-2xl font-bold`), con el subtítulo directo en `<h2>Iniciar</h2>` (`text-base sm:text-lg font-semibold`) alineado verticalmente con el logo (en el mismo margen izquierdo) y acompañado inmediatamente debajo por un texto descriptivo (*"Selecciona el entorno de trabajo y la plantilla inicial para comenzar"*), garantizando contraste cromático óptimo según el tema seleccionado o por defecto.
 1. **Columna Izquierda (Acciones Principales y Proyectos Recientes)**:
    - **Crear un proyecto**: Botón activo destacado con borde cian neón brillante (`#00d2ff`) o azul cian (`#0d99ff`) y resplandor suave.
    - **Abrir un proyecto o una solución**: Botón secundario con icono de carpeta abierta (`FolderOpen`) en estado deshabilitado/no funcional.
