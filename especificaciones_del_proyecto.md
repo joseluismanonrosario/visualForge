@@ -936,3 +936,6 @@ Funciones inmutables y puras para manipular el árbol de capas:
   - Servidor loopback embebido (`http://127.0.0.1`) en `electron/main.cjs` que garantiza compatibilidad al 100% con los iconos locales de Iconify offline (`/@iconify/json/`), assets estáticos y enrutamiento SPA sin bloqueos del esquema `file://`.
   - Salida dual: Generación simultánea de instalador estándar para Windows (`VisualForge Studio Setup <versión>.exe`) y binario portable autocontenido (`VisualForge Studio <versión>.exe`) en la carpeta `release/`.
   - Script automatizado en PowerShell: [build-exe.ps1](file:///C:/Users/manom/OneDrive/Desktop/Workspace/winWebFormApp/.agents/skills/appToProduccion/scripts/build-exe.ps1).
+  - **Ejecutables Generados y Verificados**:
+    - `release/VisualForge Studio 1.0.0.exe` (Versión Portable, ~179.3 MB).
+    - `release/VisualForge Studio Setup 1.0.0.exe` (Instalador NSIS, ~202.9 MB).

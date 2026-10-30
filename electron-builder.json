@@ -1,0 +1,38 @@
+{
+  "appId": "com.visualforge.studio",
+  "productName": "VisualForge Studio",
+  "copyright": "Copyright © 2026 VisualForge Studio",
+  "directories": {
+    "output": "release"
+  },
+  "files": [
+    "dist/**/*",
+    "electron/**/*",
+    "public/**/*",
+    "node_modules/@iconify/json/**/*",
+    "package.json"
+  ],
+  "asar": true,
+  "win": {
+    "target": [
+      {
+        "target": "portable",
+        "arch": ["x64"]
+      },
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      }
+    ],
+    "icon": "public/favicon.png"
+  },
+  "nsis": {
+    "oneClick": true,
+    "perMachine": false,
+    "allowElevation": false,
+    "allowToChangeInstallationDirectory": false,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "VisualForge Studio"
+  }
+}
