@@ -54,6 +54,7 @@ export interface FloatingToolboxProps {
   onDuplicateNode?: (id: string) => void;
   onDeleteNode?: (id: string) => void;
   onMoveSibling?: (id: string, direction: 'up' | 'down') => void;
+  onClearCanvas?: () => void;
   className?: string;
 }
 
@@ -153,6 +154,7 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
   onDuplicateNode,
   onDeleteNode,
   onMoveSibling,
+  onClearCanvas,
   className = '',
 }) => {
   const toolboxRef = useRef<HTMLDivElement>(null);
@@ -517,58 +519,71 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
 
         {/* ======================================================== */}
         {/* TOOLBOX DE ARRIBA: Barra Contextual para Elemento        */}
-        {/* (Aparece únicamente cuando se selecciona un elemento)    */}
+        {/* (Aparece únicamente cuando se selecciona un elemento o lienzo) */}
         {/* ======================================================== */}
         {selectedId && (
           <div
             data-interactive="true"
             className="select-none inline-flex items-center gap-2 bg-[#17181a]/95 backdrop-blur-2xl border border-white/[0.08] shadow-[0_12px_30px_rgba(0,0,0,0.6)] rounded-full px-3.5 py-1 animate-in fade-in slide-in-from-bottom-2 duration-150"
           >
-            <span className="text-[12px] font-mono text-[#00a3ff] select-none tracking-tight">
-              {selectedId}
+            <span className="text-[12px] font-mono text-[#00a3ff] select-none tracking-tight font-medium">
+              {selectedId === 'canvas' ? 'Lienzo' : selectedId}
             </span>
             <div className="w-px h-3.5 bg-white/15 mx-0.5" />
             <div className="flex items-center gap-1">
+              {selectedId !== 'canvas' && (
+                <>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDuplicateNode?.(selectedId);
+                    }}
+                    title="Duplicar (Ctrl+D)"
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onMoveSibling?.(selectedId, 'up');
+                    }}
+                    title="Mover arriba (Alt+↑)"
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  >
+                    <ArrowUp className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onMoveSibling?.(selectedId, 'down');
+                    }}
+                    title="Mover abajo (Alt+↓)"
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  >
+                    <ArrowDown className="w-3.5 h-3.5" />
+                  </button>
+                </>
+              )}
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onDuplicateNode?.(selectedId);
+                  if (selectedId === 'canvas') {
+                    if (onClearCanvas) {
+                      onClearCanvas();
+                    } else {
+                      onDeleteNode?.(selectedId);
+                    }
+                    showPlacementToast('✓ Todos los elementos del lienzo han sido eliminados');
+                  } else {
+                    onDeleteNode?.(selectedId);
+                  }
                 }}
-                title="Duplicar (Ctrl+D)"
-                className="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-              >
-                <Copy className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onMoveSibling?.(selectedId, 'up');
-                }}
-                title="Mover arriba (Alt+↑)"
-                className="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-              >
-                <ArrowUp className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onMoveSibling?.(selectedId, 'down');
-                }}
-                title="Mover abajo (Alt+↓)"
-                className="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-              >
-                <ArrowDown className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDeleteNode?.(selectedId);
-                }}
-                title="Eliminar (Supr / Delete)"
+                title={selectedId === 'canvas' ? "Borrar todos los elementos del lienzo (Supr / Delete)" : "Eliminar (Supr / Delete)"}
                 className="w-7 h-7 rounded-lg flex items-center justify-center text-red-400 hover:text-red-300 hover:bg-red-500/15 transition-colors cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />

@@ -146,10 +146,8 @@ export function App() {
   }, []);
 
   const handleClearCanvas = useCallback(() => {
-    if (window.confirm('¿Deseas vaciar el lienzo y eliminar todos los componentes?')) {
-      updateTreeWithHistory([]);
-      setSelectedId('canvas');
-    }
+    updateTreeWithHistory([]);
+    setSelectedId('canvas');
   }, [updateTreeWithHistory]);
 
   const handleAddRootContainer = useCallback(() => {
@@ -376,11 +374,15 @@ export function App() {
   // Delete Node
   const handleDeleteNode = useCallback(
     (id: string) => {
+      if (id === 'canvas') {
+        handleClearCanvas();
+        return;
+      }
       const newTree = deleteNodeInTree(tree, id);
       updateTreeWithHistory(newTree);
       if (selectedId === id) setSelectedId(null);
     },
-    [tree, selectedId, updateTreeWithHistory]
+    [tree, selectedId, updateTreeWithHistory, handleClearCanvas]
   );
 
   // Duplicate Node
@@ -647,6 +649,7 @@ export function App() {
           onDuplicateNode={handleDuplicateNode}
           onDeleteNode={handleDeleteNode}
           onMoveSibling={handleMoveSibling}
+          onClearCanvas={handleClearCanvas}
         />
       )}
 

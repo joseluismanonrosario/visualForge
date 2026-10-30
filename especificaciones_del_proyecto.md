@@ -103,7 +103,7 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
      - **Espaciados Globales**: Configuración directa de relleno interno (`padding`: None, Compact 16px, Normal 24px, Spaced 32px, Relaxed 48px) y separación entre secciones (`gap`: 0, 12px, 16px, 24px, 32px, 48px).
      - **Tipografía Global (`fontFamily`)**: Selector de familia tipográfica predeterminada para el lienzo (*Inter / Sans*, *Roboto*, *Fira Code / Mono*, *Playfair / Serif*, *System UI*).
      - **Visualización de Guías**: Conmutador para activar o desactivar la cuadrícula de puntos guía de fondo (`showGrid`).
-     - **Acciones Rápidas del Lienzo**: Botones dedicados para "+ Añadir Contenedor Raíz", "Exportar Código" y "Limpiar Lienzo" con confirmación de seguridad.
+     - **Acciones Rápidas del Lienzo**: Botones dedicados para "+ Añadir Contenedor Raíz", "Exportar Código" y "Borrar Todo" (que borra de inmediato todos los elementos dentro del lienzo de forma directa y sin ventanas de confirmación).
 
 5. **Barra de Herramientas Flotante (`FloatingToolbox`) (Estilo Segmentado Modular Figma UI3 con Barra Contextual Acoplada)**:
    - **Ubicación y Estructura Visual Modular (Segmented Capsule Islands)**:
@@ -114,7 +114,7 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
        * **Diseño e Iconografía**: Estilo en cápsula (`rounded-full bg-[#17181a]/95 backdrop-blur-2xl border border-white/[0.08] shadow-2xl px-3.5 py-1`) con:
          - Identificador del nodo seleccionado en tipografía monoespaciada azul cian neón (`#00a3ff`).
          - Divisor vertical sutil (`w-px h-3.5 bg-white/15`).
-         - 4 botones de acción rápida con iconos limpios sin etiquetas: **Duplicar** (`Copy`), **Subir** (`ArrowUp`), **Bajar** (`ArrowDown`) y **Eliminar** (`Trash2` en rojo suave).
+         - Botones de acción contextual: Para componentes incluye **Duplicar** (`Copy`), **Subir** (`ArrowUp`), **Bajar** (`ArrowDown`) y **Eliminar** (`Trash2` en rojo suave). Cuando el Lienzo está seleccionado (`selectedId === 'canvas'`), muestra la etiqueta "Lienzo" y el botón de eliminar (`Trash2`) borra de inmediato todos los elementos dentro del lienzo sin confirmación previa ni preguntas.
        * **Movimiento Solidario**: Al arrastrar la barra por el espacio de trabajo o acoplarla arriba/abajo, la barra contextual superior se traslada de forma solidaria y unificada con el toolbox inferior.
      - **Contenedor Principal de Herramientas ("Toolbox de Abajo")**:
        * Cápsula compacta y redondeada (`inline-flex items-center gap-1.5 bg-[#17181a]/95 backdrop-blur-2xl border border-white/[0.08] shadow-[0_16px_40px_rgba(0,0,0,0.7)] rounded-2xl p-1.5`).

@@ -599,10 +599,11 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
               <button
                 type="button"
                 onClick={onClearCanvas}
+                title="Borrar todos los elementos del lienzo"
                 className="py-1.5 px-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-medium flex items-center justify-center gap-1 transition-colors cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>Limpiar</span>
+                <span>Borrar Todo</span>
               </button>
             </div>
           </div>
