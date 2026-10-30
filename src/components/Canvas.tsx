@@ -268,6 +268,13 @@ export const Canvas: React.FC<CanvasProps> = ({
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
+    // Update mouse position for interactive background dot illumination (60-144 FPS GPU accelerated)
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      containerRef.current.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+      containerRef.current.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+    }
+
     if (['container', 'heading', 'paragraph', 'image'].includes(toolMode)) {
       setPlacementMousePos({ x: e.clientX, y: e.clientY });
     } else if (placementMousePos) {
@@ -297,6 +304,11 @@ export const Canvas: React.FC<CanvasProps> = ({
         x: e.clientX - panStart.x,
         y: e.clientY - panStart.y,
       });
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        containerRef.current.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+        containerRef.current.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+      }
     };
 
     const handleWindowMouseUp = () => {
@@ -416,7 +428,13 @@ export const Canvas: React.FC<CanvasProps> = ({
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      onMouseLeave={() => setPlacementMousePos(null)}
+      onMouseLeave={() => {
+        setPlacementMousePos(null);
+        if (containerRef.current) {
+          containerRef.current.style.setProperty('--mouse-x', '-9999px');
+          containerRef.current.style.setProperty('--mouse-y', '-9999px');
+        }
+      }}
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleCanvasDrop}
       onClick={(e) => {
@@ -428,11 +446,15 @@ export const Canvas: React.FC<CanvasProps> = ({
           onSelectNode(null);
         }
       }}
+      style={{
+        '--pan-x': `${pan.x}px`,
+        '--pan-y': `${pan.y}px`,
+      } as React.CSSProperties}
       className={`flex-1 relative overflow-hidden bg-[#1e1e1e] ${canvasSettings?.showGrid !== false ? 'canvas-dots' : ''} flex flex-col items-center select-none ${getCanvasCursor()}`}
     >
       {/* Pan & Zoom Canvas Container */}
       <div
-        className="w-full flex-1 flex flex-col items-center p-8 origin-top"
+        className="w-full flex-1 flex flex-col items-center p-8 origin-top relative z-10"
         style={{
           transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
         }}

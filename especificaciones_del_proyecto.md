@@ -73,7 +73,11 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
    - Pestaña colapsable con atajo `Ctrl+\` / `Cmd+\` para maximizar el lienzo.
 
 3. **Lienzo Central (Infinite Canvas & Artboard Viewport)**:
-   - Fondo de lienzo estilo Figma (`bg-[#1e1e1e]`) con cuadrícula sutil opcional (patrón de puntos o rejilla de 8px).
+   - **Cuadrícula de Puntos de Alta Densidad con Iluminación Interactiva por Cursor**:
+     - Espaciado compacto y ceñido de puntos a `14px 14px` (más pegados que la rejilla estándar de 24px) para una textura densa y refinada de matriz de diseño.
+     - **Efecto de Iluminación Interactiva (Interactive Dot Glow)**: Al pasar el cursor del ratón sobre el fondo del canvas, los puntos en un radio de 200px se iluminan dinámicamente en azul cian neón (`#38bdf8`) / blanco brillante con un halo sutil de luz ambiental centrada en la posición del puntero.
+     - **Aceleración GPU 60-144 FPS**: Alimentado por variables CSS `--mouse-x` y `--mouse-y` en tiempo real sin recargar ni re-renderizar componentes de React.
+     - **Sincronización Panorámica**: Los puntos del fondo y su iluminación interactiva se desplazan en perfecta sincronía atómica con las coordenadas `pan.x` y `pan.y` del lienzo.
    - **Sistema Integral de Scroll y Desplazamiento Fluido en el Canvas**:
      - **Scroll Vertical y Horizontal con Rueda / Trackpad**: Desplazamiento libre bidireccional mediante la rueda del ratón o gestos de dos dedos en trackpad (`deltaY` para vertical, `deltaX` o `Shift + Rueda` para horizontal), permitiendo navegar páginas web completas de cualquier longitud con respuesta instantánea a 60-144 FPS sin retardos de transición.
      - **Zoom Fluido no Bloqueante (`Ctrl + Rueda / Pinch`)**: Zoom continuo entre 25% y 250% previniendo el escalado accidental de la ventana del navegador (`e.preventDefault()`).

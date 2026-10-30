@@ -16,10 +16,28 @@
   }
 }
 
-/* Custom canvas dot grid */
+/* Custom canvas dot grid (Tighter grid + Interactive illumination on mouse hover) */
 .canvas-dots {
+  position: relative;
   background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
-  background-size: 24px 24px;
+  background-size: 14px 14px;
+  background-position: var(--pan-x, 0px) var(--pan-y, 0px);
+}
+
+.canvas-dots::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background-image: 
+    radial-gradient(circle 240px at var(--mouse-x, -9999px) var(--mouse-y, -9999px), rgba(13, 153, 255, 0.12), transparent 70%),
+    radial-gradient(rgba(56, 189, 248, 0.95) 1.5px, transparent 1.5px);
+  background-size: auto, 14px 14px;
+  background-position: 0 0, var(--pan-x, 0px) var(--pan-y, 0px);
+  -webkit-mask-image: radial-gradient(circle 200px at var(--mouse-x, -9999px) var(--mouse-y, -9999px), black 0%, rgba(0, 0, 0, 0.4) 50%, transparent 100%);
+  mask-image: radial-gradient(circle 200px at var(--mouse-x, -9999px) var(--mouse-y, -9999px), black 0%, rgba(0, 0, 0, 0.4) 50%, transparent 100%);
+  transition: opacity 0.15s ease;
 }
 
 /* Figma styled slim scrollbars */
@@ -175,8 +193,18 @@
 
 /* Canvas viewport area */
 [data-app-theme="light"] .canvas-dots {
-  background-image: radial-gradient(rgba(0, 0, 0, 0.14) 1px, transparent 1px) !important;
+  background-image: radial-gradient(rgba(0, 0, 0, 0.15) 1px, transparent 1px) !important;
+  background-size: 14px 14px !important;
   background-color: #e9ecef !important;
+  background-position: var(--pan-x, 0px) var(--pan-y, 0px) !important;
+}
+
+[data-app-theme="light"] .canvas-dots::before {
+  background-image: 
+    radial-gradient(circle 240px at var(--mouse-x, -9999px) var(--mouse-y, -9999px), rgba(13, 153, 255, 0.1), transparent 70%),
+    radial-gradient(rgba(13, 153, 255, 0.95) 1.5px, transparent 1.5px);
+  background-size: auto, 14px 14px;
+  background-position: 0 0, var(--pan-x, 0px) var(--pan-y, 0px);
 }
 
 [data-app-theme="light"] ::-webkit-scrollbar-thumb {
@@ -307,8 +335,18 @@
 }
 
 [data-app-theme="blue"] .canvas-dots {
-  background-image: radial-gradient(rgba(59, 130, 246, 0.22) 1px, transparent 1px) !important;
+  background-image: radial-gradient(rgba(59, 130, 246, 0.25) 1px, transparent 1px) !important;
+  background-size: 14px 14px !important;
   background-color: #080c14 !important;
+  background-position: var(--pan-x, 0px) var(--pan-y, 0px) !important;
+}
+
+[data-app-theme="blue"] .canvas-dots::before {
+  background-image: 
+    radial-gradient(circle 240px at var(--mouse-x, -9999px) var(--mouse-y, -9999px), rgba(59, 130, 246, 0.18), transparent 70%),
+    radial-gradient(rgba(96, 165, 250, 1) 1.5px, transparent 1.5px);
+  background-size: auto, 14px 14px;
+  background-position: 0 0, var(--pan-x, 0px) var(--pan-y, 0px);
 }
 
 [data-app-theme="blue"] ::-webkit-scrollbar-thumb {
