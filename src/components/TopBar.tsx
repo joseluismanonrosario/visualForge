@@ -281,10 +281,10 @@ export const TopBar: React.FC<TopBarProps> = ({
         </div>
       </div>
 
-      {/* Center: Centered Project Title, Non-clickable Project Type Logo & Unsaved indicator / Close button */}
-      <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 max-w-[40%] select-none z-10">
-        {/* Project Type Logo (No clickeable) */}
-        <div
+      {/* Center: Centered Group (Project Type Icon + Project Name + Unsaved Dot / Close X) */}
+      <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 max-w-[45%] select-none z-10">
+        {/* Project Type Logo (Blanco / dependiente del tema, pegado al nombre como parte de él) */}
+        <span
           title={`Tipo de proyecto: ${
             projectType === 'esp32'
               ? 'ESP32 / IoT'
@@ -292,12 +292,14 @@ export const TopBar: React.FC<TopBarProps> = ({
               ? 'HTML / CSS'
               : 'React Web'
           }`}
-          className="flex items-center justify-center p-1 rounded bg-[#1e1e1e] border border-[#383838] flex-shrink-0 cursor-default select-none shadow-xs"
+          className={`flex items-center justify-center flex-shrink-0 cursor-default select-none pointer-events-none ${
+            resolvedTheme === 'light' ? 'text-zinc-700' : 'text-zinc-100'
+          }`}
         >
           {projectType === 'esp32' ? (
             <svg
               viewBox="0 0 24 24"
-              className="w-3.5 h-3.5 text-emerald-400 pointer-events-none"
+              className="w-3.5 h-3.5 pointer-events-none"
               fill="none"
               stroke="currentColor"
               strokeWidth="1.8"
@@ -311,7 +313,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           ) : projectType === 'html_css' ? (
             <svg
               viewBox="0 0 24 24"
-              className="w-3.5 h-3.5 text-amber-400 pointer-events-none"
+              className="w-3.5 h-3.5 pointer-events-none"
               fill="none"
               stroke="currentColor"
               strokeWidth="1.8"
@@ -324,7 +326,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           ) : (
             <svg
               viewBox="-11.5 -10.23174 23 20.46348"
-              className="w-3.5 h-3.5 text-[#00d8ff] pointer-events-none"
+              className="w-3.5 h-3.5 pointer-events-none"
               fill="none"
               stroke="currentColor"
               strokeWidth="1.5"
@@ -335,7 +337,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               <ellipse rx="11" ry="4.2" transform="rotate(120)" />
             </svg>
           )}
-        </div>
+        </span>
 
         {isEditingTitle ? (
           <input
@@ -345,12 +347,12 @@ export const TopBar: React.FC<TopBarProps> = ({
             onBlur={() => setIsEditingTitle(false)}
             onKeyDown={(e) => e.key === 'Enter' && setIsEditingTitle(false)}
             autoFocus
-            className="bg-[#1e1e1e] border border-[#0d99ff] rounded px-2 py-0.5 text-center text-xs text-white focus:outline-none"
+            className="bg-[#1e1e1e] border border-[#0d99ff] rounded px-1.5 py-0.5 text-center text-xs text-white focus:outline-none"
           />
         ) : (
           <button
             onClick={() => setProjectName && setIsEditingTitle(true)}
-            className="hover:bg-[#383838] px-2.5 py-1 rounded text-zinc-300 hover:text-white font-medium tracking-tight truncate max-w-[200px] cursor-pointer"
+            className="hover:bg-[#383838] px-1.5 py-0.5 rounded text-zinc-200 hover:text-white font-medium tracking-tight truncate max-w-[220px] cursor-pointer"
             title="Haga clic para renombrar proyecto"
           >
             {projectName}

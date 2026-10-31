@@ -27,9 +27,9 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
         * Botón **Abrir**: Solo icono (`FolderOpen`, sin texto) con tooltip interactivo (`Ctrl+O`).
         * Botón **Guardar**: Solo icono (`Save`, sin texto) con tooltip interactivo (`Ctrl+S`).
         * Botón **Guardar como...**: Solo icono (`SaveAll`, sin texto) con tooltip interactivo (`Ctrl+Shift+S`).
-    - **Centro (Centrado Geométrico de Nombre de Proyecto)**:
-      - **Posicionamiento Centrado Estricto**: El nombre del proyecto está posicionado exactamente en el centro de la barra superior (`absolute left-1/2 -translate-x-1/2`).
-      - **Logo del Tipo de Proyecto (No Clickeable)**: En lugar de un botón interactivo con texto, se exhibe un logo/isotipo nítido del tipo de proyecto (React Atom para *React Web*, Escudo HTML5 para *HTML / CSS*, Microchip para *ESP32 / IoT*) dentro de un contenedor decorativo estático, totalmente no clickeable, con tooltip descriptivo.
+    - **Centro (Centrado Geométrico Unificado: Icono + Nombre + Indicador/Cierre)**:
+      - **Centrado Cohesivo Integral**: Todo el conjunto de cabecera compuesto por **[Icono del Tipo de Proyecto + Nombre de Archivo + Puntico/Equis]** se encuentra centrado como un único bloque geométrico (`absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5`).
+      - **Icono de Tipo de Proyecto Integrado (Blanco / Adaptativo)**: En color blanco (`text-zinc-100`) o adaptativo al tema claro (`text-zinc-700`), sin recuadros ni bordes aislantes, ubicado pegado directamente al nombre para percibirse de forma natural como parte del nombre del proyecto (React Atom para *React Web*, Escudo HTML5 para *HTML / CSS*, Microchip para *ESP32 / IoT*).
       - **Título del proyecto editable en línea** (por defecto `"Sin nombre"`).
       - **Lógica de Guardado Directo vs. Primera Vez ("Sin nombre")**:
         * **Proyectos Nuevos ("Sin nombre")**: Todo proyecto nuevo se inicializa con el texto **"Sin nombre"**. Al presionar **Guardar** (`Ctrl+S`), se abre obligatoriamente la ventana nativa de guardado para que el usuario escriba el nombre deseado y seleccione la ruta. Al guardarse, el nombre del proyecto se actualiza automáticamente con el nombre ingresado.
@@ -63,16 +63,15 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
           - En modo oscuro (`dark`), el panel de propiedades del lienzo (`Canvas Settings Inspector`) cuenta con contraste reforzado.
       - **Botón Present / Preview (Play `▶` / Eye)**: Alterna entre modo diseño y modo vista previa interactiva.
       - **Botón Share / Export Code**: Abre el modal de exportación de código fuente.
-    - **Toolbox Flotante Fijo de Tipo de Pantalla / Dispositivo (Pegado al Centro de la Barra Superior)**:
-      - Anclado fijamente justo debajo de la barra superior en el centro horizontal (`fixed top-11 left-1/2 -translate-x-1/2 z-30`).
-      - Permite conmutar con un clic entre los 3 dispositivos (*Desktop 1440px*, *Tablet 768px*, *Mobile 375px*) con sus iconos respectivos (`Monitor`, `Tablet`, `Smartphone`).
-    - **Status Bar Inferior con Controles de Zoom en la Esquina Derecha**:
+    - **Status Bar Inferior Multifunción con Viewports y Zoom**:
       - Barra de estado horizontal ubicada en el borde inferior del entorno de diseño (`h-6 bg-[#18181b] border-t border-[#2e2e32] px-3 flex items-center justify-between text-[11px]`).
       - **Lado Izquierdo**: Indicador de estado "Listo" con viñeta verde y recuento en tiempo real de los componentes en el árbol del lienzo.
+      - **Centro**: Botonera de tipo de pantalla y puntos de interrupción (`Monitor` *Desktop 1440px*, `Tablet` *Tablet 768px*, `Smartphone` *Móvil 375px*) integrada directamente en la barra de estado con fondo sutil y estados activos bien diferenciados.
       - **Esquina Derecha**: Controles integrados de Zoom con botones para reducir zoom (`ZoomOut`), indicador del porcentaje actual con clic para restablecer rápidamente al 100%, y botón para aumentar zoom (`ZoomIn`).
-    - **Splash Screen Compacto**:
+    - **Splash Screen Compacto y Tipografía Uniforme**:
       - Dimensiones optimizadas más compactas (`w-[500px] max-w-[85vw] aspect-[918/614] rounded-[18px] sm:rounded-[20px]`).
-      - Animación de estados secuenciales de inicialización y barra de progreso fluida.
+      - **Texto de Carga Uniforme**: Tipografía calibrada (`text-[9.5px] sm:text-[10px] text-zinc-400`) para mantener perfecta armonía y proporción con los textos finos de la tarjeta.
+      - **Barra de Progreso Delimitada**: Barra de progreso confinada con precisión a su bloque asignado (`width: '28%'`), evitando cualquier desbordamiento fuera de su marco ilustrado.
      - **Extensión al Borde y Controles de Ventana Exclusivos para Versión Ejecutable (Window Controls)**:
        - La barra superior se extiende de borde a borde (`pl-3 pr-0`), eliminando márgenes derechos para acoplar directamente en la esquina superior derecha los 3 botones estándar de control de ventana de Windows:
          * **Minimizar** (`Minus` / `-`): Minimiza la ventana al hacer clic.
@@ -104,7 +103,7 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
               - Estado vacío amigable en caso de no registrarse proyectos previos.
            2. Tipos de Proyecto en orden jerárquico estricto: **1. HTML / CSS Tradicional**, **2. React Web**, **3. ESP32 / IoT**.
            3. Plantillas dinámicas reactivas al tipo de proyecto seleccionado.
-         * **Pie de Navegación**: Botones de Cancelar y Siguiente estilizados con sombras y colores del tema activo.
+         * **Pie de Navegación**: Botón de "Cancelar" y botón principal de confirmación titulado **"Crear"** (en lugar de "Siguiente").
 
 2. **Panel Lateral Izquierdo: Capas & Assets (`w-72 bg-[#252526] border-r border-[#383838] flex flex-col`)**:
    - Cabecera con pestañas conmutables estilo Figma:
@@ -921,7 +920,7 @@ Al iniciar la aplicación o al hacer clic en el botón "Nuevo" de la barra super
    - Selección visual de plantilla y soporte para doble clic para apertura inmediata.
 4. **Botones de Acción Inferiores**:
    - **Cancelar**: Visible y plenamente funcional cuando ya existe un proyecto cargado para regresar al espacio de trabajo.
-   - **Siguiente**: Botón de acento azul (`#0d99ff`) con elevación que inicializa el proyecto y despliega el entorno de diseño completo.
+   - **Crear**: Botón de acento azul (`#0d99ff`) con elevación que inicializa el proyecto y despliega el entorno de diseño completo.
 
 ### Panel de Propiedades Condicional: Inspector de Hardware (GPIO)
 Cuando el proyecto activo es de tipo `esp32`:

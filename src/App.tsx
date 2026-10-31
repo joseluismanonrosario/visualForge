@@ -1199,51 +1199,6 @@ export function App() {
             setAppTheme={setAppTheme}
           />
 
-          {/* Toolbox Flotante de Tipo de Pantalla (Viewport) pegado en el centro de la barra superior */}
-          {!isPreviewMode && (
-            <div
-              className="fixed top-11 left-1/2 -translate-x-1/2 z-30 flex items-center bg-[#1e1e1e] border border-t-0 border-[#383838] rounded-b-lg shadow-md px-1.5 py-1 text-xs select-none backdrop-blur-md"
-              style={{ transform: 'translateX(-50%)' }}
-            >
-              <button
-                onClick={() => handleSetViewportMode('desktop')}
-                title="Vista Escritorio / Desktop Frame (1440px)"
-                className={`px-2.5 py-1 rounded flex items-center gap-1.5 transition-colors cursor-pointer text-xs ${
-                  viewportMode === 'desktop'
-                    ? 'bg-[#383838] text-white font-medium shadow-xs'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#282828]'
-                }`}
-              >
-                <Monitor className="w-3.5 h-3.5" />
-                <span>Desktop</span>
-              </button>
-              <button
-                onClick={() => handleSetViewportMode('tablet')}
-                title="Vista Tableta / Tablet Frame (768px)"
-                className={`px-2.5 py-1 rounded flex items-center gap-1.5 transition-colors cursor-pointer text-xs ${
-                  viewportMode === 'tablet'
-                    ? 'bg-[#383838] text-white font-medium shadow-xs'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#282828]'
-                }`}
-              >
-                <Tablet className="w-3.5 h-3.5" />
-                <span>Tablet</span>
-              </button>
-              <button
-                onClick={() => handleSetViewportMode('mobile')}
-                title="Vista Móvil / Mobile Frame (375px)"
-                className={`px-2.5 py-1 rounded flex items-center gap-1.5 transition-colors cursor-pointer text-xs ${
-                  viewportMode === 'mobile'
-                    ? 'bg-[#383838] text-white font-medium shadow-xs'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#282828]'
-                }`}
-              >
-                <Smartphone className="w-3.5 h-3.5" />
-                <span>Móvil</span>
-              </button>
-            </div>
-          )}
-
           {/* Main Studio Body: Left Sidebar + Canvas + Right Sidebar */}
           <div className="flex-1 flex overflow-hidden relative">
             <LeftSidebar
@@ -1304,7 +1259,7 @@ export function App() {
             />
           </div>
 
-          {/* Status Bar Inferior con Controles de Zoom en la Esquina Derecha */}
+          {/* Status Bar Inferior con Botones de Tipo de Pantalla y Controles de Zoom */}
           <footer className="h-6 bg-[#18181b] border-t border-[#2e2e32] px-3 flex items-center justify-between text-[11px] text-zinc-400 select-none z-20 flex-shrink-0">
             {/* Esquina Izquierda: Estado general */}
             <div className="flex items-center gap-3">
@@ -1314,6 +1269,46 @@ export function App() {
               </span>
               <span className="text-zinc-700">|</span>
               <span>{tree.length} componentes</span>
+            </div>
+
+            {/* Centro: Botones de Tipo de Pantalla (Desktop, Tablet, Mobile) */}
+            <div className="flex items-center bg-[#242427] rounded border border-[#38383c] p-0.5">
+              <button
+                onClick={() => handleSetViewportMode('desktop')}
+                title="Vista Escritorio / Desktop Frame (1440px)"
+                className={`px-2 py-0.5 rounded flex items-center gap-1 text-[10px] transition-colors cursor-pointer ${
+                  viewportMode === 'desktop'
+                    ? 'bg-[#38383e] text-white font-medium shadow-xs'
+                    : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <Monitor className="w-3 h-3" />
+                <span>Desktop</span>
+              </button>
+              <button
+                onClick={() => handleSetViewportMode('tablet')}
+                title="Vista Tableta / Tablet Frame (768px)"
+                className={`px-2 py-0.5 rounded flex items-center gap-1 text-[10px] transition-colors cursor-pointer ${
+                  viewportMode === 'tablet'
+                    ? 'bg-[#38383e] text-white font-medium shadow-xs'
+                    : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <Tablet className="w-3 h-3" />
+                <span>Tablet</span>
+              </button>
+              <button
+                onClick={() => handleSetViewportMode('mobile')}
+                title="Vista Móvil / Mobile Frame (375px)"
+                className={`px-2 py-0.5 rounded flex items-center gap-1 text-[10px] transition-colors cursor-pointer ${
+                  viewportMode === 'mobile'
+                    ? 'bg-[#38383e] text-white font-medium shadow-xs'
+                    : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <Smartphone className="w-3 h-3" />
+                <span>Móvil</span>
+              </button>
             </div>
 
             {/* Esquina Derecha: Controles de Zoom */}

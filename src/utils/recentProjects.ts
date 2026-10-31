@@ -1,7 +1,7 @@
 import { RecentProjectItem, ProjectType } from '../types';
 
 const STORAGE_KEY = 'vf_recent_projects';
-const MAX_RECENT_PROJECTS = 30;
+const MAX_RECENT_PROJECTS = 15;
 
 export type RecentSortBy = 'name' | 'date';
 export type RecentSortOrder = 'asc' | 'desc';

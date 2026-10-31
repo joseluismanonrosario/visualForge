@@ -594,7 +594,7 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
               </div>
             ) : (
               <div
-                className={`rounded-xl p-1.5 max-h-[165px] overflow-y-auto space-y-1 select-none transition-all ${
+                className={`rounded-xl p-1 max-h-[215px] overflow-y-auto space-y-0.5 select-none transition-all ${
                   isLight
                     ? 'bg-zinc-50 border border-zinc-200'
                     : isBlue
@@ -602,13 +602,13 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
                     : 'bg-[#161618] border border-[#2e2e32]'
                 }`}
               >
-                {sortedRecents.map((proj) => (
+                {sortedRecents.slice(0, 15).map((proj) => (
                   <div
                     key={proj.id || proj.name}
                     onClick={() => onOpenRecentProject?.(proj)}
                     onMouseEnter={() => setHoveredRecentId(proj.id || proj.name)}
                     onMouseLeave={() => setHoveredRecentId(null)}
-                    className={`group px-2 py-1.5 rounded-lg flex flex-col gap-0.5 text-left cursor-pointer transition-all border border-transparent ${
+                    className={`group px-2 py-1 rounded-md flex flex-col gap-0.5 text-left cursor-pointer transition-all border border-transparent ${
                       isLight
                         ? 'hover:bg-white hover:border-zinc-300 hover:shadow-xs'
                         : isBlue
@@ -617,41 +617,42 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
                     }`}
                     title={`Abrir directamente: ${proj.name} (${proj.path})`}
                   >
-                    <div className="flex items-center justify-between gap-1.5 min-w-0">
-                      <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
-                        {/* Icono fijo que no se mueve durante el scroll */}
-                        <FileCode2 className="w-3.5 h-3.5 text-violet-400 flex-shrink-0 group-hover:text-[#0d99ff] transition-colors" />
-                        {/* Nombre del proyecto: solo el texto hace scroll lento a la izquierda en hover si no cabe */}
-                        <MarqueeProjectName
-                          name={proj.name}
-                          isHovered={hoveredRecentId === (proj.id || proj.name)}
-                          className={`text-[10px] font-semibold ${
-                            isLight
-                              ? 'text-zinc-800'
-                              : 'text-zinc-200 group-hover:text-white'
-                          }`}
-                        />
-                      </div>
+                    {/* Primera línea: solo el icono fijo y el nombre del proyecto con ancho completo */}
+                    <div className="flex items-center gap-1.5 min-w-0 w-full overflow-hidden">
+                      {/* Icono fijo que no se mueve durante el scroll */}
+                      <FileCode2 className="w-3.5 h-3.5 text-violet-400 flex-shrink-0 group-hover:text-[#0d99ff] transition-colors" />
+                      {/* Nombre del proyecto: aprovecha todo el ancho de la fila */}
+                      <MarqueeProjectName
+                        name={proj.name}
+                        isHovered={hoveredRecentId === (proj.id || proj.name)}
+                        className={`text-[10px] font-semibold ${
+                          isLight
+                            ? 'text-zinc-800'
+                            : 'text-zinc-200 group-hover:text-white'
+                        }`}
+                      />
+                    </div>
+                    {/* Segunda línea: tipo de proyecto (mismo tamaño pequeño que la fecha) y fecha */}
+                    <div className="flex items-center justify-between text-[8px] font-mono pl-5 pr-0.5">
                       <span
-                        className={`text-[8px] flex-shrink-0 font-mono ${
-                          isLight ? 'text-zinc-500' : 'text-zinc-400'
+                        className={
+                          isLight
+                            ? 'text-zinc-500'
+                            : isBlue
+                            ? 'text-sky-400/80 group-hover:text-sky-300'
+                            : 'text-zinc-400 group-hover:text-zinc-300'
+                        }
+                      >
+                        {getProjectTypeLabel(proj)}
+                      </span>
+                      <span
+                        className={`flex-shrink-0 ${
+                          isLight ? 'text-zinc-400' : 'text-zinc-500 group-hover:text-zinc-400'
                         }`}
                       >
                         {proj.date}
                       </span>
                     </div>
-                    {/* Segunda línea: tipo de proyecto en vez de la ruta o nombre repetido */}
-                    <span
-                      className={`text-[8.5px] truncate font-medium pl-5 ${
-                        isLight
-                          ? 'text-zinc-500'
-                          : isBlue
-                          ? 'text-sky-400/80 group-hover:text-sky-300'
-                          : 'text-zinc-400 group-hover:text-zinc-300'
-                      }`}
-                    >
-                      {getProjectTypeLabel(proj)}
-                    </span>
                   </div>
                 ))}
               </div>
@@ -761,13 +762,13 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
           </button>
         )}
 
-        {/* Siguiente Button */}
+        {/* Botón Crear Proyecto */}
         <button
           type="button"
           onClick={handleNext}
           className="px-6 py-2 rounded-lg text-xs font-semibold bg-[#0d99ff] hover:bg-[#0082df] active:scale-95 text-white shadow-md shadow-blue-900/30 transition-all cursor-pointer"
         >
-          Siguiente
+          Crear
         </button>
       </div>
     </div>

@@ -83,19 +83,19 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
           className="absolute flex flex-col justify-end"
           style={{
             left: '4.2%',
-            bottom: '5.2%',
-            width: '42%',
+            bottom: '4.8%',
+            width: '28%',
           }}
         >
-          {/* Animated Status Text */}
-          <div className="flex items-center gap-1.5 text-zinc-300 text-[11px] sm:text-xs font-sans tracking-wide">
-            <span className="font-medium text-zinc-200 truncate">
+          {/* Animated Status Text (uniforme con la tipografía pequeña de la tarjeta) */}
+          <div className="flex items-center gap-1.5 text-zinc-400 text-[9.5px] sm:text-[10px] font-sans tracking-tight">
+            <span className="font-normal text-zinc-300 truncate">
               {LOADING_STAGES[stageIdx]}
             </span>
           </div>
 
-          {/* Glowing Progress Bar */}
-          <div className="w-full max-w-[170px] sm:max-w-[200px] h-1 bg-white/10 rounded-full overflow-hidden mt-1.5 relative">
+          {/* Glowing Progress Bar (delimitada estrictamente a su bloque) */}
+          <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden mt-1 relative">
             <div
               className="h-full bg-gradient-to-r from-[#0d99ff] via-indigo-500 to-violet-500 rounded-full transition-all duration-300 ease-out shadow-[0_0_8px_rgba(13,153,255,0.7)]"
               style={{ width: `${progress}%` }}
