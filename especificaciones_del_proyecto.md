@@ -1247,13 +1247,27 @@ Para garantizar la integridad del sistema, prevenir vulnerabilidades de ejecuci�
 6. **Content Security Policy (CSP) y Carga de Recursos Seguros (`index.html`)**:
    - Declaración de directiva CSP en la cabecera del documento HTML:
      ```html
-     <meta http-equiv="Content-Security-Policy" content="default-src 'self' http://127.0.0.1:*; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://maxst.icons8.com https://unicons.iconscout.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://maxst.icons8.com https://unicons.iconscout.com data:; img-src 'self' data: blob: https: http:; connect-src 'self' http://127.0.0.1:* ws://127.0.0.1:* https:; object-src 'none'; base-uri 'self';" />
+     <meta http-equiv="Content-Security-Policy" content="default-src 'self' http://127.0.0.1:*; script-src 'self' http://127.0.0.1:*; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://maxst.icons8.com https://unicons.iconscout.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://maxst.icons8.com https://unicons.iconscout.com data:; img-src 'self' data: blob: https: http:; connect-src 'self' http://127.0.0.1:* ws://127.0.0.1:* https:; object-src 'none'; base-uri 'self';" />
      ```
-   - Restricción de ejecución a recursos del mismo origen, bloqueo total de plugins y objetos no seguros (`object-src 'none'`), y delimitación estricta de orígenes autorizados para fuentes tipográficas y hojas de estilo de CDNs oficiales.
+   - Restricción estricta de ejecución de scripts sin `'unsafe-inline'`, bloqueo total de plugins y objetos no seguros (`object-src 'none'`), y delimitación estricta de orígenes autorizados para fuentes tipográficas y hojas de estilo de CDNs oficiales.
    - Adición del atributo de seguridad `crossorigin="anonymous"` en todas las etiquetas `<link rel="stylesheet">` de CDNs externas.
 
 7. **Sanitización Integral de SVGs contra XSS (`src/utils/svgIconRenderer.tsx`)**:
    - Implementación de la función `sanitizeSvg(svgContent: string): string` que sanea todo código SVG antes de su inyección en el DOM mediante `dangerouslySetInnerHTML`.
-   - Eliminación regex exhaustiva de etiquetas ejecutables (`<script>...</script>`), contenedores de HTML anidado (`<foreignObject>...</foreignObject>`), y elementos incrustados (`<iframe>`, `<object>`, `<embed>`, `<form>`).
+   - Eliminación regex exhaustiva de declaraciones XML (`<?xml...?>`), declaraciones DOCTYPE (`<!DOCTYPE...`), definiciones de entidad externa (`<!ENTITY...`), etiquetas de ejecución de script (`<script>...</script>`), etiquetas de animación SVG activables (`<animate>`, `<set>`, `<handler>`), contenedores de HTML anidado (`<foreignObject>...</foreignObject>`), y elementos incrustados (`<iframe>`, `<object>`, `<embed>`, `<form>`).
    - Depuración de todos los manejadores de eventos en línea (atributos `on*` como `onload`, `onerror`, `onclick`, `onmouseover`).
    - Neutralización de pseudo-protocolos peligrosos (`javascript:`, `data:text/html`) en atributos de hipervínculo (`href`, `xlink:href`).
+
+8. **Protección contra Inyección de Prototipos (Prototype Pollution Immunity)**:
+   - Sanitización recursiva profunda (`sanitizeJsonInput`) en [`src/utils/projectPersistence.ts`](file:///C:/Users/manom/OneDrive/Desktop/Workspace/winWebFormApp/src/utils/projectPersistence.ts) durante la deserialización de archivos `.vforge` y `.json`.
+   - Purga preventiva de claves peligrosas (`__proto__`, `constructor`, `prototype`) en toda la estructura de nodos y metadatos del proyecto.
+
+9. **Cabeceras HTTP de Seguridad OWASP y Restricción de Métodos (`electron/main.cjs`)**:
+   - Cabeceras automáticas en todas las respuestas del servidor local: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `Cross-Origin-Opener-Policy: same-origin`.
+   - Restricción estricta de métodos HTTP a únicamente `GET` y `HEAD`, rechazando cualquier otro verbo HTTP con código `405 Method Not Allowed`.
+   - Revocación proactiva de solicitudes de permisos de sistema (`setPermissionRequestHandler`, `setPermissionCheckHandler`, `setDevicePermissionHandler` devolviendo `false`) y bloqueo de eventos no autorizados de webview (`will-attach-webview`).
+
+10. **Estandarización de Configuración TypeScript y Documentación de Skills**:
+   - Configuración de `composite: true` en [`tsconfig.app.json`](file:///C:/Users/manom/OneDrive/Desktop/Workspace/winWebFormApp/tsconfig.app.json) para integración plena con TypeScript Project References y resolución de errores del compilador y editor VS Code.
+   - Asociación de esquema `jsonc` en [`.vscode/settings.json`](file:///C:/Users/manom/OneDrive/Desktop/Workspace/winWebFormApp/.vscode/settings.json) para admitir comentarios en archivos de configuración de TypeScript sin alertas sintácticas.
+   - Normalización de formato Markdown y escape de etiquetas tipo HTML (como `<version>`) en el manual del skill [`SKILL.md`](file:///C:/Users/manom/OneDrive/Desktop/Workspace/winWebFormApp/.agents/skills/appToProduccion/SKILL.md) garantizando compatibilidad con linters CommonMark/GFM y el ecosistema Antigravity.

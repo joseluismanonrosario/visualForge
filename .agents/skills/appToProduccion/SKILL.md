@@ -21,16 +21,19 @@ Este skill proporciona el procedimiento completo y automatizado para empaquetar 
 > **REGLA MANDATORIA**: Antes de compilar el frontend (`npm run build`) y lanzar Electron Builder, es **obligatorio** evaluar si los cambios acumulados en el código, funcionalidades, componentes o correcciones ameritan un cambio de versión según las directrices de Versionado Semántico (SemVer 2.0.0: `MAJOR.MINOR.PATCH`). Si amerita un cambio de versión (o si la versión en `package.json` está desactualizada respecto a los últimos cambios o a `CHANGELOG.md`), **se debe cambiar la versión en la app inmediatamente antes de empaquetar**.
 
 ### Criterios de Evaluación SemVer:
+
 1. **MAJOR (`X.0.0`)**: Se incrementa cuando existen cambios incompatibles con versiones anteriores (ruptura de retrocompatibilidad), tales como cambios estructurales en el formato de guardado `.vforge`, eliminación o alteración de esquemas clave en `CanvasNode`, o rediseños de la API interna que impidan abrir proyectos antiguos.
 2. **MINOR (`0.X.0`)**: Se incrementa cuando se agregan nuevas funcionalidades, herramientas o componentes de diseño manteniendo 100% la compatibilidad hacia atrás (ej. nuevos tipos de componentes en el catálogo, nuevos paneles, soporte para desacoplamiento responsivo, proyectos recientes, historial extendido a 100 pasos).
-3. **PATCH (`0.0.X`)**: Se incrementa cuando se aplican correcciones de errores (*bug fixes*), ajustes cosméticos o mejoras de interfaz sin alterar la estructura del proyecto ni introducir nuevas APIs mayores (ej. ajustes en el Splash Screen, alineación de iconos en la barra superior, ajuste de botones en status bar, correcciones de espaciado o eliminación de alertas no deseadas).
+3. **PATCH (`0.0.X`)**: Se incrementa cuando se aplican correcciones de errores (_bug fixes_), ajustes cosméticos o mejoras de interfaz sin alterar la estructura del proyecto ni introducir nuevas APIs mayores (ej. ajustes en el Splash Screen, alineación de iconos en la barra superior, ajuste de botones en status bar, correcciones de espaciado o eliminación de alertas no deseadas).
 
 ### Acciones de Sincronización en la App al Detectar Cambio de Versión:
+
 Cuando se determine un incremento de versión:
+
 1. **Actualizar `package.json`**: Modificar el campo `"version": "X.Y.Z"` con el nuevo número de versión. Electron Builder toma este valor directamente para generar y bautizar los ejecutables `.exe`.
 2. **Actualizar `CHANGELOG.md`**: Añadir la sección correspondiente a la nueva versión (`## [X.Y.Z] - AAAA-MM-DD`) especificando las adiciones, cambios y correcciones realizadas.
 3. **Actualizar `README.md`**: Reflejar el nuevo número de versión en las referencias e insignias de versión.
-4. **Actualizar `especificaciones_del_proyecto.md`**: Sincronizar la sección 11 para documentar la nueva versión y el historial de cambios, cumpliendo la *Regla de Sincronización Obligatoria de Especificaciones*.
+4. **Actualizar `especificaciones_del_proyecto.md`**: Sincronizar la sección 11 para documentar la nueva versión y el historial de cambios, cumpliendo la _Regla de Sincronización Obligatoria de Especificaciones_.
 
 ---
 
@@ -38,14 +41,15 @@ Cuando se determine un incremento de versión:
 
 > [!IMPORTANT]
 > **PUBLICACIÓN AUTOMÁTICA DE RELEASE EN GITHUB**: Al ejecutar `appToProduccion`, **siempre y cuando haya un cambio de versión** (es decir, la versión generada no cuente todavía con un tag o release registrado en el repositorio remoto de GitHub):
-> 1. **Detección Condicional**: El proceso verifica si el tag `v<versión>` ya existe en local o en GitHub (`git tag -l` y `git ls-remote --tags origin`). Si ya existe y no hubo incremento, **no se crea un nuevo release** para evitar duplicados.
+>
+> 1. **Detección Condicional**: El proceso verifica si el tag `v<version>` ya existe en local o en GitHub (`git tag -l` y `git ls-remote --tags origin`). Si ya existe y no hubo incremento, **no se crea un nuevo release** para evitar duplicados.
 > 2. **Creación y Envío del Tag a GitHub**:
->    - Se crea el tag anotado en Git: `git tag -a v<versión> -m "VisualForge Studio v<versión>"`.
->    - Se envía el tag a GitHub: `git push origin v<versión>`, lo cual genera formalmente el Release en la pestaña de Releases del repositorio.
+>    - Se crea el tag anotado en Git: `git tag -a v<version> -m "VisualForge Studio v<version>"`.
+>    - Se envía el tag a GitHub: `git push origin v<version>`, lo cual genera formalmente el Release en la pestaña de Releases del repositorio.
 > 3. **Publicación con Notas y Binarios Adjuntos**:
 >    - Se extraen de forma automática las notas de versión correspondientes desde `CHANGELOG.md`.
->    - Si está disponible la herramienta GitHub CLI (`gh`), se publica el Release adjuntando los archivos `.exe` generados (`VisualForge Studio Setup <versión>.exe` y `VisualForge Studio <versión>.exe`).
->    - Si `gh` no está disponible, el Release queda publicado mediante el Git tag oficial en `https://github.com/joseluismanonrosario/visualForge/releases/tag/v<versión>`.
+>    - Si está disponible la herramienta GitHub CLI (`gh`), se publica el Release adjuntando los archivos `.exe` generados (`VisualForge Studio Setup <version>.exe` y `VisualForge Studio <version>.exe`).
+>    - Si `gh` no está disponible, el Release queda publicado mediante el Git tag oficial en `https://github.com/joseluismanonrosario/visualForge/releases/tag/v<version>`.
 
 ---
 
@@ -54,8 +58,8 @@ Cuando se determine un incremento de versión:
 - **Motor de Conversión**: **Electron** + **Electron Builder**.
 - **Compatibilidad con Iconify y Assets**: El proceso principal de Electron (`electron/main.cjs`) incluye un servidor local HTTP ultraligero embebido en loopback (`127.0.0.1:<random-port>`) que sirve la carpeta `dist/` e intercepta las peticiones `/@iconify/` y `/api/iconify/`, garantizando que todo el catálogo de más de 400.000 iconos locales funcione al 100% sin conexión a internet y sin bloqueos de seguridad por protocolo `file://`.
 - **Binarios Generados**:
-  1. **VisualForge Studio Setup <versión>.exe**: Instalador estándar NSIS para Windows de 64 bits con accesos directos en escritorio y menú inicio.
-  2. **VisualForge Studio <versión>.exe**: Ejecutable portable autocontenido que no requiere instalación.
+  1. `VisualForge Studio Setup <version>.exe`: Instalador estándar NSIS para Windows de 64 bits con accesos directos en escritorio y menú inicio.
+  2. `VisualForge Studio <version>.exe`: Ejecutable portable autocontenido que no requiere instalación.
 
 ---
 
@@ -64,6 +68,7 @@ Cuando se determine un incremento de versión:
 Cuando el usuario invoque el skill, sigue estrictamente estos pasos en orden:
 
 ### Paso 0: Verificación y Actualización de Versión (SemVer)
+
 1. Analizar los cambios pendientes o recientes introducidos en la app.
 2. Si amerita un salto de versión (MAJOR, MINOR o PATCH) o si `package.json` difiere de la versión esperada:
    - Incrementar `"version"` en `package.json`.
@@ -72,19 +77,23 @@ Cuando el usuario invoque el skill, sigue estrictamente estos pasos en orden:
    - Registrar la actualización en `especificaciones_del_proyecto.md`.
 
 ### Paso 1: Ejecutar el script automatizado
+
 Ejecuta el script PowerShell preparado en `scripts/build-exe.ps1`:
+
 ```powershell
 powershell -ExecutionPolicy Bypass -File .agents/skills/appToProduccion/scripts/build-exe.ps1
 ```
 
 O si el usuario solicita únicamente la versión portable:
+
 ```powershell
 powershell -ExecutionPolicy Bypass -File .agents/skills/appToProduccion/scripts/build-exe.ps1 -PortableOnly
 ```
 
-*Nota: El script gestiona de extremo a extremo la sincronización de archivos, la compilación de Vite, el empaquetado con Electron Builder y la publicación del Release en GitHub si hubo cambio de versión.*
+_Nota: El script gestiona de extremo a extremo la sincronización de archivos, la compilación de Vite, el empaquetado con Electron Builder y la publicación del Release en GitHub si hubo cambio de versión._
 
 ### Paso 2: Flujo manual equivalente (si se requiere depuración paso a paso)
+
 Si se requiere ejecutar los pasos de forma individual:
 
 1. **Verificar y sincronizar versión en `package.json`**:
@@ -98,6 +107,7 @@ Si se requiere ejecutar los pasos de forma individual:
 
 4. **Verificar scripts de `package.json`**:
    Asegurar que `package.json` cuente con:
+
    ```json
    {
      "main": "electron/main.cjs",
@@ -108,24 +118,27 @@ Si se requiere ejecutar los pasos de forma individual:
    ```
 
 5. **Instalar dependencias de empaquetado**:
+
    ```bash
    npm install --save-dev electron electron-builder
    ```
 
 6. **Compilar el frontend con Vite**:
+
    ```bash
    npm run build
    ```
 
 7. **Empaquetar para Windows con Electron Builder**:
+
    ```bash
    npx electron-builder --win
    ```
 
 8. **Crear y enviar Release a GitHub si ameritó cambio de versión**:
    ```bash
-   git tag -a v<versión> -m "VisualForge Studio v<versión>"
-   git push origin v<versión>
+   git tag -a v<version> -m "VisualForge Studio v<version>"
+   git push origin v<version>
    ```
 
 ---
@@ -133,11 +146,12 @@ Si se requiere ejecutar los pasos de forma individual:
 ## 5. Verificación y Resultados
 
 Tras finalizar el proceso:
+
 1. Revisa los archivos generados en la carpeta `release/`:
-   - `release/VisualForge Studio Setup <versión>.exe` (Instalador NSIS)
-   - `release/VisualForge Studio <versión>.exe` (Portable)
+   - `release/VisualForge Studio Setup <version>.exe` (Instalador NSIS)
+   - `release/VisualForge Studio <version>.exe` (Portable)
 2. Verifica la publicación del Release en GitHub:
-   - `https://github.com/joseluismanonrosario/visualForge/releases/tag/v<versión>`
+   - `https://github.com/joseluismanonrosario/visualForge/releases/tag/v<version>`
 3. Reporta al usuario la ruta completa de los ejecutables, su versión exacta, su tamaño en MB y el enlace al Release de GitHub.
 
 ---
