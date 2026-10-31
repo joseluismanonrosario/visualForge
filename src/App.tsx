@@ -49,7 +49,7 @@ import {
 
 export function App() {
   const [showSplash, setShowSplash] = useState(true);
-  const [projectName, setProjectName] = useState('VisualForge Studio - Project');
+  const [projectName, setProjectName] = useState('Sin nombre');
   const [projectType, setProjectType] = useState<ProjectType>('html_css');
   const [isProjectLoaded, setIsProjectLoaded] = useState(false);
   const [isWelcomeOpen, setIsWelcomeOpen] = useState(true);
@@ -614,28 +614,101 @@ export function App() {
         zoom,
       });
 
-      // Si ya estaba guardado en una ruta previa, guarda directamente sin pedir nombre.
-      // Si es un proyecto nuevo sin ruta previa, abre la ventana para elegir ubicación.
-      const result = await saveProjectFile(projectName, jsonString, currentFilePath);
-      if (result.success) {
-        const targetPath = result.filePath || currentFilePath || `${projectName}.vforge`;
+      // Si ya estaba guardado en una ruta previa y tiene nombre asignado, guarda directamente sin pedir nombre.
+      // Si es un proyecto nuevo ("Sin nombre" o sin ruta previa), abre la ventana para elegir y escribir nombre y ubicación.
+      const result = await saveProjectFile(projectName, jsonString, currentFilePath, false);
+      if (result.success && result.filePath) {
+        const targetPath = result.filePath;
+        const fileNameWithExt = targetPath.split(/[\\/]/).pop() || '';
+        const cleanName = fileNameWithExt.replace(/\.(vforge|json)$/i, '') || projectName;
+
+        setProjectName(cleanName);
         setCurrentFilePath(targetPath);
         showToast(
-          `Proyecto guardado con éxito: ${targetPath}`,
+          `Proyecto guardado con éxito: ${fileNameWithExt}`,
           'success'
         );
 
+        let finalJson = jsonString;
+        if (cleanName !== projectName) {
+          finalJson = serializeProject({
+            projectName: cleanName,
+            projectType,
+            tree,
+            canvasSettings,
+            viewportMode,
+            zoom,
+          });
+          await saveProjectFile(cleanName, finalJson, targetPath, false);
+        }
+
         // Registrar en lista de proyectos recientes
         const updatedRecents = addRecentProject({
-          name: projectName,
+          name: cleanName,
           path: targetPath,
-          fileName: targetPath.split(/[\\/]/).pop() || `${projectName}.vforge`,
-          content: jsonString,
+          fileName: fileNameWithExt,
+          content: finalJson,
         });
         setRecentProjects(updatedRecents);
         setHasUnsavedChanges(false);
       } else if (result.error) {
         showToast(`Error al guardar: ${result.error}`, 'error');
+      }
+    } catch (err: any) {
+      showToast(`Error de serialización: ${err.message}`, 'error');
+    }
+  }, [projectName, projectType, tree, canvasSettings, viewportMode, zoom, currentFilePath, showToast]);
+
+  // Proceso de "Guardar como..." (Forzar diálogo para cambiar nombre o ubicación)
+  const handleSaveAsProject = useCallback(async () => {
+    try {
+      const jsonString = serializeProject({
+        projectName,
+        projectType,
+        tree,
+        canvasSettings,
+        viewportMode,
+        zoom,
+      });
+
+      // Forzar diálogo pasando forceDialog = true y currentFilePath para prellenar la ruta/nombre actual
+      const result = await saveProjectFile(projectName, jsonString, currentFilePath, true);
+      if (result.success && result.filePath) {
+        const targetPath = result.filePath;
+        const fileNameWithExt = targetPath.split(/[\\/]/).pop() || '';
+        const cleanName = fileNameWithExt.replace(/\.(vforge|json)$/i, '') || projectName;
+
+        setProjectName(cleanName);
+        setCurrentFilePath(targetPath);
+        showToast(
+          `Proyecto guardado como: ${fileNameWithExt}`,
+          'success'
+        );
+
+        let finalJson = jsonString;
+        if (cleanName !== projectName) {
+          finalJson = serializeProject({
+            projectName: cleanName,
+            projectType,
+            tree,
+            canvasSettings,
+            viewportMode,
+            zoom,
+          });
+          await saveProjectFile(cleanName, finalJson, targetPath, false);
+        }
+
+        // Registrar en lista de proyectos recientes
+        const updatedRecents = addRecentProject({
+          name: cleanName,
+          path: targetPath,
+          fileName: fileNameWithExt,
+          content: finalJson,
+        });
+        setRecentProjects(updatedRecents);
+        setHasUnsavedChanges(false);
+      } else if (result.error) {
+        showToast(`Error al guardar como: ${result.error}`, 'error');
       }
     } catch (err: any) {
       showToast(`Error de serialización: ${err.message}`, 'error');
@@ -672,19 +745,26 @@ export function App() {
 
       // Establecer la ruta del archivo abierto para futuros guardados directos
       const targetPath = result.fileName || `${restored.projectName}.vforge`;
+      const fileNameWithExt = targetPath.split(/[\\/]/).pop() || '';
+      const derivedName =
+        restored.projectName && restored.projectName.trim().toLowerCase() !== 'sin nombre'
+          ? restored.projectName
+          : fileNameWithExt.replace(/\.(vforge|json)$/i, '') || restored.projectName;
+
+      setProjectName(derivedName);
       setCurrentFilePath(targetPath);
 
       // Registrar en lista de proyectos recientes
       const updatedRecents = addRecentProject({
-        name: restored.projectName,
+        name: derivedName,
         path: targetPath,
-        fileName: targetPath.split(/[\\/]/).pop() || `${restored.projectName}.vforge`,
+        fileName: fileNameWithExt || `${derivedName}.vforge`,
         content: result.content,
       });
       setRecentProjects(updatedRecents);
 
       showToast(
-        `Proyecto "${restored.projectName}" cargado exitosamente (${restored.tree.length} componentes)`,
+        `Proyecto "${derivedName}" cargado exitosamente (${restored.tree.length} componentes)`,
         'success'
       );
     } catch (err: any) {
@@ -739,19 +819,27 @@ export function App() {
 
         // Asignar ruta activa para guardados directos en el futuro
         const targetPath = item.path || `${restored.projectName}.vforge`;
+        const fileNameWithExt =
+          item.fileName || targetPath.split(/[\\/]/).pop() || `${restored.projectName}.vforge`;
+        const derivedName =
+          restored.projectName && restored.projectName.trim().toLowerCase() !== 'sin nombre'
+            ? restored.projectName
+            : fileNameWithExt.replace(/\.(vforge|json)$/i, '') || item.name || restored.projectName;
+
+        setProjectName(derivedName);
         setCurrentFilePath(targetPath);
 
         // Actualizar marca y posición en la lista de recientes
         const updatedRecents = addRecentProject({
-          name: restored.projectName,
+          name: derivedName,
           path: targetPath,
-          fileName: item.fileName || `${restored.projectName}.vforge`,
+          fileName: fileNameWithExt,
           content,
         });
         setRecentProjects(updatedRecents);
 
         showToast(
-          `Proyecto "${restored.projectName}" abierto exitosamente (${restored.tree.length} componentes)`,
+          `Proyecto "${derivedName}" abierto exitosamente (${restored.tree.length} componentes)`,
           'success'
         );
       } catch (err: any) {
@@ -766,13 +854,15 @@ export function App() {
     if (!hasUnsavedChanges) {
       // Si está grabado (sin cambios pendientes), simplemente cierra e ir a nuevo proyecto
       setCurrentFilePath(null);
+      setProjectName('Sin nombre');
       setIsWelcomeOpen(true);
       setIsProjectLoaded(false);
+      showToast(`Proyecto "${projectName}" cerrado.`, 'info');
     } else {
       // Si no está grabado, preguntar si desea guardarlo
       setIsUnsavedModalOpen(true);
     }
-  }, [hasUnsavedChanges]);
+  }, [hasUnsavedChanges, projectName, showToast]);
 
   // Al confirmar la solicitud de guardar: guarda el proyecto, cierra y se va a la pantalla de nuevo proyecto
   const handleSaveAndCloseProject = useCallback(async () => {
@@ -786,22 +876,39 @@ export function App() {
         zoom,
       });
 
-      // Guarda directamente si ya tenía ruta asignada, o abre el diálogo si es nuevo
-      const result = await saveProjectFile(projectName, jsonString, currentFilePath);
-      if (result.success) {
-        const targetPath = result.filePath || currentFilePath || `${projectName}.vforge`;
-        showToast(`Proyecto guardado con éxito: ${targetPath}`, 'success');
+      // Guarda directamente si ya tenía ruta asignada y nombre, o abre el diálogo si es nuevo o "Sin nombre"
+      const result = await saveProjectFile(projectName, jsonString, currentFilePath, false);
+      if (result.success && result.filePath) {
+        const targetPath = result.filePath;
+        const fileNameWithExt = targetPath.split(/[\\/]/).pop() || '';
+        const cleanName = fileNameWithExt.replace(/\.(vforge|json)$/i, '') || projectName;
+
+        let finalJson = jsonString;
+        if (cleanName !== projectName) {
+          finalJson = serializeProject({
+            projectName: cleanName,
+            projectType,
+            tree,
+            canvasSettings,
+            viewportMode,
+            zoom,
+          });
+          await saveProjectFile(cleanName, finalJson, targetPath, false);
+        }
+
+        showToast(`Proyecto guardado con éxito: ${fileNameWithExt}`, 'success');
 
         const updatedRecents = addRecentProject({
-          name: projectName,
+          name: cleanName,
           path: targetPath,
-          fileName: targetPath.split(/[\\/]/).pop() || `${projectName}.vforge`,
-          content: jsonString,
+          fileName: fileNameWithExt,
+          content: finalJson,
         });
         setRecentProjects(updatedRecents);
         setHasUnsavedChanges(false);
         setIsUnsavedModalOpen(false);
         setCurrentFilePath(null);
+        setProjectName('Sin nombre');
 
         // Se va a la pantalla de nuevo proyecto y cierra el proyecto
         setIsWelcomeOpen(true);
@@ -819,6 +926,7 @@ export function App() {
     setIsUnsavedModalOpen(false);
     setHasUnsavedChanges(false);
     setCurrentFilePath(null);
+    setProjectName('Sin nombre');
     // Se va a la pantalla de nuevo proyecto y cierra el proyecto
     setIsWelcomeOpen(true);
     setIsProjectLoaded(false);
@@ -833,8 +941,15 @@ export function App() {
   // Global Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Save As: Ctrl+Shift+S or Cmd+Shift+S
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        handleSaveAsProject();
+        return;
+      }
+
       // Save: Ctrl+S or Cmd+S
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 's') {
         e.preventDefault();
         handleSaveProject();
         return;
@@ -930,6 +1045,7 @@ export function App() {
     handleDuplicateNode,
     handleMoveSibling,
     handleSaveProject,
+    handleSaveAsProject,
     handleOpenProject,
     isWelcomeOpen,
     isProjectLoaded,
@@ -937,7 +1053,8 @@ export function App() {
 
   const handleCreateProject = useCallback(
     (name: string, type: ProjectType, template: 'iot' | 'saas' | 'blank') => {
-      setProjectName(name);
+      const initialName = name && name.trim() ? name : 'Sin nombre';
+      setProjectName(initialName);
       setProjectType(type);
       let initialTree: CanvasNode[] = [];
       if (template === 'blank') {
@@ -1003,6 +1120,7 @@ export function App() {
             projectType={projectType}
             onOpenNewProject={() => setIsWelcomeOpen(true)}
             onSaveProject={handleSaveProject}
+            onSaveAsProject={handleSaveAsProject}
             onOpenProject={handleOpenProject}
             toolMode={toolMode}
             setToolMode={setToolMode}

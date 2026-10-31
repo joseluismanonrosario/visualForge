@@ -21,16 +21,18 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
      - Sincronización reactiva en tiempo real del favicon del navegador (`<link rel="icon">`) con el logo del tema activo.
      - Zona despejada y limpia: Los botones de selección (`MousePointer`) y mover lienzo (`Hand`) se trasladan exclusivamente a la barra flotante `FloatingToolbox` para evitar redundancias y mantener la cabecera despejada.
    - **Centro**:
-     - **Botonera Agrupada de Proyecto (`+`, Abrir, Guardar)**:
+     - **Botonera Agrupada de Proyecto (`+`, Abrir, Guardar, Guardar como...)**:
        - Contenedor unificado (`inline-flex`) con borde delimitado y divisores internos:
          * Botón **`+` (Nuevo)**: Abre la configuración / pantalla de nuevo proyecto.
          * Botón **Abrir**: Solo icono (`FolderOpen`, sin texto) con tooltip interactivo (`Ctrl+O`).
          * Botón **Guardar**: Solo icono (`Save`, sin texto) con tooltip interactivo (`Ctrl+S`).
-     - **Lógica de Guardado Directo vs. Primera Vez**:
-       * Si el proyecto ya cuenta con una ruta previa (abierto o guardado con anterioridad), guarda directamente sin pedir nombre ni abrir ventanas emergentes.
-       * Si es un proyecto nuevo y es la primera vez que se guarda, invoca la ventana nativa de guardado para seleccionar la ruta y el nombre del archivo `.vforge`.
+         * Botón **Guardar como...**: Solo icono (`SaveAll`, sin texto) con tooltip interactivo (`Ctrl+Shift+S`).
+     - **Lógica de Guardado Directo vs. Primera Vez ("Sin nombre")**:
+       * **Proyectos Nuevos ("Sin nombre")**: Todo proyecto nuevo se inicializa con el texto **"Sin nombre"**. Al presionar **Guardar** (`Ctrl+S`), se abre obligatoriamente la ventana nativa de guardado para que el usuario escriba el nombre deseado y seleccione la ruta. Al guardarse, el nombre del proyecto se actualiza automáticamente con el nombre ingresado.
+       * **Guardado Directo**: Si el archivo del proyecto ya estaba guardado en una ruta y cuenta con nombre asignado, guarda directamente sin pedir nombre ni abrir ventanas emergentes.
+       * **Guardar como... (`SaveAll` / `Ctrl+Shift+S`)**: Abre la ventana nativa de guardado apareciendo el nombre actual del archivo prellenado para permitir cambiar el nombre o ubicarlo en otro directorio.
      - Badge selector de entorno de proyecto (*React Web*, *HTML / CSS*, *ESP32 / IoT*).
-     - Título del proyecto editable en línea (ej. `Landing Page - v1`).
+     - Título del proyecto editable en línea (por defecto `"Sin nombre"`).
      - **Indicador Dinámico de Cambios No Guardados y Cierre de Proyecto**:
        - Ubicado directamente al lado del nombre del proyecto en la cabecera.
        - **Con Cambios No Grabados**: Exhibe un puntico azul cian (`#0d99ff`). Al colocar el cursor encima (hover), el puntico conmuta inmediatamente a una equis (`X`) de cierre.
@@ -1026,19 +1028,23 @@ VisualForge implementa un motor de persistencia completo para guardar y abrir pr
 ### A. Proceso de Guardar (Serialización)
 1. **Disparadores de Usuario**:
    - Clic en el botón **"Guardar"** (`Save` icon en verde esmeralda) en la barra superior `TopBar`.
-   - Atajo de teclado global **`Ctrl + S`** (o `Cmd + S` en macOS).
+   - Clic en el botón **"Guardar como..."** (`SaveAll` icon en azul cielo) en la barra superior `TopBar`.
+   - Atajo de teclado global **`Ctrl + S`** (o `Cmd + S` en macOS) para Guardar.
+   - Atajo de teclado global **`Ctrl + Shift + S`** (o `Cmd + Shift + S` en macOS) para Guardar como...
 2. **Recopilación y Estructura del Estado en Memoria**:
    - Reúne todos los datos actuales del proyecto en un objeto tipado `VForgeProjectData`:
      - Metadatos del archivo: `format: "visualforge"`, `version: "1.0"`, `generator: "VisualForge Studio"`, marcas de tiempo `createdAt` y `updatedAt`.
-     - Metadatos del proyecto: `name` (nombre editable) y `type` (`html_css`, `react`, `esp32`).
+     - Metadatos del proyecto: `name` (nombre editable, por defecto `"Sin nombre"`) y `type` (`html_css`, `react`, `esp32`).
      - Configuración del lienzo: Objeto `canvas.settings` (`artboardBg`, `artboardTextColor`, `minHeight`, `padding`, `gap`, `fontFamily`, `showGrid`, `width`, `height`, `presetName`), `viewportMode` y nivel de `zoom`.
      - Árbol jerárquico de componentes (`elements`): Coordenadas x/y, anchos, altos, estilos CSS en memoria, textos, capas, jerarquías de anidamiento (`children`), banderas de bloqueo (`locked`), visibilidad desacoplada por dispositivo (`hidden`, `responsiveVisibility`), estilos responsivos independientes (`responsiveStyles` para Desktop, Tablet y Mobile), y props de componentes (incluyendo configuraciones GPIO para proyectos ESP32).
 3. **Conversión a JSON**:
    - Transformación del objeto estructurado en una cadena JSON formateada y legible con indentación de 2 espacios (`JSON.stringify(data, null, 2)`).
 4. **Lógica de Guardado Directo vs. Diálogo Nativo de Guardado (`.vforge`)**:
-   - **Guardado Directo (Quick Save)**: Si el proyecto ya cuenta con una ruta o archivo asociado (`currentFilePath`), guarda directamente sobre el archivo en disco (mediante el canal IPC `project-save-direct` en Electron o `activeWebFileHandle` en web) sin desplegar ventanas emergentes ni solicitar nombre nuevamente.
-   - **Primera Vez (Proyecto Nuevo)**: Si el proyecto no cuenta con ruta previa, abre la ventana nativa de guardado:
-     * **En Ejecutable de Escritorio (Electron)**: Invoca `dialog.showSaveDialog` a través del canal IPC `project-save` (`electron/preload.cjs` y `electron/main.cjs`), asegurando filtros de archivo `*.vforge` y escritura directa en el sistema de archivos con Node.js `fs.promises.writeFile`.
+   - **Proyectos Nuevos ("Sin nombre")**: Los proyectos nuevos inician con el nombre `"Sin nombre"`. Al presionar Guardar, se despliega obligatoriamente la ventana nativa de guardado para que el usuario escriba el nombre del archivo y seleccione su ubicación. Al guardarse, el nombre interno del proyecto se actualiza automáticamente con el nombre seleccionado por el usuario.
+   - **Guardado Directo (Quick Save)**: Si el proyecto ya cuenta con una ruta o archivo asociado (`currentFilePath`) y no se llama `"Sin nombre"`, guarda directamente sobre el archivo en disco (mediante el canal IPC `project-save-direct` en Electron o `activeWebFileHandle` en web) sin desplegar ventanas emergentes ni solicitar nombre nuevamente.
+   - **Guardar como... (Save As)**: Despliega forzosamente el diálogo nativo de guardado prellenando la ruta y el nombre actual del archivo para que el usuario pueda cambiar el nombre o guardarlo en una nueva ubicación. Al completarse, el proyecto actualiza su ruta activa, nombre y registro en proyectos recientes.
+   - **Mecanismos por Plataforma**:
+     * **En Ejecutable de Escritorio (Electron)**: Invoca `dialog.showSaveDialog` a través del canal IPC `project-save` (`electron/preload.cjs` y `electron/main.cjs`), asegurando filtros de archivo `*.vforge`, prellenado de nombre/ruta y escritura directa en el sistema de archivos con Node.js `fs.promises.writeFile`.
      * **En Navegador Web**: Utiliza la API nativa del sistema `showSaveFilePicker` con filtro `{ 'application/json': ['.vforge'] }` y fallback universal de descarga Blob forzando la extensión `.vforge`.
    - Notificación emergente toast en pantalla con retroalimentación del resultado.
 

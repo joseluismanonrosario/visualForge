@@ -24,6 +24,7 @@ import {
   Copy,
   X,
   Save,
+  SaveAll,
   FolderOpen,
 } from 'lucide-react';
 import { ViewportMode, ToolMode, ProjectType, AppTheme, ResolvedTheme } from '../types';
@@ -47,6 +48,7 @@ interface TopBarProps {
   projectType?: ProjectType;
   onOpenNewProject?: () => void;
   onSaveProject?: () => void;
+  onSaveAsProject?: () => void;
   onOpenProject?: () => void;
   toolMode?: ToolMode;
   setToolMode?: (tool: ToolMode) => void;
@@ -71,11 +73,12 @@ interface TopBarProps {
 
 export const TopBar: React.FC<TopBarProps> = ({
   isCreationMode = false,
-  projectName = 'VisualForge Project',
+  projectName = 'Sin nombre',
   setProjectName,
   projectType = 'react',
   onOpenNewProject,
   onSaveProject,
+  onSaveAsProject,
   onOpenProject,
   hasUnsavedChanges = false,
   onCloseProject,
@@ -232,7 +235,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
       {/* Center: Project Title & Environment Badge */}
       <div className="flex items-center gap-2 max-w-[360px] sm:max-w-lg">
-        {/* Grupo unificado de botones de proyecto: +, Abrir, Guardar */}
+        {/* Grupo unificado de botones de proyecto: +, Abrir, Guardar, Guardar como */}
         <div className="inline-flex items-center rounded-lg bg-[#1e1e1e] border border-[#383838] p-0.5 divide-x divide-[#383838] shadow-xs flex-shrink-0">
           {/* New Project Button (+) */}
           <button
@@ -259,10 +262,23 @@ export const TopBar: React.FC<TopBarProps> = ({
           {onSaveProject && (
             <button
               onClick={onSaveProject}
-              className="flex items-center justify-center p-1.5 rounded-r-md hover:bg-[#383838] text-zinc-200 transition-colors cursor-pointer"
+              className={`flex items-center justify-center p-1.5 hover:bg-[#383838] text-zinc-200 transition-colors cursor-pointer ${
+                !onSaveAsProject ? 'rounded-r-md' : ''
+              }`}
               title="Guardar Proyecto .vforge (Ctrl+S)"
             >
               <Save className="w-3.5 h-3.5 text-emerald-400" />
+            </button>
+          )}
+
+          {/* Save As Project Button (Solo icono) */}
+          {onSaveAsProject && (
+            <button
+              onClick={onSaveAsProject}
+              className="flex items-center justify-center p-1.5 rounded-r-md hover:bg-[#383838] text-zinc-200 transition-colors cursor-pointer"
+              title="Guardar como... (Ctrl+Shift+S)"
+            >
+              <SaveAll className="w-3.5 h-3.5 text-sky-400" />
             </button>
           )}
         </div>

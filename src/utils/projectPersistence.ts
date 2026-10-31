@@ -145,16 +145,21 @@ export function getActiveWebFileHandle(): any {
 
 /**
  * Invoca el guardado del archivo .vforge.
- * Si ya cuenta con una ruta o archivo existente (existingPath), guarda directamente sin pedir nombre.
- * Si es un archivo nuevo sin ruta previa, abre el diálogo nativo de guardado para elegir ubicación.
+ * Si ya cuenta con una ruta o archivo existente (existingPath), projectName no es "Sin nombre" y forceDialog es false,
+ * guarda directamente sin pedir nombre.
+ * Si es un archivo nuevo sin ruta previa, projectName es "Sin nombre", o forceDialog es true (Guardar como...),
+ * abre el diálogo nativo de guardado para que el usuario elija o modifique el nombre y la ubicación.
  */
 export async function saveProjectFile(
   projectName: string,
   jsonString: string,
-  existingPath?: string | null
+  existingPath?: string | null,
+  forceDialog: boolean = false
 ): Promise<{ success: boolean; filePath?: string; error?: string }> {
-  // A. Si ya estaba guardado en una ruta previamente, guardar directamente
-  if (existingPath && typeof existingPath === 'string' && existingPath.trim().length > 0) {
+  const isUnnamed = !projectName || projectName.trim().toLowerCase() === 'sin nombre';
+
+  // A. Si ya estaba guardado en una ruta previamente, no se fuerza diálogo y ya tiene un nombre asignado
+  if (!forceDialog && !isUnnamed && existingPath && typeof existingPath === 'string' && existingPath.trim().length > 0) {
     // 1. Entorno Desktop nativo (Electron IPC guardado directo sin diálogo)
     if (typeof window !== 'undefined' && (window as any).electronAPI?.saveProjectDirect) {
       try {
@@ -180,16 +185,24 @@ export async function saveProjectFile(
     }
   }
 
-  // B. Si es la primera vez que se guarda (proyecto nuevo sin ruta), abrir ventana de guardar
-  const cleanName = (projectName || 'VisualForge_Project')
-    .replace(/[<>:"/\\|?*]+/g, '_')
-    .trim();
-  const defaultFileName = cleanName.endsWith('.vforge') ? cleanName : `${cleanName}.vforge`;
+  // B. Si es la primera vez que se guarda (proyecto nuevo sin ruta o "Sin nombre"), o se seleccionó "Guardar como...":
+  // Sugerir la ruta y nombre actual para que aparezca prellenado en el diálogo
+  let suggestedPathOrName = '';
+  if (existingPath && typeof existingPath === 'string' && existingPath.trim().length > 0) {
+    suggestedPathOrName = existingPath;
+  } else {
+    const cleanName = (projectName || 'Sin nombre')
+      .replace(/[<>:"/\\|?*]+/g, '_')
+      .trim();
+    suggestedPathOrName = cleanName.endsWith('.vforge') ? cleanName : `${cleanName}.vforge`;
+  }
 
-  // 1. Entorno Desktop nativo (Electron IPC showSaveDialog)
+  const defaultFileName = suggestedPathOrName.split(/[\\/]/).pop() || 'Sin nombre.vforge';
+
+  // 1. Entorno Desktop nativo (Electron IPC showSaveDialog con suggestedPathOrName)
   if (typeof window !== 'undefined' && (window as any).electronAPI?.saveProject) {
     try {
-      const res = await (window as any).electronAPI.saveProject(defaultFileName, jsonString);
+      const res = await (window as any).electronAPI.saveProject(suggestedPathOrName, jsonString);
       if (res?.canceled) return { success: false };
       if (res?.error) return { success: false, error: res.error };
       return { success: true, filePath: res.filePath };

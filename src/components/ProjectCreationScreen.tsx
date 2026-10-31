@@ -42,7 +42,7 @@ const PROJECT_TYPE_OPTIONS: ProjectTypeOption[] = [
     title: 'HTML / CSS Tradicional',
     description:
       'Sitios web y páginas estáticas optimizadas, con SVGs en línea y sin dependencias de frameworks.',
-    defaultName: 'Landing Page HTML & CSS',
+    defaultName: 'Sin nombre',
     templates: [
       {
         id: 'blank',
@@ -63,7 +63,7 @@ const PROJECT_TYPE_OPTIONS: ProjectTypeOption[] = [
     title: 'React Web (Frontend Moderno)',
     description:
       'Aplicaciones web modernas modulares con componentes JSX limpios, shadcn/ui y Tailwind CSS v4.',
-    defaultName: 'React 19 Web App',
+    defaultName: 'Sin nombre',
     templates: [
       {
         id: 'blank',
@@ -85,7 +85,7 @@ const PROJECT_TYPE_OPTIONS: ProjectTypeOption[] = [
     title: 'ESP32 / IoT (Microcontroladores)',
     description:
       'Interfaces web embebidas para ESP32 con control GPIO, firmware C++ ESPAsyncWebServer y SVGs inline.',
-    defaultName: 'ESP32 IoT WebServer',
+    defaultName: 'Sin nombre',
     templates: [
       {
         id: 'blank',
@@ -246,7 +246,7 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
 
   const handleNext = () => {
     onCreateProject(
-      activeProjectOption.defaultName,
+      'Sin nombre',
       selectedTypeId,
       selectedTemplateId
     );
