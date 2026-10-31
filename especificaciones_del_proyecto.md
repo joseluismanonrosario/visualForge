@@ -22,11 +22,20 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
      - Zona despejada y limpia: Los botones de selección (`MousePointer`) y mover lienzo (`Hand`) se trasladan exclusivamente a la barra flotante `FloatingToolbox` para evitar redundancias y mantener la cabecera despejada.
    - **Centro**:
      - Botón para crear o configurar proyecto ("Nuevo").
-     - Botón para abrir archivo de proyecto ("Abrir" / `Ctrl+O`).
-     - Botón para guardar proyecto en archivo local ("Guardar" / `Ctrl+S`).
+     - Botón para abrir archivo de proyecto: Solo icono (`FolderOpen`, sin texto) con tooltip interactivo (`Ctrl+O`).
+     - Botón para guardar proyecto en archivo local: Solo icono (`Save`, sin texto) con tooltip interactivo (`Ctrl+S`).
      - Badge selector de entorno de proyecto (*React Web*, *HTML / CSS*, *ESP32 / IoT*).
      - Título del proyecto editable en línea (ej. `Landing Page - v1`).
-     - Indicador verde de guardado y estado sincronizado.
+     - **Indicador Dinámico de Cambios No Guardados y Cierre de Proyecto**:
+       - Ubicado directamente al lado del nombre del proyecto en la cabecera.
+       - **Con Cambios No Grabados**: Exhibe un puntico azul cian (`#0d99ff`). Al colocar el cursor encima (hover), el puntico conmuta inmediatamente a una equis (`X`) de cierre.
+       - **Sin Cambios Pendientes (Grabado)**: Exhibe de forma permanente una equis (`X`) para cerrar el proyecto.
+       - **Flujo de Cierre al Pulsar la Equis**:
+         * Si el proyecto tiene cambios no grabados: Despliega el modal de confirmación `UnsavedChangesModal`.
+           - **Confirmar ("Guardar")**: Serializa y almacena el archivo `.vforge`, actualiza recientes, cierra el proyecto actual y se dirige a la pantalla de nuevo proyecto.
+           - **Negar ("No guardar")**: Descarta los cambios no grabados, cierra el proyecto y se dirige a la pantalla de nuevo proyecto.
+           - **Cancelar**: Cierra el diálogo y continúa en el lienzo de trabajo.
+         * Si el proyecto no tiene cambios pendientes: Cierra el proyecto directamente y se dirige a la pantalla de nuevo proyecto (`ProjectCreationScreen`).
    - **Derecha**:
      - Historial de Estados (Undo `Ctrl+Z` / Redo `Ctrl+Shift+Z` o `Ctrl+Y`).
      - **Selector de Tema de la Aplicación**: Botonera compacta integrada con soporte para 4 modos de tema:

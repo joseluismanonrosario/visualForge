@@ -35,6 +35,7 @@ import { ExportModal } from './components/ExportModal';
 import { ProjectCreationScreen } from './components/ProjectCreationScreen';
 import { SplashScreen } from './components/SplashScreen';
 import { FloatingToolbox } from './components/FloatingToolbox';
+import { UnsavedChangesModal } from './components/UnsavedChangesModal';
 import {
   serializeProject,
   deserializeProject,
@@ -52,6 +53,8 @@ export function App() {
   const [projectType, setProjectType] = useState<ProjectType>('html_css');
   const [isProjectLoaded, setIsProjectLoaded] = useState(false);
   const [isWelcomeOpen, setIsWelcomeOpen] = useState(true);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isUnsavedModalOpen, setIsUnsavedModalOpen] = useState(false);
   const [recentProjects, setRecentProjects] = useState<RecentProjectItem[]>(() =>
     getRecentProjects()
   );
@@ -119,6 +122,7 @@ export function App() {
       return [...sliced, newTree];
     });
     setHistoryIdx((prev) => prev + 1);
+    setHasUnsavedChanges(true);
   }, [historyIdx]);
 
   // Undo / Redo Handlers
@@ -127,6 +131,7 @@ export function App() {
       const prevIdx = historyIdx - 1;
       setHistoryIdx(prevIdx);
       setTree(history[prevIdx]);
+      setHasUnsavedChanges(true);
     }
   }, [historyIdx, history]);
 
@@ -135,6 +140,7 @@ export function App() {
       const nextIdx = historyIdx + 1;
       setHistoryIdx(nextIdx);
       setTree(history[nextIdx]);
+      setHasUnsavedChanges(true);
     }
   }, [historyIdx, history]);
 
@@ -158,7 +164,7 @@ export function App() {
     };
   });
 
-  const handleUpdateCanvasSettings = useCallback((updates: Partial<CanvasSettings>) => {
+  const handleUpdateCanvasSettings = useCallback((updates: Partial<CanvasSettings>, markDirty = true) => {
     setCanvasSettings((prev) => {
       const next = { ...prev, ...updates };
       try {
@@ -166,6 +172,14 @@ export function App() {
       } catch {}
       return next;
     });
+    if (markDirty) {
+      setHasUnsavedChanges(true);
+    }
+  }, []);
+
+  const handleSetProjectName = useCallback((name: string) => {
+    setProjectName(name);
+    setHasUnsavedChanges(true);
   }, []);
 
   const handleSetViewportMode = useCallback(
@@ -183,7 +197,7 @@ export function App() {
         height: defaultPreset.height,
         minHeight: defaultPreset.height,
         presetName: `${mode === 'tablet' ? 'Tablet' : mode === 'mobile' ? 'Mobile' : 'Desktop'} — ${defaultPreset.name} (${defaultPreset.width} × ${defaultPreset.height})`,
-      });
+      }, false);
     },
     [handleUpdateCanvasSettings]
   );
@@ -615,6 +629,7 @@ export function App() {
           content: jsonString,
         });
         setRecentProjects(updatedRecents);
+        setHasUnsavedChanges(false);
       } else if (result.error) {
         showToast(`Error al guardar: ${result.error}`, 'error');
       }
@@ -642,13 +657,14 @@ export function App() {
       setHistoryIdx(0);
       setProjectName(restored.projectName);
       setProjectType(restored.projectType);
-      handleUpdateCanvasSettings(restored.canvasSettings);
+      handleUpdateCanvasSettings(restored.canvasSettings, false);
       setViewportMode(restored.viewportMode);
       setZoom(restored.zoom);
       setSelectedId(restored.tree[0]?.id || null);
 
       setIsProjectLoaded(true);
       setIsWelcomeOpen(false);
+      setHasUnsavedChanges(false);
 
       // Registrar en lista de proyectos recientes organizados alfabéticamente
       const targetPath = result.fileName || `${restored.projectName}.vforge`;
@@ -705,13 +721,14 @@ export function App() {
         setHistoryIdx(0);
         setProjectName(restored.projectName);
         setProjectType(restored.projectType);
-        handleUpdateCanvasSettings(restored.canvasSettings);
+        handleUpdateCanvasSettings(restored.canvasSettings, false);
         setViewportMode(restored.viewportMode);
         setZoom(restored.zoom);
         setSelectedId(restored.tree[0]?.id || null);
 
         setIsProjectLoaded(true);
         setIsWelcomeOpen(false);
+        setHasUnsavedChanges(false);
 
         // Actualizar marca y posición en la lista de recientes manteniendo orden alfabético
         const updatedRecents = addRecentProject({
@@ -732,6 +749,71 @@ export function App() {
     },
     [handleUpdateCanvasSettings, showToast]
   );
+
+  // Solicitar cierre de proyecto (desde el botón indicador junto al nombre del proyecto)
+  const handleRequestCloseProject = useCallback(() => {
+    if (!hasUnsavedChanges) {
+      // Si está grabado (sin cambios pendientes), se va a la pantalla de nuevo proyecto directamente
+      setIsWelcomeOpen(true);
+      setIsProjectLoaded(false);
+    } else {
+      // Si no está grabado, pregunta si quiere grabar
+      setIsUnsavedModalOpen(true);
+    }
+  }, [hasUnsavedChanges]);
+
+  // Al confirmar la solicitud de guardar: guarda el proyecto, cierra y se va a la pantalla de nuevo proyecto
+  const handleSaveAndCloseProject = useCallback(async () => {
+    try {
+      const jsonString = serializeProject({
+        projectName,
+        projectType,
+        tree,
+        canvasSettings,
+        viewportMode,
+        zoom,
+      });
+
+      const result = await saveProjectFile(projectName, jsonString);
+      if (result.success) {
+        const targetPath = result.filePath || `${projectName}.vforge`;
+        showToast(`Proyecto guardado con éxito: ${targetPath}`, 'success');
+
+        const updatedRecents = addRecentProject({
+          name: projectName,
+          path: targetPath,
+          fileName: targetPath.split(/[\\/]/).pop() || `${projectName}.vforge`,
+          content: jsonString,
+        });
+        setRecentProjects(updatedRecents);
+        setHasUnsavedChanges(false);
+        setIsUnsavedModalOpen(false);
+
+        // Se va a la pantalla de nuevo proyecto y cierra el proyecto
+        setIsWelcomeOpen(true);
+        setIsProjectLoaded(false);
+      } else if (result.error) {
+        showToast(`Error al guardar: ${result.error}`, 'error');
+      }
+    } catch (err: any) {
+      showToast(`Error de serialización: ${err.message}`, 'error');
+    }
+  }, [projectName, projectType, tree, canvasSettings, viewportMode, zoom, showToast]);
+
+  // Al negar la solicitud de guardar: descarta cambios, cierra y se va a la pantalla de nuevo proyecto
+  const handleDiscardAndCloseProject = useCallback(() => {
+    setIsUnsavedModalOpen(false);
+    setHasUnsavedChanges(false);
+    // Se va a la pantalla de nuevo proyecto y cierra el proyecto
+    setIsWelcomeOpen(true);
+    setIsProjectLoaded(false);
+    showToast(`Proyecto "${projectName}" cerrado.`, 'info');
+  }, [projectName, showToast]);
+
+  // Al cancelar el modal de confirmación: permanece en el proyecto
+  const handleCancelCloseProject = useCallback(() => {
+    setIsUnsavedModalOpen(false);
+  }, []);
 
   // Global Keyboard Shortcuts
   useEffect(() => {
@@ -854,6 +936,7 @@ export function App() {
       setHistory([initialTree]);
       setHistoryIdx(0);
       setSelectedId(initialTree[0]?.id || null);
+      setHasUnsavedChanges(false);
     },
     []
   );
@@ -898,7 +981,9 @@ export function App() {
           {/* Figma Top Toolbar */}
           <TopBar
             projectName={projectName}
-            setProjectName={setProjectName}
+            setProjectName={handleSetProjectName}
+            hasUnsavedChanges={hasUnsavedChanges}
+            onCloseProject={handleRequestCloseProject}
             projectType={projectType}
             onOpenNewProject={() => setIsWelcomeOpen(true)}
             onSaveProject={handleSaveProject}
@@ -1002,6 +1087,16 @@ export function App() {
             projectType={projectType}
             isOpen={isExportOpen}
             onClose={() => setIsExportOpen(false)}
+          />
+
+          {/* Diálogo de confirmación para cambios no guardados al cerrar proyecto */}
+          <UnsavedChangesModal
+            isOpen={isUnsavedModalOpen}
+            projectName={projectName}
+            onSaveAndClose={handleSaveAndCloseProject}
+            onDiscardAndClose={handleDiscardAndCloseProject}
+            onCancel={handleCancelCloseProject}
+            resolvedTheme={resolvedTheme}
           />
         </>
       )}

@@ -65,6 +65,8 @@ interface TopBarProps {
   appTheme?: AppTheme;
   resolvedTheme?: ResolvedTheme;
   setAppTheme?: (theme: AppTheme) => void;
+  hasUnsavedChanges?: boolean;
+  onCloseProject?: () => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -75,6 +77,8 @@ export const TopBar: React.FC<TopBarProps> = ({
   onOpenNewProject,
   onSaveProject,
   onOpenProject,
+  hasUnsavedChanges = false,
+  onCloseProject,
   viewportMode = 'desktop',
   setViewportMode,
   zoom = 1,
@@ -238,27 +242,25 @@ export const TopBar: React.FC<TopBarProps> = ({
           <span className="hidden sm:inline">Nuevo</span>
         </button>
 
-        {/* Open Project Button */}
+        {/* Open Project Button (Solo icono) */}
         {onOpenProject && (
           <button
             onClick={onOpenProject}
-            className="flex items-center gap-1 px-2 py-1 rounded bg-[#1e1e1e] hover:bg-[#383838] border border-[#383838] text-zinc-200 text-xs font-medium transition-colors cursor-pointer"
+            className="flex items-center justify-center p-1.5 rounded bg-[#1e1e1e] hover:bg-[#383838] border border-[#383838] text-zinc-200 transition-colors cursor-pointer"
             title="Abrir Proyecto .vforge (Ctrl+O)"
           >
             <FolderOpen className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">Abrir</span>
           </button>
         )}
 
-        {/* Save Project Button */}
+        {/* Save Project Button (Solo icono) */}
         {onSaveProject && (
           <button
             onClick={onSaveProject}
-            className="flex items-center gap-1 px-2 py-1 rounded bg-[#1e1e1e] hover:bg-[#383838] border border-[#383838] text-zinc-200 text-xs font-medium transition-colors cursor-pointer"
+            className="flex items-center justify-center p-1.5 rounded bg-[#1e1e1e] hover:bg-[#383838] border border-[#383838] text-zinc-200 transition-colors cursor-pointer"
             title="Guardar Proyecto .vforge (Ctrl+S)"
           >
             <Save className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="hidden sm:inline">Guardar</span>
           </button>
         )}
 
@@ -290,7 +292,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           <input
             type="text"
             value={projectName}
-            onChange={(e) => setProjectName(e.target.value)}
+            onChange={(e) => setProjectName && setProjectName(e.target.value)}
             onBlur={() => setIsEditingTitle(false)}
             onKeyDown={(e) => e.key === 'Enter' && setIsEditingTitle(false)}
             autoFocus
@@ -298,14 +300,39 @@ export const TopBar: React.FC<TopBarProps> = ({
           />
         ) : (
           <button
-            onClick={() => setIsEditingTitle(true)}
+            onClick={() => setProjectName && setIsEditingTitle(true)}
             className="hover:bg-[#383838] px-2.5 py-1 rounded text-zinc-300 hover:text-white font-medium tracking-tight truncate max-w-[160px]"
-            title="Click to rename project"
+            title="Haga clic para renombrar proyecto"
           >
             {projectName}
           </button>
         )}
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="All changes saved" />
+
+        {/* Indicador de cambios no grabados (puntico / hover equis) y equis de cerrar proyecto */}
+        {onCloseProject && (
+          <button
+            type="button"
+            onClick={onCloseProject}
+            title={
+              hasUnsavedChanges
+                ? 'Cambios no guardados · Clic para cerrar proyecto'
+                : 'Cerrar proyecto'
+            }
+            className="group relative flex items-center justify-center w-5 h-5 rounded hover:bg-[#383838] transition-colors cursor-pointer select-none"
+          >
+            {hasUnsavedChanges ? (
+              <>
+                {/* Puntico cuando hay cambios no grabados */}
+                <span className="w-2 h-2 rounded-full bg-[#0d99ff] group-hover:hidden transition-all shadow-[0_0_6px_#0d99ff]" />
+                {/* Equis al poner el mouse encima (hover) para cerrar el proyecto */}
+                <X className="w-3.5 h-3.5 text-zinc-400 group-hover:text-white hidden group-hover:block transition-all" />
+              </>
+            ) : (
+              /* Equis permanente para cerrar cuando está guardado (sin cambios pendientes) */
+              <X className="w-3.5 h-3.5 text-zinc-400 hover:text-white transition-all" />
+            )}
+          </button>
+        )}
       </div>
 
       {/* Right: History, Frames, Zoom, Preview & Export */}
