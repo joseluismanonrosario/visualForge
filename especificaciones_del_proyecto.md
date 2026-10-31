@@ -37,16 +37,16 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
        - Ubicado directamente al lado del nombre del proyecto en la cabecera.
        - **Con Cambios No Grabados**: Exhibe un puntico azul cian (`#0d99ff`). Al colocar el cursor encima (hover), el puntico conmuta inmediatamente a una equis (`X`) de cierre.
        - **Sin Cambios Pendientes (Grabado)**: Exhibe de forma permanente una equis (`X`) para cerrar el proyecto.
-       - **Flujo de Cierre al Pulsar la Equis**:
-         * Si el proyecto tiene cambios no grabados: Despliega el modal de confirmación `UnsavedChangesModal`.
-           - **Equis en la Esquina Superior Derecha**: Permite cerrar o cancelar la acción de forma directa.
-           - **Botones Normales Sin Iconos**: "Cancelar", "No guardar" y "Guardar" estilizados limpiamente solo con texto.
-           - **Confirmar ("Guardar")**: Guarda el archivo `.vforge` (directo si ya tenía ruta previa o mediante diálogo si es nuevo), actualiza recientes, cierra el proyecto actual y se dirige a la pantalla de nuevo proyecto.
-           - **Negar ("No guardar")**: Descarta los cambios no grabados, cierra el proyecto y se dirige a la pantalla de nuevo proyecto.
-           - **Cancelar**: Cierra el diálogo y continúa en el lienzo de trabajo.
+       - **Flujo de Cierre al Pulsar la Equis o al Presionar "+ Nuevo"**:
+         * Si el proyecto tiene cambios no grabados (sea uno nuevo sin guardar o uno guardado previamente con modificaciones posteriores): Despliega el modal de confirmación `UnsavedChangesModal`.
+           - **Pregunta Simple**: "¿Desea guardar?" con el mensaje "¿Desea guardar los cambios del proyecto "{projectName}"?".
+           - **Botones "Sí" y "No"**: Botón "Sí" (guarda el proyecto y avanza a la pantalla de nuevo proyecto) y botón "No" (descarta los cambios no guardados y avanza a la pantalla de nuevo proyecto).
+           - **Equis en la Esquina Superior Derecha**: Permite cancelar la acción y permanecer en el proyecto actual.
          * Si el proyecto no tiene cambios pendientes: Cierra el proyecto directamente y se dirige a la pantalla de nuevo proyecto (`ProjectCreationScreen`).
    - **Derecha**:
-     - Historial de Estados (Undo `Ctrl+Z` / Redo `Ctrl+Shift+Z` o `Ctrl+Y`).
+     - **Historial de Estados y Deshacer Inteligente (Undo `Ctrl+Z` / Redo `Ctrl+Shift+Z` o `Ctrl+Y`)**:
+       * Capacidad de hasta 100 pasos hacia atrás en el historial (`MAX_HISTORY = 100`), permitiendo deshacer cambios incluso después de haber guardado múltiples veces.
+       * **Detección Dinámica del Punto Guardado**: Al deshacer (`Undo`), si se regresa al punto exacto donde se guardó el proyecto o al estado inicial antes de realizar cambios, el indicador de cambios no guardados (puntico azul) se deshabilita y se muestra la equis (`X`) de cierre directo, ya que el estado en memoria coincide con lo guardado en disco. Al rehacer (`Redo`), se reactiva automáticamente el estado de cambios no guardados.
      - **Selector de Tema de la Aplicación**: Botonera compacta integrada con soporte para 4 modos de tema:
        - **Automático (`system`)**: Detecta automáticamente la configuración del sistema operativo/PC mediante `window.matchMedia('(prefers-color-scheme: dark)')` y escucha cambios en tiempo real.
        - **Oscuro (`dark`)**: Tema visual clásico de Figma Studio con cromas oscuros y logo blanco.

@@ -47,6 +47,8 @@ import {
   addRecentProject,
 } from './utils/recentProjects';
 
+const MAX_HISTORY = 100;
+
 export function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [projectName, setProjectName] = useState('Sin nombre');
@@ -98,10 +100,11 @@ export function App() {
     }
   }, [appTheme, resolvedTheme]);
 
-  // Tree and History State for Undo / Redo
+  // Tree and History State for Undo / Redo (Up to MAX_HISTORY = 100 steps)
   const [tree, setTree] = useState<CanvasNode[]>(INITIAL_CANVAS_TREE);
   const [history, setHistory] = useState<CanvasNode[][]>([INITIAL_CANVAS_TREE]);
   const [historyIdx, setHistoryIdx] = useState(0);
+  const [savedHistoryIdx, setSavedHistoryIdx] = useState<number | null>(0);
 
   // Selection & UI State
   const [selectedId, setSelectedId] = useState<string | null>('hero_container');
@@ -115,35 +118,71 @@ export function App() {
   const [isRightOpen, setIsRightOpen] = useState(true);
   const [isExportOpen, setIsExportOpen] = useState(false);
 
-  // Push new state to history stack
-  const updateTreeWithHistory = useCallback((newTree: CanvasNode[]) => {
-    setTree(newTree);
-    setHistory((prev) => {
-      const sliced = prev.slice(0, historyIdx + 1);
-      return [...sliced, newTree];
-    });
-    setHistoryIdx((prev) => prev + 1);
-    setHasUnsavedChanges(true);
-  }, [historyIdx]);
+  // Push new state to history stack (capped at MAX_HISTORY = 100)
+  const updateTreeWithHistory = useCallback(
+    (newTree: CanvasNode[]) => {
+      setTree(newTree);
 
-  // Undo / Redo Handlers
+      const targetLength = historyIdx + 2;
+      if (targetLength > MAX_HISTORY) {
+        const shiftCount = targetLength - MAX_HISTORY;
+        setHistory((prev) => {
+          const sliced = prev.slice(0, historyIdx + 1);
+          sliced.push(newTree);
+          return sliced.slice(shiftCount);
+        });
+        setHistoryIdx(MAX_HISTORY - 1);
+        setSavedHistoryIdx((prevSaved) => {
+          if (prevSaved === null) return null;
+          const adjusted = prevSaved - shiftCount;
+          return adjusted >= 0 ? adjusted : null;
+        });
+      } else {
+        setHistory((prev) => {
+          const sliced = prev.slice(0, historyIdx + 1);
+          sliced.push(newTree);
+          return sliced;
+        });
+        setHistoryIdx(historyIdx + 1);
+      }
+
+      setHasUnsavedChanges(true);
+    },
+    [historyIdx]
+  );
+
+  // Undo / Redo Handlers con detección inteligente del punto de guardado
   const handleUndo = useCallback(() => {
     if (historyIdx > 0) {
       const prevIdx = historyIdx - 1;
       setHistoryIdx(prevIdx);
       setTree(history[prevIdx]);
-      setHasUnsavedChanges(true);
+
+      // Si al deshacer llegamos al punto guardado o al punto inicial antes de cambios, deshabilitar cambios no guardados
+      const isClean =
+        savedHistoryIdx !== null &&
+        (prevIdx === savedHistoryIdx ||
+          (history[savedHistoryIdx] &&
+            JSON.stringify(history[prevIdx]) === JSON.stringify(history[savedHistoryIdx])));
+      setHasUnsavedChanges(!isClean);
     }
-  }, [historyIdx, history]);
+  }, [historyIdx, history, savedHistoryIdx]);
 
   const handleRedo = useCallback(() => {
     if (historyIdx < history.length - 1) {
       const nextIdx = historyIdx + 1;
       setHistoryIdx(nextIdx);
       setTree(history[nextIdx]);
-      setHasUnsavedChanges(true);
+
+      // Si al rehacer llegamos al punto guardado
+      const isClean =
+        savedHistoryIdx !== null &&
+        (nextIdx === savedHistoryIdx ||
+          (history[savedHistoryIdx] &&
+            JSON.stringify(history[nextIdx]) === JSON.stringify(history[savedHistoryIdx])));
+      setHasUnsavedChanges(!isClean);
     }
-  }, [historyIdx, history]);
+  }, [historyIdx, history, savedHistoryIdx]);
 
   // Canvas & Artboard Settings State
   const [canvasSettings, setCanvasSettings] = useState<CanvasSettings>(() => {
@@ -652,6 +691,7 @@ export function App() {
           content: finalJson,
         });
         setRecentProjects(updatedRecents);
+        setSavedHistoryIdx(historyIdx);
         setHasUnsavedChanges(false);
       } else if (result.error) {
         showToast(`Error al guardar: ${result.error}`, 'error');
@@ -659,7 +699,7 @@ export function App() {
     } catch (err: any) {
       showToast(`Error de serialización: ${err.message}`, 'error');
     }
-  }, [projectName, projectType, tree, canvasSettings, viewportMode, zoom, currentFilePath, showToast]);
+  }, [projectName, projectType, tree, canvasSettings, viewportMode, zoom, currentFilePath, historyIdx, showToast]);
 
   // Proceso de "Guardar como..." (Forzar diálogo para cambiar nombre o ubicación)
   const handleSaveAsProject = useCallback(async () => {
@@ -708,6 +748,7 @@ export function App() {
           content: finalJson,
         });
         setRecentProjects(updatedRecents);
+        setSavedHistoryIdx(historyIdx);
         setHasUnsavedChanges(false);
       } else if (result.error) {
         showToast(`Error al guardar como: ${result.error}`, 'error');
@@ -715,7 +756,7 @@ export function App() {
     } catch (err: any) {
       showToast(`Error de serialización: ${err.message}`, 'error');
     }
-  }, [projectName, projectType, tree, canvasSettings, viewportMode, zoom, currentFilePath, showToast]);
+  }, [projectName, projectType, tree, canvasSettings, viewportMode, zoom, currentFilePath, historyIdx, showToast]);
 
   // Proceso de Cargar / Abrir (Deserialización y Restauración)
   const handleOpenProject = useCallback(async () => {
@@ -734,6 +775,7 @@ export function App() {
       setTree(restored.tree);
       setHistory([restored.tree]);
       setHistoryIdx(0);
+      setSavedHistoryIdx(0);
       setProjectName(restored.projectName);
       setProjectType(restored.projectType);
       handleUpdateCanvasSettings(restored.canvasSettings, false);
@@ -808,6 +850,7 @@ export function App() {
         setTree(restored.tree);
         setHistory([restored.tree]);
         setHistoryIdx(0);
+        setSavedHistoryIdx(0);
         setProjectName(restored.projectName);
         setProjectType(restored.projectType);
         handleUpdateCanvasSettings(restored.canvasSettings, false);
@@ -851,17 +894,18 @@ export function App() {
     [handleUpdateCanvasSettings, showToast]
   );
 
-  // Solicitar cierre de proyecto (desde el botón equis junto al nombre del proyecto)
+  // Solicitar cierre de proyecto (desde el botón equis junto al nombre del proyecto o botón Nuevo)
   const handleRequestCloseProject = useCallback(() => {
     if (!hasUnsavedChanges) {
       // Si está grabado (sin cambios pendientes), simplemente cierra e ir a nuevo proyecto
       setCurrentFilePath(null);
       setProjectName('Sin nombre');
+      setSavedHistoryIdx(0);
       setIsWelcomeOpen(true);
       setIsProjectLoaded(false);
       showToast(`Proyecto "${projectName}" cerrado.`, 'info');
     } else {
-      // Si no está grabado, preguntar si desea guardarlo
+      // Si no está grabado (por primera vez o con cambios posteriores), preguntar si desea guardarlo
       setIsUnsavedModalOpen(true);
     }
   }, [hasUnsavedChanges, projectName, showToast]);
@@ -911,6 +955,7 @@ export function App() {
         setIsUnsavedModalOpen(false);
         setCurrentFilePath(null);
         setProjectName('Sin nombre');
+        setSavedHistoryIdx(0);
 
         // Se va a la pantalla de nuevo proyecto y cierra el proyecto
         setIsWelcomeOpen(true);
@@ -929,6 +974,7 @@ export function App() {
     setHasUnsavedChanges(false);
     setCurrentFilePath(null);
     setProjectName('Sin nombre');
+    setSavedHistoryIdx(0);
     // Se va a la pantalla de nuevo proyecto y cierra el proyecto
     setIsWelcomeOpen(true);
     setIsProjectLoaded(false);
@@ -954,6 +1000,13 @@ export function App() {
       if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 's') {
         e.preventDefault();
         handleSaveProject();
+        return;
+      }
+
+      // New: Ctrl+N or Cmd+N
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        handleRequestCloseProject();
         return;
       }
 
@@ -1049,6 +1102,7 @@ export function App() {
     handleSaveProject,
     handleSaveAsProject,
     handleOpenProject,
+    handleRequestCloseProject,
     isWelcomeOpen,
     isProjectLoaded,
   ]);
@@ -1069,6 +1123,7 @@ export function App() {
       setTree(initialTree);
       setHistory([initialTree]);
       setHistoryIdx(0);
+      setSavedHistoryIdx(0);
       setSelectedId(initialTree[0]?.id || null);
       setCurrentFilePath(null);
       setHasUnsavedChanges(false);
@@ -1120,7 +1175,7 @@ export function App() {
             hasUnsavedChanges={hasUnsavedChanges}
             onCloseProject={handleRequestCloseProject}
             projectType={projectType}
-            onOpenNewProject={() => setIsWelcomeOpen(true)}
+            onOpenNewProject={handleRequestCloseProject}
             onSaveProject={handleSaveProject}
             onSaveAsProject={handleSaveAsProject}
             onOpenProject={handleOpenProject}
