@@ -1,4 +1,4 @@
-import { RecentProjectItem } from '../types';
+import { RecentProjectItem, ProjectType } from '../types';
 
 const STORAGE_KEY = 'vf_recent_projects';
 const MAX_RECENT_PROJECTS = 30;
@@ -71,6 +71,7 @@ export function addRecentProject(params: {
   path?: string;
   fileName?: string;
   content?: string;
+  type?: ProjectType;
 }): RecentProjectItem[] {
   if (typeof window === 'undefined') return [];
 
@@ -78,6 +79,17 @@ export function addRecentProject(params: {
   const rawName = (params.name || 'VisualForge_Project').trim();
   const rawFileName = (params.fileName || `${rawName}.vforge`).trim();
   const rawPath = (params.path || rawFileName).trim();
+
+  let resolvedType: ProjectType | undefined = params.type;
+  if (!resolvedType && params.content) {
+    try {
+      const parsed = JSON.parse(params.content);
+      const t = parsed?.project?.type || parsed?.projectType;
+      if (t === 'esp32' || t === 'html_css' || t === 'react') {
+        resolvedType = t;
+      }
+    } catch {}
+  }
 
   const now = new Date();
   const formattedDate =
@@ -111,6 +123,7 @@ export function addRecentProject(params: {
     date: formattedDate,
     timestamp,
     content: params.content,
+    type: resolvedType || (existingIdx >= 0 ? existing[existingIdx].type : undefined),
   };
 
   let newList: RecentProjectItem[];

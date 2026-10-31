@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { ProjectType, ResolvedTheme, RecentProjectItem } from '../types';
 import {
   FilePlus2,
@@ -157,6 +157,76 @@ const ReactAtomIcon: React.FC<{ className?: string }> = ({
   </svg>
 );
 
+/* Obtiene la etiqueta textual del tipo de proyecto para la segunda línea de recientes */
+const getProjectTypeLabel = (proj: RecentProjectItem): string => {
+  if (proj.type === 'esp32') return 'ESP32 / IoT';
+  if (proj.type === 'html_css') return 'HTML / CSS';
+  if (proj.type === 'react') return 'React Web';
+  if (proj.content) {
+    try {
+      const parsed = JSON.parse(proj.content);
+      const t = parsed?.project?.type || parsed?.projectType;
+      if (t === 'esp32') return 'ESP32 / IoT';
+      if (t === 'html_css') return 'HTML / CSS';
+      if (t === 'react') return 'React Web';
+    } catch {}
+  }
+  return 'HTML / CSS';
+};
+
+/* Desplazamiento lento a la izquierda en hover únicamente si el nombre no cabe en el contenedor */
+const MarqueeProjectName: React.FC<{
+  name: string;
+  isHovered: boolean;
+  className?: string;
+}> = ({ name, isHovered, className }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLSpanElement>(null);
+  const [overflowDist, setOverflowDist] = useState<number>(0);
+
+  const measure = () => {
+    if (containerRef.current && textRef.current) {
+      const cWidth = containerRef.current.clientWidth;
+      const tWidth = textRef.current.scrollWidth;
+      if (tWidth > cWidth) {
+        setOverflowDist(tWidth - cWidth + 12);
+      } else {
+        setOverflowDist(0);
+      }
+    }
+  };
+
+  useEffect(() => {
+    measure();
+  }, [name]);
+
+  const isOverflowing = overflowDist > 0;
+
+  return (
+    <div
+      ref={containerRef}
+      onMouseEnter={measure}
+      className="overflow-hidden flex-1 relative whitespace-nowrap min-w-0"
+    >
+      <span
+        ref={textRef}
+        style={
+          isOverflowing && isHovered
+            ? ({
+                '--overflow-dist': `-${overflowDist}px`,
+              } as React.CSSProperties)
+            : undefined
+        }
+        className={`inline-block transition-transform duration-300 ${
+          isOverflowing && isHovered ? 'animate-marquee-hover' : ''
+        } ${className || ''}`}
+      >
+        {name}
+      </span>
+    </div>
+  );
+};
+
 interface ProjectCreationScreenProps {
   isOpen: boolean;
   canCancel: boolean;
@@ -193,6 +263,7 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
   // Estado de ordenación de proyectos recientes (por fecha por defecto)
   const [recentSortBy, setRecentSortBy] = useState<RecentSortBy>('date');
   const [recentSortOrder, setRecentSortOrder] = useState<RecentSortOrder>('desc');
+  const [hoveredRecentId, setHoveredRecentId] = useState<string | null>(null);
 
   // Alternar orden por nombre (al presionar la fila de nombre: alterna ascendente / descendente)
   const handleToggleSortName = () => {
@@ -535,6 +606,8 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
                   <div
                     key={proj.id || proj.name}
                     onClick={() => onOpenRecentProject?.(proj)}
+                    onMouseEnter={() => setHoveredRecentId(proj.id || proj.name)}
+                    onMouseLeave={() => setHoveredRecentId(null)}
                     className={`group px-2 py-1.5 rounded-lg flex flex-col gap-0.5 text-left cursor-pointer transition-all border border-transparent ${
                       isLight
                         ? 'hover:bg-white hover:border-zinc-300 hover:shadow-xs'
@@ -544,18 +617,20 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
                     }`}
                     title={`Abrir directamente: ${proj.name} (${proj.path})`}
                   >
-                    <div className="flex items-center justify-between gap-1.5">
-                      <div className="flex items-center gap-1.5 truncate">
+                    <div className="flex items-center justify-between gap-1.5 min-w-0">
+                      <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
+                        {/* Icono fijo que no se mueve durante el scroll */}
                         <FileCode2 className="w-3.5 h-3.5 text-violet-400 flex-shrink-0 group-hover:text-[#0d99ff] transition-colors" />
-                        <span
-                          className={`text-[10px] font-semibold truncate ${
+                        {/* Nombre del proyecto: solo el texto hace scroll lento a la izquierda en hover si no cabe */}
+                        <MarqueeProjectName
+                          name={proj.name}
+                          isHovered={hoveredRecentId === (proj.id || proj.name)}
+                          className={`text-[10px] font-semibold ${
                             isLight
                               ? 'text-zinc-800'
                               : 'text-zinc-200 group-hover:text-white'
                           }`}
-                        >
-                          {proj.name}
-                        </span>
+                        />
                       </div>
                       <span
                         className={`text-[8px] flex-shrink-0 font-mono ${
@@ -565,14 +640,17 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
                         {proj.date}
                       </span>
                     </div>
+                    {/* Segunda línea: tipo de proyecto en vez de la ruta o nombre repetido */}
                     <span
-                      className={`text-[8px] truncate font-mono pl-5 ${
+                      className={`text-[8.5px] truncate font-medium pl-5 ${
                         isLight
-                          ? 'text-zinc-400'
-                          : 'text-zinc-500 group-hover:text-zinc-400'
+                          ? 'text-zinc-500'
+                          : isBlue
+                          ? 'text-sky-400/80 group-hover:text-sky-300'
+                          : 'text-zinc-400 group-hover:text-zinc-300'
                       }`}
                     >
-                      {proj.path}
+                      {getProjectTypeLabel(proj)}
                     </span>
                   </div>
                 ))}

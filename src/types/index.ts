@@ -143,4 +143,5 @@ export interface RecentProjectItem {
   date: string;
   timestamp: number;
   content?: string;
+  type?: ProjectType;
 }

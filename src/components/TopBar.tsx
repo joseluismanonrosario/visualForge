@@ -217,8 +217,8 @@ export const TopBar: React.FC<TopBarProps> = ({
   }
 
   return (
-    <header className="h-11 bg-[#2c2c2c] border-b border-[#383838] pl-3 pr-0 flex items-center justify-between select-none z-30 flex-shrink-0 text-xs text-zinc-200">
-      {/* Left: Brand */}
+    <header className="relative h-11 bg-[#2c2c2c] border-b border-[#383838] pl-3 pr-0 flex items-center justify-between select-none z-30 flex-shrink-0 text-xs text-zinc-200">
+      {/* Left: Brand & Unified Project Buttons */}
       <div className="flex items-center gap-3">
         {/* Figma Style Logo */}
         <div className="flex items-center gap-2">
@@ -231,10 +231,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             VisualForge
           </span>
         </div>
-      </div>
 
-      {/* Center: Project Title & Environment Badge */}
-      <div className="flex items-center gap-2 max-w-[360px] sm:max-w-lg">
         {/* Grupo unificado de botones de proyecto: +, Abrir, Guardar, Guardar como */}
         <div className="inline-flex items-center rounded-lg bg-[#1e1e1e] border border-[#383838] p-0.5 divide-x divide-[#383838] shadow-xs flex-shrink-0">
           {/* New Project Button (+) */}
@@ -282,30 +279,63 @@ export const TopBar: React.FC<TopBarProps> = ({
             </button>
           )}
         </div>
+      </div>
 
-        {/* Project Type Badge */}
-        <button
-          onClick={onOpenNewProject}
-          title="Haga clic para cambiar el tipo de proyecto e iconografía"
-          className="flex items-center gap-1.5 px-2 py-1 rounded bg-[#1e1e1e] hover:bg-[#383838] border border-[#383838] text-[11px] font-medium text-zinc-300 transition-colors"
-        >
-          <span
-            className={`w-1.5 h-1.5 rounded-full ${
-              projectType === 'esp32'
-                ? 'bg-emerald-400'
-                : projectType === 'html_css'
-                ? 'bg-amber-400'
-                : 'bg-[#0d99ff]'
-            }`}
-          />
-          <span className="truncate max-w-[130px]">
-            {projectType === 'esp32'
+      {/* Center: Centered Project Title, Non-clickable Project Type Logo & Unsaved indicator / Close button */}
+      <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 max-w-[40%] select-none z-10">
+        {/* Project Type Logo (No clickeable) */}
+        <div
+          title={`Tipo de proyecto: ${
+            projectType === 'esp32'
               ? 'ESP32 / IoT'
               : projectType === 'html_css'
               ? 'HTML / CSS'
-              : 'React Web'}
-          </span>
-        </button>
+              : 'React Web'
+          }`}
+          className="flex items-center justify-center p-1 rounded bg-[#1e1e1e] border border-[#383838] flex-shrink-0 cursor-default select-none shadow-xs"
+        >
+          {projectType === 'esp32' ? (
+            <svg
+              viewBox="0 0 24 24"
+              className="w-3.5 h-3.5 text-emerald-400 pointer-events-none"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="5" y="5" width="14" height="14" rx="2" />
+              <path d="M9 9h6v6H9z" />
+              <path d="M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4" />
+            </svg>
+          ) : projectType === 'html_css' ? (
+            <svg
+              viewBox="0 0 24 24"
+              className="w-3.5 h-3.5 text-amber-400 pointer-events-none"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M4 3l1.8 17.2L12 22l6.2-1.8L20 3H4z" />
+              <path d="M8 8h8M8 12h7.5M8 12l.5 5 3.5 1 3.5-1 .3-3" strokeWidth="1.8" />
+            </svg>
+          ) : (
+            <svg
+              viewBox="-11.5 -10.23174 23 20.46348"
+              className="w-3.5 h-3.5 text-[#00d8ff] pointer-events-none"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            >
+              <circle cx="0" cy="0" r="2.2" fill="currentColor" stroke="none" />
+              <ellipse rx="11" ry="4.2" />
+              <ellipse rx="11" ry="4.2" transform="rotate(60)" />
+              <ellipse rx="11" ry="4.2" transform="rotate(120)" />
+            </svg>
+          )}
+        </div>
 
         {isEditingTitle ? (
           <input
@@ -320,7 +350,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         ) : (
           <button
             onClick={() => setProjectName && setIsEditingTitle(true)}
-            className="hover:bg-[#383838] px-2.5 py-1 rounded text-zinc-300 hover:text-white font-medium tracking-tight truncate max-w-[160px]"
+            className="hover:bg-[#383838] px-2.5 py-1 rounded text-zinc-300 hover:text-white font-medium tracking-tight truncate max-w-[200px] cursor-pointer"
             title="Haga clic para renombrar proyecto"
           >
             {projectName}
@@ -337,7 +367,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                 ? 'Cambios no guardados · Clic para cerrar proyecto'
                 : 'Cerrar proyecto'
             }
-            className="group relative flex items-center justify-center w-5 h-5 rounded hover:bg-[#383838] transition-colors cursor-pointer select-none"
+            className="group relative flex items-center justify-center w-5 h-5 rounded hover:bg-[#383838] transition-colors cursor-pointer select-none flex-shrink-0"
           >
             {hasUnsavedChanges ? (
               <>
@@ -430,71 +460,6 @@ export const TopBar: React.FC<TopBarProps> = ({
             </button>
           </div>
         )}
-
-        {/* Viewport Frame Dropdown - Positioned beside Zoom and Preview */}
-        <div className="flex items-center bg-[#1e1e1e] rounded-lg border border-[#383838] p-0.5">
-          <button
-            onClick={() => setViewportMode('desktop')}
-            title="Desktop Frame (1440px)"
-            className={`px-2 py-1 rounded flex items-center gap-1.5 transition-colors ${
-              viewportMode === 'desktop'
-                ? 'bg-[#383838] text-white font-medium'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
-            }`}
-          >
-            <Monitor className="w-3.5 h-3.5" />
-            <span className="hidden lg:inline">Desktop</span>
-          </button>
-          <button
-            onClick={() => setViewportMode('tablet')}
-            title="Tablet Frame (768px)"
-            className={`px-2 py-1 rounded flex items-center gap-1.5 transition-colors ${
-              viewportMode === 'tablet'
-                ? 'bg-[#383838] text-white font-medium'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
-            }`}
-          >
-            <Tablet className="w-3.5 h-3.5" />
-            <span className="hidden lg:inline">Tablet</span>
-          </button>
-          <button
-            onClick={() => setViewportMode('mobile')}
-            title="Mobile Frame (375px)"
-            className={`px-2 py-1 rounded flex items-center gap-1.5 transition-colors ${
-              viewportMode === 'mobile'
-                ? 'bg-[#383838] text-white font-medium'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
-            }`}
-          >
-            <Smartphone className="w-3.5 h-3.5" />
-            <span className="hidden lg:inline">Mobile</span>
-          </button>
-        </div>
-
-        {/* Zoom Controls */}
-        <div className="flex items-center bg-[#1e1e1e] rounded border border-[#383838] px-1 py-0.5">
-          <button
-            onClick={() => setZoom((z) => Math.max(0.4, Number((z - 0.1).toFixed(1))))}
-            className="p-1 hover:text-white text-zinc-400"
-            title="Zoom out"
-          >
-            <ZoomOut className="w-3 h-3" />
-          </button>
-          <button
-            onClick={resetZoom}
-            className="px-1.5 font-mono text-[11px] hover:text-white text-zinc-300"
-            title="Click to reset to 100%"
-          >
-            {Math.round(zoom * 100)}%
-          </button>
-          <button
-            onClick={() => setZoom((z) => Math.min(2.0, Number((z + 0.1).toFixed(1))))}
-            className="p-1 hover:text-white text-zinc-400"
-            title="Zoom in"
-          >
-            <ZoomIn className="w-3 h-3" />
-          </button>
-        </div>
 
         {/* Preview / Present Mode Toggle */}
         <button

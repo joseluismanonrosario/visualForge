@@ -69,8 +69,8 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
       }`}
       title="Haga clic para omitir"
     >
-      {/* Splash Screen Card Container */}
-      <div className="relative w-[880px] max-w-[94vw] aspect-[918/614] rounded-[24px] sm:rounded-[26px] overflow-hidden shadow-2xl shadow-black/80 border border-white/10 animate-in fade-in zoom-in-95 duration-300">
+      {/* Splash Screen Card Container (tamaño compacto optimizado) */}
+      <div className="relative w-[500px] max-w-[85vw] aspect-[918/614] rounded-[18px] sm:rounded-[20px] overflow-hidden shadow-2xl shadow-black/80 border border-white/10 animate-in fade-in zoom-in-95 duration-300">
         {/* Splash Graphic Asset Background */}
         <img
           src="/splash-bg.png"
@@ -84,18 +84,18 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
           style={{
             left: '4.2%',
             bottom: '5.2%',
-            width: '40%',
+            width: '42%',
           }}
         >
           {/* Animated Status Text */}
-          <div className="flex items-center gap-2 text-zinc-300 text-xs sm:text-[13px] font-sans tracking-wide">
+          <div className="flex items-center gap-1.5 text-zinc-300 text-[11px] sm:text-xs font-sans tracking-wide">
             <span className="font-medium text-zinc-200 truncate">
               {LOADING_STAGES[stageIdx]}
             </span>
           </div>
 
           {/* Glowing Progress Bar */}
-          <div className="w-full max-w-[230px] sm:max-w-[260px] h-1 bg-white/10 rounded-full overflow-hidden mt-2 relative">
+          <div className="w-full max-w-[170px] sm:max-w-[200px] h-1 bg-white/10 rounded-full overflow-hidden mt-1.5 relative">
             <div
               className="h-full bg-gradient-to-r from-[#0d99ff] via-indigo-500 to-violet-500 rounded-full transition-all duration-300 ease-out shadow-[0_0_8px_rgba(13,153,255,0.7)]"
               style={{ width: `${progress}%` }}

@@ -20,49 +20,59 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
      - Acompañado del texto de marca "VisualForge".
      - Sincronización reactiva en tiempo real del favicon del navegador (`<link rel="icon">`) con el logo del tema activo.
      - Zona despejada y limpia: Los botones de selección (`MousePointer`) y mover lienzo (`Hand`) se trasladan exclusivamente a la barra flotante `FloatingToolbox` para evitar redundancias y mantener la cabecera despejada.
-   - **Centro**:
-     - **Botonera Agrupada de Proyecto (`+`, Abrir, Guardar, Guardar como...)**:
-       - Contenedor unificado (`inline-flex`) con borde delimitado y divisores internos:
-         * Botón **`+` (Nuevo)**: Abre la configuración / pantalla de nuevo proyecto.
-         * Botón **Abrir**: Solo icono (`FolderOpen`, sin texto) con tooltip interactivo (`Ctrl+O`).
-         * Botón **Guardar**: Solo icono (`Save`, sin texto) con tooltip interactivo (`Ctrl+S`).
-         * Botón **Guardar como...**: Solo icono (`SaveAll`, sin texto) con tooltip interactivo (`Ctrl+Shift+S`).
-     - **Lógica de Guardado Directo vs. Primera Vez ("Sin nombre")**:
-       * **Proyectos Nuevos ("Sin nombre")**: Todo proyecto nuevo se inicializa con el texto **"Sin nombre"**. Al presionar **Guardar** (`Ctrl+S`), se abre obligatoriamente la ventana nativa de guardado para que el usuario escriba el nombre deseado y seleccione la ruta. Al guardarse, el nombre del proyecto se actualiza automáticamente con el nombre ingresado.
-       * **Guardado Directo**: Si el archivo del proyecto ya estaba guardado en una ruta y cuenta con nombre asignado, guarda directamente sin pedir nombre ni abrir ventanas emergentes.
-       * **Guardar como... (`SaveAll` / `Ctrl+Shift+S`)**: Abre la ventana nativa de guardado apareciendo el nombre actual del archivo prellenado para permitir cambiar el nombre o ubicarlo en otro directorio.
-     - Badge selector de entorno de proyecto (*React Web*, *HTML / CSS*, *ESP32 / IoT*).
-     - Título del proyecto editable en línea (por defecto `"Sin nombre"`).
-     - **Indicador Dinámico de Cambios No Guardados y Cierre de Proyecto**:
-       - Ubicado directamente al lado del nombre del proyecto en la cabecera.
-       - **Con Cambios No Grabados**: Exhibe un puntico azul cian (`#0d99ff`). Al colocar el cursor encima (hover), el puntico conmuta inmediatamente a una equis (`X`) de cierre.
-       - **Sin Cambios Pendientes (Grabado)**: Exhibe de forma permanente una equis (`X`) para cerrar el proyecto.
-       - **Flujo de Cierre al Pulsar la Equis o al Presionar "+ Nuevo"**:
-         * Si el proyecto tiene cambios no grabados (sea uno nuevo sin guardar o uno guardado previamente con modificaciones posteriores): Despliega el modal de confirmación `UnsavedChangesModal`.
-           - **Pregunta Simple**: "¿Desea guardar?" con el mensaje "¿Desea guardar los cambios del proyecto "{projectName}"?".
-           - **Botones "Sí" y "No"**: Botón "Sí" (guarda el proyecto y avanza a la pantalla de nuevo proyecto) y botón "No" (descarta los cambios no guardados y avanza a la pantalla de nuevo proyecto).
-           - **Equis en la Esquina Superior Derecha**: Permite cancelar la acción y permanecer en el proyecto actual.
-         * Si el proyecto no tiene cambios pendientes: Cierra el proyecto directamente y se dirige a la pantalla de nuevo proyecto (`ProjectCreationScreen`).
-   - **Derecha**:
-     - **Historial de Estados y Deshacer Inteligente (Undo `Ctrl+Z` / Redo `Ctrl+Shift+Z` o `Ctrl+Y`)**:
-       * Capacidad de hasta 100 pasos hacia atrás en el historial (`MAX_HISTORY = 100`), permitiendo deshacer cambios incluso después de haber guardado múltiples veces.
-       * **Detección Dinámica del Punto Guardado**: Al deshacer (`Undo`), si se regresa al punto exacto donde se guardó el proyecto o al estado inicial antes de realizar cambios, el indicador de cambios no guardados (puntico azul) se deshabilita y se muestra la equis (`X`) de cierre directo, ya que el estado en memoria coincide con lo guardado en disco. Al rehacer (`Redo`), se reactiva automáticamente el estado de cambios no guardados.
-     - **Selector de Tema de la Aplicación**: Botonera compacta integrada con soporte para 4 modos de tema:
-       - **Automático (`system`)**: Detecta automáticamente la configuración del sistema operativo/PC mediante `window.matchMedia('(prefers-color-scheme: dark)')` y escucha cambios en tiempo real.
-       - **Oscuro (`dark`)**: Tema visual clásico de Figma Studio con cromas oscuros y logo blanco.
-       - **Claro (`light`)**: Tema visual limpio y luminoso con cromas claros, fondo neutral y logo gris grafito.
-       - **Azul (`blue`)**: Tema Midnight Indigo con tonalidades azuladas oscuras y logo azul cobalto.
-       - Persistencia automática de la preferencia en `localStorage` (`vf_app_theme`), resolución reactiva y marcado en atributos HTML (`data-app-theme` y `data-theme-setting`).
-       - **Garantía Integral de Contraste y Legibilidad Sin Pérdida de Texto**:
-         - En modo claro (`light`), todos los campos de texto, inputs, selectores y textareas en paneles laterales y modales cuentan con fondo blanco `#ffffff` y tipografía oscura `#0f172a` de alto contraste, evitando textos blancos invisibles sobre fondo claro.
-         - Las etiquetas atenuadas y textos secundarios utilizan contraste calibrado `#475569` para lectura nítida.
-         - El Artboard aísla su esquema tipográfico para evitar que herede clases de texto del contenedor principal de la aplicación, preservando la fidelidad del diseño web visualizado.
-         - En modo azul (`blue`), los campos y controles integran fondos azul marino `#131c31` con tipografía clara `#f1f5f9` y bordes bien definidos para evitar textos negros o atenuaciones ilegibles.
-         - En modo oscuro (`dark`), el panel de propiedades del lienzo (`Canvas Settings Inspector`) cuenta con contraste reforzado: tarjetas en `#1b1c1e` con bordes `#3a3b40`, títulos de sección en `text-zinc-200` con viñeta azul cian, etiquetas secundarias en `text-zinc-300`, contenedores definidos para desplegables (`bg-[#25262a] border-[#3e3f46] text-white`), campos de ancho/alto con distintivo monoespaciado azul `#0d99ff`, swatches de paleta oscura con doble reborde visible (`border-2 border-white/25`), botones de dispositivos inactivos con fondo sólido delimitado (`bg-[#1e1e20] text-zinc-300 border-[#383838]`), e indicación global `:root, [data-app-theme="dark"] { color-scheme: dark; }` con reglas explícitas para elementos `option` que evitan fondos blancos nativos o texto desvanecido al abrir menús desplegables.
-     - **Frame / Device Selector (Reposicionado)**: Controles de vista de dispositivo (*Desktop 1440px*, *Tablet 768px*, *Mobile 375px*) reubicados en el lateral derecho, situados estratégicamente al lado de los controles de Zoom y del botón Preview.
-     - Selector de Nivel de Zoom (`ZoomOut`, porcentaje editable/clic para reset a `100%`, `ZoomIn`).
-     - **Botón Present / Preview (Play `▶` / Eye)**: Alterna entre modo diseño y modo vista previa interactiva.
-     - **Botón Share / Export Code**: Abre el modal de exportación de código fuente.
+    - **Botonera Agrupada de Proyecto (`+`, Abrir, Guardar, Guardar como...)**:
+      - Reubicada en la zona izquierda, directamente contigua a la marca "VisualForge":
+      - Contenedor unificado (`inline-flex`) con borde delimitado y divisores internos:
+        * Botón **`+` (Nuevo)**: Abre la configuración / pantalla de nuevo proyecto.
+        * Botón **Abrir**: Solo icono (`FolderOpen`, sin texto) con tooltip interactivo (`Ctrl+O`).
+        * Botón **Guardar**: Solo icono (`Save`, sin texto) con tooltip interactivo (`Ctrl+S`).
+        * Botón **Guardar como...**: Solo icono (`SaveAll`, sin texto) con tooltip interactivo (`Ctrl+Shift+S`).
+    - **Centro (Centrado Geométrico de Nombre de Proyecto)**:
+      - **Posicionamiento Centrado Estricto**: El nombre del proyecto está posicionado exactamente en el centro de la barra superior (`absolute left-1/2 -translate-x-1/2`).
+      - **Logo del Tipo de Proyecto (No Clickeable)**: En lugar de un botón interactivo con texto, se exhibe un logo/isotipo nítido del tipo de proyecto (React Atom para *React Web*, Escudo HTML5 para *HTML / CSS*, Microchip para *ESP32 / IoT*) dentro de un contenedor decorativo estático, totalmente no clickeable, con tooltip descriptivo.
+      - **Título del proyecto editable en línea** (por defecto `"Sin nombre"`).
+      - **Lógica de Guardado Directo vs. Primera Vez ("Sin nombre")**:
+        * **Proyectos Nuevos ("Sin nombre")**: Todo proyecto nuevo se inicializa con el texto **"Sin nombre"**. Al presionar **Guardar** (`Ctrl+S`), se abre obligatoriamente la ventana nativa de guardado para que el usuario escriba el nombre deseado y seleccione la ruta. Al guardarse, el nombre del proyecto se actualiza automáticamente con el nombre ingresado.
+        * **Guardado Directo**: Si el archivo del proyecto ya estaba guardado en una ruta y cuenta con nombre asignado, guarda directamente sin pedir nombre ni abrir ventanas emergentes.
+        * **Guardar como... (`SaveAll` / `Ctrl+Shift+S`)**: Abre la ventana nativa de guardado apareciendo el nombre actual del archivo prellenado para permitir cambiar el nombre o ubicarlo en otro directorio.
+      - **Indicador Dinámico de Cambios No Guardados y Cierre de Proyecto**:
+        - Ubicado directamente al lado del nombre del proyecto en la cabecera.
+        - **Con Cambios No Grabados**: Exhibe un puntico azul cian (`#0d99ff`). Al colocar el cursor encima (hover), el puntico conmuta inmediatamente a una equis (`X`) de cierre.
+        - **Sin Cambios Pendientes (Grabado)**: Exhibe de forma permanente una equis (`X`) para cerrar el proyecto.
+        - **Flujo de Cierre al Pulsar la Equis o al Presionar "+ Nuevo"**:
+          * Si el proyecto tiene cambios no grabados (sea uno nuevo sin guardar o uno guardado previamente con modificaciones posteriores): Despliega el modal de confirmación `UnsavedChangesModal`.
+            - **Pregunta Simple**: "¿Desea guardar?" con el mensaje "¿Desea guardar los cambios del proyecto "{projectName}"?".
+            - **Botones "Sí" y "No"**: Botón "Sí" (guarda el proyecto y avanza a la pantalla de nuevo proyecto) y botón "No" (descarta los cambios no guardados y avanza a la pantalla de nuevo proyecto).
+            - **Equis en la Esquina Superior Derecha**: Permite cancelar la acción y permanecer en el proyecto actual.
+          * Si el proyecto no tiene cambios pendientes: Cierra el proyecto directamente y se dirige a la pantalla de nuevo proyecto (`ProjectCreationScreen`), sin notificaciones innecesarias.
+    - **Derecha**:
+      - **Historial de Estados y Deshacer Inteligente (Undo `Ctrl+Z` / Redo `Ctrl+Shift+Z` o `Ctrl+Y`)**:
+        * Capacidad de hasta 100 pasos hacia atrás en el historial (`MAX_HISTORY = 100`), permitiendo deshacer cambios incluso después de haber guardado múltiples veces.
+        * **Detección Dinámica del Punto Guardado**: Al deshacer (`Undo`), si se regresa al punto exacto donde se guardó el proyecto o al estado inicial antes de realizar cambios, el indicador de cambios no guardados (puntico azul) se deshabilita y se muestra la equis (`X`) de cierre directo, ya que el estado en memoria coincide con lo guardado en disco. Al rehacer (`Redo`), se reactiva automáticamente el estado de cambios no guardados.
+      - **Selector de Tema de la Aplicación**: Botonera compacta integrada con soporte para 4 modos de tema:
+        - **Automático (`system`)**: Detecta automáticamente la configuración del sistema operativo/PC mediante `window.matchMedia('(prefers-color-scheme: dark)')` y escucha cambios en tiempo real.
+        - **Oscuro (`dark`)**: Tema visual clásico de Figma Studio con cromas oscuros y logo blanco.
+        - **Claro (`light`)**: Tema visual limpio y luminoso con cromas claros, fondo neutral y logo gris grafito.
+        - **Azul (`blue`)**: Tema Midnight Indigo con tonalidades azuladas oscuras y logo azul cobalto.
+        - Persistencia automática de la preferencia en `localStorage` (`vf_app_theme`), resolución reactiva y marcado en atributos HTML (`data-app-theme` y `data-theme-setting`).
+        - **Garantía Integral de Contraste y Legibilidad Sin Pérdida de Texto**:
+          - En modo claro (`light`), todos los campos de texto, inputs, selectores y textareas en paneles laterales y modales cuentan con fondo blanco `#ffffff` y tipografía oscura `#0f172a` de alto contraste, evitando textos blancos invisibles sobre fondo claro.
+          - Las etiquetas atenuadas y textos secundarios utilizan contraste calibrado `#475569` para lectura nítida.
+          - El Artboard aísla su esquema tipográfico para evitar que herede clases de texto del contenedor principal de la aplicación, preservando la fidelidad del diseño web visualizado.
+          - En modo azul (`blue`), los campos y controles integran fondos azul marino `#131c31` con tipografía clara `#f1f5f9` y bordes bien definidos para evitar textos negros o atenuaciones ilegibles.
+          - En modo oscuro (`dark`), el panel de propiedades del lienzo (`Canvas Settings Inspector`) cuenta con contraste reforzado.
+      - **Botón Present / Preview (Play `▶` / Eye)**: Alterna entre modo diseño y modo vista previa interactiva.
+      - **Botón Share / Export Code**: Abre el modal de exportación de código fuente.
+    - **Toolbox Flotante Fijo de Tipo de Pantalla / Dispositivo (Pegado al Centro de la Barra Superior)**:
+      - Anclado fijamente justo debajo de la barra superior en el centro horizontal (`fixed top-11 left-1/2 -translate-x-1/2 z-30`).
+      - Permite conmutar con un clic entre los 3 dispositivos (*Desktop 1440px*, *Tablet 768px*, *Mobile 375px*) con sus iconos respectivos (`Monitor`, `Tablet`, `Smartphone`).
+    - **Status Bar Inferior con Controles de Zoom en la Esquina Derecha**:
+      - Barra de estado horizontal ubicada en el borde inferior del entorno de diseño (`h-6 bg-[#18181b] border-t border-[#2e2e32] px-3 flex items-center justify-between text-[11px]`).
+      - **Lado Izquierdo**: Indicador de estado "Listo" con viñeta verde y recuento en tiempo real de los componentes en el árbol del lienzo.
+      - **Esquina Derecha**: Controles integrados de Zoom con botones para reducir zoom (`ZoomOut`), indicador del porcentaje actual con clic para restablecer rápidamente al 100%, y botón para aumentar zoom (`ZoomIn`).
+    - **Splash Screen Compacto**:
+      - Dimensiones optimizadas más compactas (`w-[500px] max-w-[85vw] aspect-[918/614] rounded-[18px] sm:rounded-[20px]`).
+      - Animación de estados secuenciales de inicialización y barra de progreso fluida.
      - **Extensión al Borde y Controles de Ventana Exclusivos para Versión Ejecutable (Window Controls)**:
        - La barra superior se extiende de borde a borde (`pl-3 pr-0`), eliminando márgenes derechos para acoplar directamente en la esquina superior derecha los 3 botones estándar de control de ventana de Windows:
          * **Minimizar** (`Minus` / `-`): Minimiza la ventana al hacer clic.

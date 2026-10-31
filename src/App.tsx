@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { CheckCircle2, AlertCircle } from 'lucide-react';
+import {
+  CheckCircle2,
+  AlertCircle,
+  Monitor,
+  Tablet,
+  Smartphone,
+  ZoomIn,
+  ZoomOut,
+} from 'lucide-react';
 import {
   CanvasNode,
   ViewportMode,
@@ -689,6 +697,7 @@ export function App() {
           path: targetPath,
           fileName: fileNameWithExt,
           content: finalJson,
+          type: projectType,
         });
         setRecentProjects(updatedRecents);
         setSavedHistoryIdx(historyIdx);
@@ -746,6 +755,7 @@ export function App() {
           path: targetPath,
           fileName: fileNameWithExt,
           content: finalJson,
+          type: projectType,
         });
         setRecentProjects(updatedRecents);
         setSavedHistoryIdx(historyIdx);
@@ -804,13 +814,9 @@ export function App() {
         path: targetPath,
         fileName: fileNameWithExt || `${derivedName}.vforge`,
         content: result.content,
+        type: restored.projectType,
       });
       setRecentProjects(updatedRecents);
-
-      showToast(
-        `Proyecto "${derivedName}" cargado exitosamente (${restored.tree.length} componentes)`,
-        'success'
-      );
     } catch (err: any) {
       showToast(`Error al cargar el proyecto .vforge: ${err.message}`, 'error');
     }
@@ -880,13 +886,9 @@ export function App() {
           path: targetPath,
           fileName: fileNameWithExt,
           content,
+          type: restored.projectType,
         });
         setRecentProjects(updatedRecents);
-
-        showToast(
-          `Proyecto "${derivedName}" abierto exitosamente (${restored.tree.length} componentes)`,
-          'success'
-        );
       } catch (err: any) {
         showToast(`Error al abrir el proyecto reciente: ${err.message}`, 'error');
       }
@@ -903,7 +905,6 @@ export function App() {
       setSavedHistoryIdx(0);
       setIsWelcomeOpen(true);
       setIsProjectLoaded(false);
-      showToast(`Proyecto "${projectName}" cerrado.`, 'info');
     } else {
       // Si no está grabado (por primera vez o con cambios posteriores), preguntar si desea guardarlo
       setIsUnsavedModalOpen(true);
@@ -949,6 +950,7 @@ export function App() {
           path: targetPath,
           fileName: fileNameWithExt,
           content: finalJson,
+          type: projectType,
         });
         setRecentProjects(updatedRecents);
         setHasUnsavedChanges(false);
@@ -978,8 +980,7 @@ export function App() {
     // Se va a la pantalla de nuevo proyecto y cierra el proyecto
     setIsWelcomeOpen(true);
     setIsProjectLoaded(false);
-    showToast(`Proyecto "${projectName}" cerrado.`, 'info');
-  }, [projectName, showToast]);
+  }, []);
 
   // Al cancelar el modal de confirmación: permanece en el proyecto
   const handleCancelCloseProject = useCallback(() => {
@@ -1198,6 +1199,51 @@ export function App() {
             setAppTheme={setAppTheme}
           />
 
+          {/* Toolbox Flotante de Tipo de Pantalla (Viewport) pegado en el centro de la barra superior */}
+          {!isPreviewMode && (
+            <div
+              className="fixed top-11 left-1/2 -translate-x-1/2 z-30 flex items-center bg-[#1e1e1e] border border-t-0 border-[#383838] rounded-b-lg shadow-md px-1.5 py-1 text-xs select-none backdrop-blur-md"
+              style={{ transform: 'translateX(-50%)' }}
+            >
+              <button
+                onClick={() => handleSetViewportMode('desktop')}
+                title="Vista Escritorio / Desktop Frame (1440px)"
+                className={`px-2.5 py-1 rounded flex items-center gap-1.5 transition-colors cursor-pointer text-xs ${
+                  viewportMode === 'desktop'
+                    ? 'bg-[#383838] text-white font-medium shadow-xs'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#282828]'
+                }`}
+              >
+                <Monitor className="w-3.5 h-3.5" />
+                <span>Desktop</span>
+              </button>
+              <button
+                onClick={() => handleSetViewportMode('tablet')}
+                title="Vista Tableta / Tablet Frame (768px)"
+                className={`px-2.5 py-1 rounded flex items-center gap-1.5 transition-colors cursor-pointer text-xs ${
+                  viewportMode === 'tablet'
+                    ? 'bg-[#383838] text-white font-medium shadow-xs'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#282828]'
+                }`}
+              >
+                <Tablet className="w-3.5 h-3.5" />
+                <span>Tablet</span>
+              </button>
+              <button
+                onClick={() => handleSetViewportMode('mobile')}
+                title="Vista Móvil / Mobile Frame (375px)"
+                className={`px-2.5 py-1 rounded flex items-center gap-1.5 transition-colors cursor-pointer text-xs ${
+                  viewportMode === 'mobile'
+                    ? 'bg-[#383838] text-white font-medium shadow-xs'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#282828]'
+                }`}
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+                <span>Móvil</span>
+              </button>
+            </div>
+          )}
+
           {/* Main Studio Body: Left Sidebar + Canvas + Right Sidebar */}
           <div className="flex-1 flex overflow-hidden relative">
             <LeftSidebar
@@ -1257,6 +1303,44 @@ export function App() {
               setIsOpen={setIsRightOpen}
             />
           </div>
+
+          {/* Status Bar Inferior con Controles de Zoom en la Esquina Derecha */}
+          <footer className="h-6 bg-[#18181b] border-t border-[#2e2e32] px-3 flex items-center justify-between text-[11px] text-zinc-400 select-none z-20 flex-shrink-0">
+            {/* Esquina Izquierda: Estado general */}
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-1.5 text-zinc-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span>Listo</span>
+              </span>
+              <span className="text-zinc-700">|</span>
+              <span>{tree.length} componentes</span>
+            </div>
+
+            {/* Esquina Derecha: Controles de Zoom */}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setZoom((z) => Math.max(0.4, Number((z - 0.1).toFixed(1))))}
+                className="p-1 hover:text-white text-zinc-400 hover:bg-[#2e2e32] rounded transition-colors cursor-pointer"
+                title="Reducir zoom"
+              >
+                <ZoomOut className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setZoom(1.0)}
+                className="px-1.5 py-0.5 font-mono text-[11px] hover:text-white text-zinc-300 hover:bg-[#2e2e32] rounded transition-colors cursor-pointer"
+                title="Haga clic para restablecer al 100%"
+              >
+                {Math.round(zoom * 100)}%
+              </button>
+              <button
+                onClick={() => setZoom((z) => Math.min(2.0, Number((z + 0.1).toFixed(1))))}
+                className="p-1 hover:text-white text-zinc-400 hover:bg-[#2e2e32] rounded transition-colors cursor-pointer"
+                title="Aumentar zoom"
+              >
+                <ZoomIn className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </footer>
 
           {/* Floating Smart Toolbox (Figma / VisionOS Style) */}
           {!isPreviewMode && (

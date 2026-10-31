@@ -401,3 +401,23 @@ select option {
 [data-app-theme="blue"] ::-webkit-scrollbar-thumb:hover {
   background: #334155;
 }
+
+/* Animación de desplazamiento suave a la izquierda para nombres de proyecto largos en hover */
+@keyframes marquee-scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(0);
+  }
+  80% {
+    transform: translateX(var(--overflow-dist, -50%));
+  }
+  100% {
+    transform: translateX(var(--overflow-dist, -50%));
+  }
+}
+
+.animate-marquee-hover {
+  animation: marquee-scroll-left 4.5s cubic-bezier(0.42, 0, 0.58, 1) infinite alternate;
+}
