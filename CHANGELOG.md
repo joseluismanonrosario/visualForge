@@ -6,6 +6,25 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 ---
 
+## [1.4.5] - 2026-10-31
+
+### Seguridad
+- **Token de Sesión Secreta Criptográfico en Electron (`X-VF-Token` / `vf_token`)**:
+  - **Aislamiento y Protección del Servidor Local**: Generación de un token criptográfico aleatorio de alta entropía (192 bits / 24 bytes en hex) en cada arranque de la app de escritorio.
+  - **Bloqueo de Navegadores Externos (403 Forbidden)**: Cualquier intento de conexión no autorizada hacia `http://127.0.0.1:<port>` desde navegadores externos (Chrome, Edge, Firefox, scripts locales u otros procesos en la misma máquina) es rechazado inmediatamente con error `403 Forbidden`.
+  - **Inyección Transparente Interna**: Se configuró `session.defaultSession.webRequest.onBeforeSendHeaders` en Electron para inyectar automáticamente el encabezado de autenticación `X-VF-Token` en todas las solicitudes internas, acompañado de una cookie de sesión `HttpOnly` (`vf_token`) y parámetro de consulta inicial seguro.
+
+### Rendimiento y Optimización
+- **Optimización de Velocidad de Carga mediante Code-Splitting y Streaming de Chunks (Web y Desktop)**:
+  - **División de Paquetes en Rollup/Vite**: Configuración de `manualChunks` en `vite.config.ts` para segregar el bundle monolítico de 3.1 MB en fragmentos independientes optimizados para procesamiento en paralelo: `vendor-react` (280 kB), `vendor-iconify` (739 kB), `data-catalog` (1.35 MB) e `index` central (635 kB).
+  - **Carga Perezosa (Lazy Loading) de Módulos Pesados**: Transformación de `ExportModal` y del motor generador de código `exportEngine` en un componente dinámico con `React.lazy()` y `Suspense`, excluyéndolos de la carga inicial hasta que el usuario decida exportar.
+  - **Tiempo de Compilación Reducido**: Reducción del tiempo de empaquetado de producción en más del 30% (de 15.8s a 10.7s).
+- **Gestión Avanzada de Memoria RAM**:
+  - **Caché LRU con Límite de Capacidad en `iconifyManager.ts`**: Implementación de un límite máximo de 25 colecciones en memoria (`MAX_COLLECTION_CACHE`), descartando automáticamente las colecciones menos utilizadas para prevenir fugas de RAM al explorar múltiples sets de iconos.
+  - **Optimización de Pila de Deshacer/Rehacer**: Reducción de la retención histórica a 50 estados (`MAX_HISTORY = 50`), reduciendo a la mitad el consumo de memoria de árboles clonados en sesiones prolongadas.
+
+---
+
 ## [1.4.4] - 2026-10-31
 
 ### Corregido

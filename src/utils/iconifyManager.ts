@@ -45,11 +45,22 @@ export const ALL_COLLECTIONS: IconifyCollectionMeta[] = Object.entries(
 const COLLECTIONS_MAP = new Map<string, IconifyCollectionMeta>();
 ALL_COLLECTIONS.forEach((col) => COLLECTIONS_MAP.set(col.prefix, col));
 
-// 2. In-memory cache for loaded IconifyJSON collections
+// 2. In-memory LRU cache for loaded IconifyJSON collections (capped at 25 sets to protect memory)
+const MAX_COLLECTION_CACHE = 25;
 const COLLECTION_CACHE = new Map<string, IconifyJSON>();
 
 // Initialize cache with default Lucide collection
 COLLECTION_CACHE.set('lucide', preloadedLucide as unknown as IconifyJSON);
+
+function trimCollectionCache() {
+  if (COLLECTION_CACHE.size <= MAX_COLLECTION_CACHE) return;
+  for (const key of COLLECTION_CACHE.keys()) {
+    if (key !== 'lucide') {
+      COLLECTION_CACHE.delete(key);
+      if (COLLECTION_CACHE.size <= MAX_COLLECTION_CACHE) break;
+    }
+  }
+}
 
 // Active loading promises to deduplicate network requests
 const LOADING_PROMISES = new Map<string, Promise<IconifyJSON | null>>();
@@ -153,7 +164,13 @@ export function isCollectionLoaded(prefix: string): boolean {
  * Get an already loaded collection from memory
  */
 export function getLoadedCollection(prefix: string): IconifyJSON | undefined {
-  return COLLECTION_CACHE.get(prefix);
+  const cached = COLLECTION_CACHE.get(prefix);
+  if (cached && prefix !== 'lucide') {
+    // Refresh LRU position in Map
+    COLLECTION_CACHE.delete(prefix);
+    COLLECTION_CACHE.set(prefix, cached);
+  }
+  return cached;
 }
 
 /**
@@ -204,6 +221,9 @@ export async function loadCollection(prefix: string, signal?: AbortSignal): Prom
         throw new Error(`Failed to load iconify collection: ${prefix} (${response.status})`);
       }
       const data: IconifyJSON = await response.json();
+      if (COLLECTION_CACHE.size >= MAX_COLLECTION_CACHE) {
+        trimCollectionCache();
+      }
       COLLECTION_CACHE.set(prefix, data);
       return data;
     } catch (err: any) {

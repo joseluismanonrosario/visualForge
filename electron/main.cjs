@@ -1,4 +1,8 @@
-const { app, BrowserWindow, Menu, shell, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, Menu, shell, ipcMain, dialog, session } = require('electron');
+const crypto = require('crypto');
+
+// Token criptografico de sesion secreta para proteger el servidor local contra navegadores externos
+const SESSION_SECRET = crypto.randomBytes(24).toString('hex');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
@@ -38,6 +42,19 @@ function startLocalServer(callback) {
 
     try {
       const parsedUrl = new URL(req.url, 'http://127.0.0.1');
+
+      // Validacion de token de sesion secreta (Header, Query Param o Cookie)
+      const cookieHeader = req.headers.cookie || '';
+      const cookieMatch = cookieHeader.split(';').map(c => c.trim()).find(c => c.startsWith('vf_token='));
+      const cookieToken = cookieMatch ? cookieMatch.split('=')[1] : null;
+      const requestToken = req.headers['x-vf-token'] || parsedUrl.searchParams.get('_vf_token') || cookieToken;
+
+      if (!requestToken || requestToken !== SESSION_SECRET) {
+        res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('403 Forbidden: Acceso no autorizado a VisualForge Studio.');
+        return;
+      }
+
       let pathname = decodeURIComponent(parsedUrl.pathname);
 
       // Manejo de iconos locales de Iconify
@@ -115,11 +132,15 @@ function startLocalServer(callback) {
             return;
           }
           if (res.writableEnded || res.destroyed) return;
-          res.writeHead(200, {
+          const headers = {
             'Content-Type': contentType,
             'Content-Length': data.length,
             'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=31536000',
-          });
+          };
+          if (ext === '.html') {
+            headers['Set-Cookie'] = `vf_token=${SESSION_SECRET}; Path=/; SameSite=Strict; HttpOnly`;
+          }
+          res.writeHead(200, headers);
           res.end(data);
         });
         return;
@@ -186,7 +207,7 @@ function createWindow(port) {
 
   Menu.setApplicationMenu(null);
 
-  mainWindow.loadURL(`http://127.0.0.1:${port}`);
+  mainWindow.loadURL(`http://127.0.0.1:${port}/?_vf_token=${SESSION_SECRET}`);
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
@@ -367,6 +388,15 @@ if (!gotTheLock) {
   });
 
   app.whenReady().then(() => {
+    // Inyectar automaticamente el token de sesion en todas las peticiones internas de Electron al servidor local
+    session.defaultSession.webRequest.onBeforeSendHeaders(
+      { urls: ['http://127.0.0.1:*/*'] },
+      (details, callback) => {
+        details.requestHeaders['X-VF-Token'] = SESSION_SECRET;
+        callback({ requestHeaders: details.requestHeaders });
+      }
+    );
+
     startLocalServer((port) => {
       createWindow(port);
     });

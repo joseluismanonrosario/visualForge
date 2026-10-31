@@ -60,4 +60,34 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-})
+  build: {
+    target: 'es2022',
+    minify: 'esbuild',
+    cssCodeSplit: true,
+    chunkSizeWarningLimit: 1500,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react-dom') || id.includes('react/') || id.includes('scheduler')) {
+              return 'vendor-react';
+            }
+            if (id.includes('lucide-react')) {
+              return 'vendor-lucide';
+            }
+            if (id.includes('@iconify')) {
+              return 'vendor-iconify';
+            }
+            return 'vendor-core';
+          }
+          if (id.includes('icon-catalog.json')) {
+            return 'data-catalog';
+          }
+          if (id.includes('exportEngine') || id.includes('ExportModal')) {
+            return 'feature-export';
+          }
+        },
+      },
+    },
+  },
+});

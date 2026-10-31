@@ -39,7 +39,10 @@ import { TopBar } from './components/TopBar';
 import { LeftSidebar } from './components/LeftSidebar';
 import { RightSidebar } from './components/RightSidebar';
 import { Canvas } from './components/Canvas';
-import { ExportModal } from './components/ExportModal';
+// Lazy loading para optimizar el bundle inicial y consumo de memoria
+const ExportModal = React.lazy(() =>
+  import('./components/ExportModal').then((m) => ({ default: m.ExportModal }))
+);
 import { ProjectCreationScreen } from './components/ProjectCreationScreen';
 import { SplashScreen } from './components/SplashScreen';
 import { FloatingToolbox } from './components/FloatingToolbox';
@@ -56,7 +59,7 @@ import {
   syncRecentProjectsFromElectron,
 } from './utils/recentProjects';
 
-const MAX_HISTORY = 100;
+const MAX_HISTORY = 50;
 
 export function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -1366,13 +1369,17 @@ export function App() {
             />
           )}
 
-          {/* Export Code Modal */}
-          <ExportModal
-            tree={tree}
-            projectType={projectType}
-            isOpen={isExportOpen}
-            onClose={() => setIsExportOpen(false)}
-          />
+          {/* Export Code Modal (Cargado perezosamente bajo demanda) */}
+          {isExportOpen && (
+            <React.Suspense fallback={null}>
+              <ExportModal
+                tree={tree}
+                projectType={projectType}
+                isOpen={isExportOpen}
+                onClose={() => setIsExportOpen(false)}
+              />
+            </React.Suspense>
+          )}
 
           {/* Diálogo de confirmación para cambios no guardados al cerrar proyecto */}
           <UnsavedChangesModal
