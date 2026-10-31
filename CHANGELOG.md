@@ -11,6 +11,7 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 ### Agregado
 - **Indicador de Versión en Splash Screen**: Muestra la versión actual de la aplicación (`v1.4.2`) en la esquina inferior derecha de la tarjeta de bienvenida con fondo traslúcido y tipografía monospace (`text-[10.5px] font-mono`).
 - **Regla de Evaluación y Actualización SemVer en Skill `appToProduccion`**: Incorporación de directriz obligatoria para evaluar cambios acumulados y sincronizar automáticamente la versión en la app (`package.json`, `README.md`, `CHANGELOG.md`, `especificaciones_del_proyecto.md`) antes de compilar y empaquetar los ejecutables nativos `.exe`.
+- **Publicación Automática de Release en GitHub**: Integración de regla y paso automatizado en `appToProduccion` para publicar un nuevo Release oficial en GitHub (`git push origin v<versión>`) siempre y cuando haya un cambio de versión en la aplicación.
 
 ### Cambiado
 - **Reubicación de Botones de Pantalla en Status Bar**: Los botones selectores de dispositivo (*Desktop*, *Tablet*, *Móvil*) se trasladaron al borde derecho de la barra de estado inferior, integrados junto a los controles de zoom para una interfaz más despejada y ergonómica.
