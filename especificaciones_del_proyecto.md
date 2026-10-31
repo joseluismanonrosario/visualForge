@@ -29,7 +29,7 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
         * Botón **Guardar como...**: Solo icono (`SaveAll`, sin texto) con tooltip interactivo (`Ctrl+Shift+S`).
     - **Centro (Centrado Geométrico Unificado: Icono + Nombre + Indicador/Cierre)**:
       - **Centrado Cohesivo Integral**: Todo el conjunto de cabecera compuesto por **[Icono del Tipo de Proyecto + Nombre de Archivo + Puntico/Equis]** se encuentra centrado como un único bloque geométrico (`absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5`).
-      - **Icono de Tipo de Proyecto Integrado (Blanco / Adaptativo)**: En color blanco (`text-zinc-100`) o adaptativo al tema claro (`text-zinc-700`), sin recuadros ni bordes aislantes, ubicado pegado directamente al nombre para percibirse de forma natural como parte del nombre del proyecto (React Atom para *React Web*, Escudo HTML5 para *HTML / CSS*, Microchip para *ESP32 / IoT*).
+      - **Icono de Tipo de Proyecto Integrado (Blanco / Adaptativo)**: En color blanco (`text-zinc-100`) o adaptativo al tema claro (`text-zinc-700`), sin recuadros ni bordes aislantes, ubicado pegado directamente al nombre para percibirse de forma natural como parte del nombre del proyecto (React Atom para *React Web*, Icono oficial HTML5 de IcoMoon Free `html-five2` para *HTML / CSS*, Microchip para *ESP32 / IoT*).
       - **Título del proyecto editable en línea** (por defecto `"Sin nombre"`).
       - **Lógica de Guardado Directo vs. Primera Vez ("Sin nombre")**:
         * **Proyectos Nuevos ("Sin nombre")**: Todo proyecto nuevo se inicializa con el texto **"Sin nombre"**. Al presionar **Guardar** (`Ctrl+S`), se abre obligatoriamente la ventana nativa de guardado para que el usuario escriba el nombre deseado y seleccione la ruta. Al guardarse, el nombre del proyecto se actualiza automáticamente con el nombre ingresado.
@@ -911,7 +911,7 @@ Al iniciar la aplicación o al hacer clic en el botón "Nuevo" de la barra super
    - **Abrir un proyecto**: Botón interactivo con icono `FolderOpen` que invoca el explorador nativo de archivos para seleccionar, deserializar y restaurar proyectos `.vforge` locales inmediatamente en el lienzo.
    - **Lista de Recientes**: Historial visual con nombre de archivo, fecha/hora y ruta local (en estado no funcional/solo lectura para futuras integraciones).
 2. **Columna Central (Tipos de Proyecto - Orden de Selección)**:
-   - **1. HTML / CSS Tradicional**: Sitios web y páginas estáticas optimizadas, con SVGs en línea y sin dependencias de frameworks (icono escudo HTML5).
+   - **1. HTML / CSS Tradicional**: Sitios web y páginas estáticas optimizadas, con SVGs en línea y sin dependencias de frameworks (icono oficial HTML5 `icomoon-free:html-five2`).
    - **2. React Web (Frontend Moderno)**: Aplicaciones web modernas modulares con componentes JSX limpios, shadcn/ui y Tailwind CSS v4 (icono átomo React).
    - **3. ESP32 / IoT (Microcontroladores)**: Interfaces web embebidas para ESP32 con control GPIO, firmware C++ ESPAsyncWebServer y SVGs inline (icono microchip `Cpu`).
    - Tarjeta seleccionada con resplandor temático y borde de doble píxel activo.
@@ -1152,7 +1152,7 @@ VisualForge Studio se gestiona bajo el estándar de **Versionado Semántico 2.0.
 
 2. **Documentación Oficial del Repositorio**:
    - **`README.md`**: Guía exhaustiva con arquitectura del sistema, instalación, scripts de compilación web y empaquetado nativo `.exe`, descripción de persistencia `.vforge`, y política de versionado SemVer.
-   - **`CHANGELOG.md`**: Registro cronológico de cambios bajo la especificación *Keep a Changelog*, documentando cada versión (`v1.0.0` a `v1.4.2`) con secciones *Agregado*, *Cambiado*, *Corregido* y *Eliminado*.
+   - **`CHANGELOG.md`**: Registro cronológico de cambios bajo la especificación *Keep a Changelog*, documentando cada versión (`v1.0.0` a `v1.4.3`) con secciones *Agregado*, *Cambiado*, *Corregido* y *Eliminado*.
 
 3. **Directrices de Versionado Semántico desde la Perspectiva del Desarrollador**:
    - **Versión MAJOR (X.0.0) - Ruptura de Compatibilidad**:
@@ -1163,7 +1163,7 @@ VisualForge Studio se gestiona bajo el estándar de **Versionado Semántico 2.0.
      * **Ejemplos**: Incorporar nuevos tipos de componentes al catálogo (`componentCatalog.ts`); nuevos motores de exportación de código fuente; extensiones no destructivas al modelo con propiedades opcionales (`props` o estilos adicionales); soporte para nuevos breakpoints de pantalla; o nuevos subsistemas como proyectos recientes e historial extendido a 100 pasos.
    - **Versión PATCH (0.0.X) - Correcciones y Ajustes Menores**:
      * **Criterios determinantes**: Correcciones de errores (*bug fixes*), ajustes cosméticos, optimizaciones de rendimiento y refinamientos de interfaz de usuario sin alteración de la API de datos ni de la compatibilidad de archivos.
-     * **Ejemplos**: Ajuste de uniformidad tipográfica en el Splash Screen; corrección de límites de la barra de progreso para que no se salga de su bloque; traslado de los botones de dispositivos al borde derecho del status bar; visualización de la versión en el Splash Screen; cambio de texto en botones (e.g., "Siguiente" a "Crear"); centrado del grupo de nombre en la cabecera; y supresión de notificaciones toast innecesarias.
+     * **Ejemplos**: Ajuste de uniformidad tipográfica en el Splash Screen; corrección de límites de la barra de progreso para que no se salga de su bloque; traslado de los botones de dispositivos al borde derecho del status bar; visualización de la versión en el Splash Screen; cambio de texto en botones (e.g., "Siguiente" a "Crear"); adopción del icono oficial HTML5 `icomoon-free:html-five2`; y resolución de bloqueos por spinner infinito en el selector de iconos mediante cancelación reactiva de peticiones con `AbortController` y timeouts de seguridad.
 
 4. **Regla de Actualización Obligatoria de Versión en el Skill de Producción (`appToProduccion`)**:
    - Al ejecutar el empaquetado para producción mediante el skill `appToProduccion`, se realiza una evaluación previa obligatoria de los cambios introducidos frente a las directrices SemVer.

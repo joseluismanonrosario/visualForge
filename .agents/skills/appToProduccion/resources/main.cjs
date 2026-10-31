@@ -22,12 +22,20 @@ const MIME_TYPES = {
   '.eot': 'application/vnd.ms-fontobject',
 };
 
+// Cache en memoria para colecciones de iconos de Iconify (evita lecturas repetidas de disco y cuellos de botella)
+const ICON_CACHE = new Map();
+const MAX_ICON_CACHE = 40;
+
 // Iniciar servidor local embebido para soporte completo de Iconify y assets
 function startLocalServer(callback) {
   const distDir = path.join(__dirname, '../dist');
   const iconifyDir = path.join(__dirname, '../node_modules/@iconify/json');
 
   const server = http.createServer((req, res) => {
+    // Evitar que errores no capturados en el socket cierren el servidor
+    req.on('error', () => {});
+    res.on('error', () => {});
+
     try {
       const parsedUrl = new URL(req.url, 'http://127.0.0.1');
       let pathname = decodeURIComponent(parsedUrl.pathname);
@@ -41,12 +49,48 @@ function startLocalServer(callback) {
         }
 
         if (fs.existsSync(iconPath) && fs.statSync(iconPath).isFile()) {
-          res.writeHead(200, {
-            'Content-Type': 'application/json; charset=utf-8',
-            'Access-Control-Allow-Origin': '*',
-            'Cache-Control': 'public, max-age=86400',
+          // 1. Servir desde caché en memoria si existe
+          if (ICON_CACHE.has(iconPath)) {
+            const cached = ICON_CACHE.get(iconPath);
+            if (!res.writableEnded && !res.destroyed) {
+              res.writeHead(200, {
+                'Content-Type': 'application/json; charset=utf-8',
+                'Content-Length': cached.length,
+                'Access-Control-Allow-Origin': '*',
+                'Cache-Control': 'public, max-age=86400',
+              });
+              res.end(cached);
+            }
+            return;
+          }
+
+          // 2. Lectura asíncrona segura con Content-Length y protección contra aborts
+          fs.readFile(iconPath, (err, data) => {
+            if (err) {
+              if (!res.writableEnded && !res.destroyed) {
+                res.writeHead(500, { 'Content-Type': 'text/plain' });
+                res.end('Error al leer colección de iconos: ' + err.message);
+              }
+              return;
+            }
+
+            if (res.writableEnded || res.destroyed) return;
+
+            // Guardar en caché LRU en memoria
+            if (ICON_CACHE.size >= MAX_ICON_CACHE) {
+              const firstKey = ICON_CACHE.keys().next().value;
+              ICON_CACHE.delete(firstKey);
+            }
+            ICON_CACHE.set(iconPath, data);
+
+            res.writeHead(200, {
+              'Content-Type': 'application/json; charset=utf-8',
+              'Content-Length': data.length,
+              'Access-Control-Allow-Origin': '*',
+              'Cache-Control': 'public, max-age=86400',
+            });
+            res.end(data);
           });
-          fs.createReadStream(iconPath).pipe(res);
           return;
         }
       }
@@ -61,21 +105,39 @@ function startLocalServer(callback) {
       if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
         const ext = path.extname(filePath).toLowerCase();
         const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-        res.writeHead(200, {
-          'Content-Type': contentType,
-          'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=31536000',
+
+        fs.readFile(filePath, (err, data) => {
+          if (err) {
+            if (!res.writableEnded && !res.destroyed) {
+              res.writeHead(500, { 'Content-Type': 'text/plain' });
+              res.end('Error reading file: ' + err.message);
+            }
+            return;
+          }
+          if (res.writableEnded || res.destroyed) return;
+          res.writeHead(200, {
+            'Content-Type': contentType,
+            'Content-Length': data.length,
+            'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=31536000',
+          });
+          res.end(data);
         });
-        fs.createReadStream(filePath).pipe(res);
         return;
       }
 
       res.writeHead(404, { 'Content-Type': 'text/plain' });
       res.end('404 Not Found');
     } catch (err) {
-      res.writeHead(500, { 'Content-Type': 'text/plain' });
-      res.end('Internal Server Error: ' + err.message);
+      if (!res.writableEnded && !res.destroyed) {
+        res.writeHead(500, { 'Content-Type': 'text/plain' });
+        res.end('Internal Server Error: ' + err.message);
+      }
     }
   });
+
+  server.keepAliveTimeout = 60000;
+  server.headersTimeout = 65000;
+  server.requestTimeout = 30000;
 
   server.listen(0, '127.0.0.1', () => {
     const port = server.address().port;

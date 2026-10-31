@@ -17,7 +17,7 @@
   <img src="https://img.shields.io/badge/TailwindCSS-v4.0.9-38bdf8?style=flat-square&logo=tailwindcss" alt="Tailwind CSS v4" />
   <img src="https://img.shields.io/badge/Vite-6.2.0-646cff?style=flat-square&logo=vite" alt="Vite" />
   <img src="https://img.shields.io/badge/Electron-45.1.0-47848F?style=flat-square&logo=electron" alt="Electron" />
-  <img src="https://img.shields.io/badge/Version-1.4.2-emerald?style=flat-square" alt="Version 1.4.2" />
+  <img src="https://img.shields.io/badge/Version-1.4.3-emerald?style=flat-square" alt="Version 1.4.3" />
 </p>
 
 ---
@@ -293,6 +293,7 @@ El incremento de la versión **PATCH** corresponde a correcciones de errores (*b
 - `v1.3.1`: Corrección del doble borde en selección de lienzo, inserción directa sin selección previa y remoción de alertas al limpiar el lienzo.
 - `v1.4.1`: Traslado de los botones de dispositivos a la barra de estado inferior, centrado integral del grupo de nombre de proyecto en la cabecera, reducción del Splash Screen y animación hover marquee en archivos recientes.
 - `v1.4.2`: Visualización de la versión activa en el Splash Screen, reubicación de los botones de tipo de pantalla al borde derecho de la barra de estado e incorporación de la regla de evaluación SemVer en `appToProduccion`.
+- `v1.4.3`: Adopción del icono `icomoon-free:html-five2` para HTML5 y corrección del bloqueo por spinner infinito en el selector de iconos mediante cancelación asíncrona (`AbortController`), timeouts y servidor local con caché en memoria y `Content-Length`.
 
 ---
 

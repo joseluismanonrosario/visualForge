@@ -18,10 +18,19 @@ function iconifyLocalPlugin(): Plugin {
       }
 
       if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-        res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Cache-Control', 'public, max-age=86400');
-        fs.createReadStream(filePath).pipe(res);
+        fs.readFile(filePath, (err, data) => {
+          if (err) {
+            res.statusCode = 500;
+            res.end(err.message);
+            return;
+          }
+          if (res.writableEnded || res.destroyed) return;
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          res.setHeader('Content-Length', data.length);
+          res.setHeader('Access-Control-Allow-Origin', '*');
+          res.setHeader('Cache-Control', 'public, max-age=86400');
+          res.end(data);
+        });
         return;
       }
     }

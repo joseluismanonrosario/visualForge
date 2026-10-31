@@ -157,9 +157,9 @@ export function getLoadedCollection(prefix: string): IconifyJSON | undefined {
 }
 
 /**
- * Asynchronously load an Iconify collection from local disk via Vite middleware
+ * Asynchronously load an Iconify collection from local disk via Vite/Electron middleware
  */
-export async function loadCollection(prefix: string): Promise<IconifyJSON | null> {
+export async function loadCollection(prefix: string, signal?: AbortSignal): Promise<IconifyJSON | null> {
   if (!prefix) return null;
 
   // 1. Check in-memory cache
@@ -172,21 +172,52 @@ export async function loadCollection(prefix: string): Promise<IconifyJSON | null
     return LOADING_PROMISES.get(prefix)!;
   }
 
-  // 3. Request from local server middleware
+  // 3. Request from local server middleware with safety timeout and cancellation
   const loadPromise = (async () => {
+    // 8-second safety timeout controller to ensure promises never hang indefinitely
+    const timeoutController = new AbortController();
+    const timer = setTimeout(() => {
+      try {
+        timeoutController.abort();
+      } catch (_) {}
+    }, 8000);
+
+    const onCallerAbort = () => {
+      try {
+        timeoutController.abort();
+      } catch (_) {}
+    };
+
+    if (signal) {
+      if (signal.aborted) {
+        clearTimeout(timer);
+        return null;
+      }
+      signal.addEventListener('abort', onCallerAbort, { once: true });
+    }
+
     try {
-      // Load from local offline endpoint served by Vite plugin
-      const response = await fetch(`/@iconify/json/${prefix}.json`);
+      const response = await fetch(`/@iconify/json/${prefix}.json`, {
+        signal: timeoutController.signal,
+      });
       if (!response.ok) {
         throw new Error(`Failed to load iconify collection: ${prefix} (${response.status})`);
       }
       const data: IconifyJSON = await response.json();
       COLLECTION_CACHE.set(prefix, data);
       return data;
-    } catch (err) {
+    } catch (err: any) {
+      if (err?.name === 'AbortError') {
+        // Request was cancelled or timed out
+        return null;
+      }
       console.warn(`[IconifyManager] Could not load offline collection "${prefix}":`, err);
       return null;
     } finally {
+      clearTimeout(timer);
+      if (signal) {
+        signal.removeEventListener('abort', onCallerAbort);
+      }
       LOADING_PROMISES.delete(prefix);
     }
   })();

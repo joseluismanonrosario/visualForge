@@ -229,29 +229,45 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
     }
   }, [selectedNode?.id, selectedNode?.props?.iconName, selectedNode?.props?.prefix]);
 
-  // Load collection on demand from local disk via Vite middleware
+  // Load collection on demand from local disk via Vite/Electron middleware with cancellation
   useEffect(() => {
     let active = true;
+    const controller = new AbortController();
+
     const cached = getLoadedCollection(selectedCollection);
     if (cached) {
       setCollectionData(cached);
       setSelectedSubcategory('All');
       setIconPage(1);
+      setIsLoadingCollection(false);
       return;
     }
 
     setIsLoadingCollection(true);
-    loadCollection(selectedCollection).then((data) => {
-      if (active) {
-        setCollectionData(data);
-        setSelectedSubcategory('All');
-        setIconPage(1);
-        setIsLoadingCollection(false);
-      }
-    });
+    loadCollection(selectedCollection, controller.signal)
+      .then((data) => {
+        if (active) {
+          if (data) {
+            setCollectionData(data);
+            setSelectedSubcategory('All');
+            setIconPage(1);
+          }
+        }
+      })
+      .catch((err) => {
+        if (active) {
+          console.error('[RightSidebar] Error cargando colección:', err);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setIsLoadingCollection(false);
+        }
+      });
 
     return () => {
       active = false;
+      controller.abort();
     };
   }, [selectedCollection]);
 

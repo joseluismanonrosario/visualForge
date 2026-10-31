@@ -6,6 +6,19 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 ---
 
+## [1.4.3] - 2026-10-31
+
+### Agregado
+- **Icono Oficial de HTML5 (`icomoon-free:html-five2`)**: Reemplazo del isotipo genérico de escudo en la cabecera (`TopBar.tsx`) y en la pantalla de bienvenida (`ProjectCreationScreen.tsx`) por el icono oficial de HTML5 de la colección IcoMoon Free (`icomoon-free:html-five2`).
+
+### Corregido
+- **Solución al Spinner Infinito y Bloqueo en Carga Rápida de Colecciones de Iconos**:
+  - **Cancelación con AbortController en Frontend**: Implementación de señales de aborto (`AbortController`) al conmutar colecciones en el inspector lateral (`RightSidebar.tsx`) y timeout de seguridad de 8 segundos en `iconifyManager.ts`. Las solicitudes previas se cancelan al instante, liberando inmediatamente los sockets HTTP del cliente Chromium.
+  - **Garantía de Finalización de Estado**: Incorporación de bloques `.catch()` y `.finally()` en la carga de colecciones para asegurar que `isLoadingCollection` siempre se restablezca a `false`, previniendo bloqueos de spinner infinito.
+  - **Servidor HTTP Local Robusto en Electron**: Reemplazo de streams sin control por lectura segura asíncrona con encabezado `Content-Length`, soporte de Keep-Alive, manejo de eventos de error de sockets y caché en memoria (`ICON_CACHE` para hasta 40 colecciones) en `electron/main.cjs` y en el plugin de Vite.
+
+---
+
 ## [1.4.2] - 2026-10-31
 
 ### Agregado
