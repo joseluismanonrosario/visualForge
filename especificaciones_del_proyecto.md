@@ -1135,3 +1135,29 @@ VisualForge implementa una arquitectura de diseño responsivo avanzada basada en
 6. **Experiencia de Usuario en la Interfaz (UI/UX)**:
    - **Badge de Breakpoint Activo**: En la cabecera del inspector de propiedades (`RightSidebar`), se muestra una etiqueta distintiva que indica el dispositivo activo (`DESKTOP`, `TABLET` o `MOBILE`) y notifica al usuario si las ediciones actuales están aisladas para ese formato de pantalla.
    - **Inspector Dinámico**: Los campos numéricos, selectores de tipografía y controles de color reflejan fielmente el valor efectivo calculado para el breakpoint visualizado.
+
+
+---
+
+## 11. CONTROL DE VERSIONES, REPOSITORIO GITHUB Y DIRECTRICES SEMVER (MAJOR.MINOR.PATCH)
+
+VisualForge Studio se gestiona bajo el estándar de **Versionado Semántico 2.0.0 (SemVer: MAJOR.MINOR.PATCH)** y cuenta con repositorio remoto oficial vinculado y documentación estructurada de cambios:
+
+1. **Repositorio Remoto Oficial de Git**:
+   - Conexión configurada en `origin`: `https://github.com/joseluismanonrosario/visualForge.git`.
+   - Rama principal de trabajo: `master`.
+
+2. **Documentación Oficial del Repositorio**:
+   - **`README.md`**: Guía exhaustiva con arquitectura del sistema, instalación, scripts de compilación web y empaquetado nativo `.exe`, descripción de persistencia `.vforge`, y política de versionado SemVer.
+   - **`CHANGELOG.md`**: Registro cronológico de cambios bajo la especificación *Keep a Changelog*, documentando cada versión (`v1.0.0` a `v1.4.1`) con secciones *Agregado*, *Cambiado*, *Corregido* y *Eliminado*.
+
+3. **Directrices de Versionado Semántico desde la Perspectiva del Desarrollador**:
+   - **Versión MAJOR (X.0.0) - Ruptura de Compatibilidad**:
+     * **Criterios determinantes**: Modificaciones estructurales o destructivas en el esquema raíz del archivo `.vforge` (e.g. alteración de `"format": "visualforge"` o renombramiento de la jerarquía `elements`), eliminación o alteración de campos obligatorios en el modelo de nodos `CanvasNode` (`id`, `type`, `responsiveStyles`) que impidan que versiones anteriores abran los archivos sin crashear, o reemplazo total de motores de serialización/renderizado sin migradores automáticos hacia atrás.
+     * **Ejemplos**: Migrar el formato de almacenamiento de JSON a esquemas binarios o grafos relacionales incompatibles con `v1.x`; eliminar soporte para deserializar archivos `.vforge` generados bajo versiones tempranas.
+   - **Versión MINOR (0.X.0) - Nuevas Características Retrocompatibles**:
+     * **Criterios determinantes**: Incorporación de nuevas funciones, componentes o herramientas de diseño que mantienen el 100% de compatibilidad hacia atrás con los archivos `.vforge` existentes. Los proyectos antiguos se abren y editan con normalidad.
+     * **Ejemplos**: Incorporar nuevos tipos de componentes al catálogo (`componentCatalog.ts`); nuevos motores de exportación de código fuente; extensiones no destructivas al modelo con propiedades opcionales (`props` o estilos adicionales); soporte para nuevos breakpoints de pantalla; o nuevos subsistemas como proyectos recientes e historial extendido a 100 pasos.
+   - **Versión PATCH (0.0.X) - Correcciones y Ajustes Menores**:
+     * **Criterios determinantes**: Correcciones de errores (*bug fixes*), ajustes cosméticos, optimizaciones de rendimiento y refinamientos de interfaz de usuario sin alteración de la API de datos ni de la compatibilidad de archivos.
+     * **Ejemplos**: Ajuste de uniformidad tipográfica en el Splash Screen; corrección de límites de la barra de progreso para que no se salga de su bloque; traslado de los botones de dispositivos al status bar; cambio de texto en botones (e.g., "Siguiente" a "Crear"); centrado del grupo de nombre en la cabecera; y supresión de notificaciones toast innecesarias.
