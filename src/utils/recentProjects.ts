@@ -63,6 +63,31 @@ export function getRecentProjects(
 }
 
 /**
+ * Sincroniza y obtiene la lista de recientes desde el almacenamiento nativo permanente de Electron
+ * si la aplicación se ejecuta en escritorio. Si no, retorna los de localStorage.
+ */
+export async function syncRecentProjectsFromElectron(
+  sortBy: RecentSortBy = 'date',
+  sortOrder: RecentSortOrder = 'desc'
+): Promise<RecentProjectItem[]> {
+  if (typeof window !== 'undefined' && (window as any).electronAPI?.getRecentProjects) {
+    try {
+      const electronItems = await (window as any).electronAPI.getRecentProjects();
+      if (Array.isArray(electronItems) && electronItems.length > 0) {
+        // Almacenar en localStorage para acceso síncrono inmediato en la sesión
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(electronItems));
+        } catch (_) {}
+        return sortRecentProjects(electronItems, sortBy, sortOrder);
+      }
+    } catch (err) {
+      console.warn('Error sincronizando recientes de Electron:', err);
+    }
+  }
+  return getRecentProjects(sortBy, sortOrder);
+}
+
+/**
  * Agrega o actualiza un archivo de proyecto en la lista de recientes al guardar o abrir,
  * ordenándolo alfabéticamente y persistiendo en localStorage.
  */
@@ -158,6 +183,15 @@ export function addRecentProject(params: {
     }
   }
 
+  // Persistir en el almacenamiento permanente de Electron si está en escritorio
+  if (typeof window !== 'undefined' && (window as any).electronAPI?.saveRecentProjects) {
+    try {
+      (window as any).electronAPI.saveRecentProjects(sorted);
+    } catch (err) {
+      console.warn('Error al guardar recientes en Electron:', err);
+    }
+  }
+
   return sorted;
 }
 
@@ -175,5 +209,15 @@ export function removeRecentProject(idOrPath: string): RecentProjectItem[] {
   } catch (err) {
     console.warn('Error al actualizar proyectos recientes tras eliminar:', err);
   }
+
+  // Persistir en el almacenamiento permanente de Electron si está en escritorio
+  if (typeof window !== 'undefined' && (window as any).electronAPI?.saveRecentProjects) {
+    try {
+      (window as any).electronAPI.saveRecentProjects(filtered);
+    } catch (err) {
+      console.warn('Error al guardar recientes en Electron tras eliminar:', err);
+    }
+  }
+
   return filtered;
 }

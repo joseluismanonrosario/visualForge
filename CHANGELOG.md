@@ -6,6 +6,16 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 ---
 
+## [1.4.4] - 2026-10-31
+
+### Corregido
+- **Persistencia Permanente de Proyectos Recientes en Aplicación de Escritorio**:
+  - **Almacenamiento Nativo en Disco (`userData/recent-projects.json`)**: Implementación de controladores IPC (`project-get-recents` y `project-save-recents`) en Electron para persistir físicamente los proyectos recientes en la carpeta de datos del usuario, independientemente de la sesión del navegador.
+  - **Sincronización Reactiva Bidireccional**: Función `syncRecentProjectsFromElectron()` para sincronizar automáticamente el archivo local con el estado de React y `localStorage` al iniciar y renderizar la pantalla de bienvenida.
+  - **Fijación de Puerto Preferido Local (`48321`)**: Reemplazo de puerto efímero 0 por un puerto local estable preferido (`48321`) con fallback dinámico, evitando la partición de origen de Chromium y garantizando que el almacenamiento web y preferencias de tema permanezcan intactos entre cierres y aperturas sucesivas.
+
+---
+
 ## [1.4.3] - 2026-10-31
 
 ### Agregado

@@ -909,7 +909,7 @@ Al iniciar la aplicación o al hacer clic en el botón "Nuevo" de la barra super
 1. **Columna Izquierda (Acciones Principales y Proyectos Recientes)**:
    - **Crear un proyecto**: Botón activo destacado con borde cian neón brillante (`#00d2ff`) o azul cian (`#0d99ff`) y resplandor suave.
    - **Abrir un proyecto**: Botón interactivo con icono `FolderOpen` que invoca el explorador nativo de archivos para seleccionar, deserializar y restaurar proyectos `.vforge` locales inmediatamente en el lienzo.
-   - **Lista de Recientes**: Historial visual con nombre de archivo, fecha/hora y ruta local (en estado no funcional/solo lectura para futuras integraciones).
+   - **Lista de Recientes Interactiva con Persistencia Permanente**: Historial visual con nombre de archivo, fecha/hora, tipo de proyecto y ruta local. En la aplicación de escritorio, la persistencia se realiza mediante almacenamiento físico en el disco local (`userData/recent-projects.json`) y sincronización reactiva bidireccional (`syncRecentProjectsFromElectron()`), garantizando que la lista de proyectos recientes se conserve de forma permanente al cerrar y reabrir la aplicación. Al hacer clic sobre un elemento reciente, se restaura y abre directamente en el lienzo.
 2. **Columna Central (Tipos de Proyecto - Orden de Selección)**:
    - **1. HTML / CSS Tradicional**: Sitios web y páginas estáticas optimizadas, con SVGs en línea y sin dependencias de frameworks (icono oficial HTML5 `icomoon-free:html-five2`).
    - **2. React Web (Frontend Moderno)**: Aplicaciones web modernas modulares con componentes JSX limpios, shadcn/ui y Tailwind CSS v4 (icono átomo React).
@@ -1152,7 +1152,7 @@ VisualForge Studio se gestiona bajo el estándar de **Versionado Semántico 2.0.
 
 2. **Documentación Oficial del Repositorio**:
    - **`README.md`**: Guía exhaustiva con arquitectura del sistema, instalación, scripts de compilación web y empaquetado nativo `.exe`, descripción de persistencia `.vforge`, y política de versionado SemVer.
-   - **`CHANGELOG.md`**: Registro cronológico de cambios bajo la especificación *Keep a Changelog*, documentando cada versión (`v1.0.0` a `v1.4.3`) con secciones *Agregado*, *Cambiado*, *Corregido* y *Eliminado*.
+   - **`CHANGELOG.md`**: Registro cronológico de cambios bajo la especificación *Keep a Changelog*, documentando cada versión (`v1.0.0` a `v1.4.4`) con secciones *Agregado*, *Cambiado*, *Corregido* y *Eliminado*.
 
 3. **Directrices de Versionado Semántico desde la Perspectiva del Desarrollador**:
    - **Versión MAJOR (X.0.0) - Ruptura de Compatibilidad**:
@@ -1163,7 +1163,7 @@ VisualForge Studio se gestiona bajo el estándar de **Versionado Semántico 2.0.
      * **Ejemplos**: Incorporar nuevos tipos de componentes al catálogo (`componentCatalog.ts`); nuevos motores de exportación de código fuente; extensiones no destructivas al modelo con propiedades opcionales (`props` o estilos adicionales); soporte para nuevos breakpoints de pantalla; o nuevos subsistemas como proyectos recientes e historial extendido a 100 pasos.
    - **Versión PATCH (0.0.X) - Correcciones y Ajustes Menores**:
      * **Criterios determinantes**: Correcciones de errores (*bug fixes*), ajustes cosméticos, optimizaciones de rendimiento y refinamientos de interfaz de usuario sin alteración de la API de datos ni de la compatibilidad de archivos.
-     * **Ejemplos**: Ajuste de uniformidad tipográfica en el Splash Screen; corrección de límites de la barra de progreso para que no se salga de su bloque; traslado de los botones de dispositivos al borde derecho del status bar; visualización de la versión en el Splash Screen; cambio de texto en botones (e.g., "Siguiente" a "Crear"); adopción del icono oficial HTML5 `icomoon-free:html-five2`; y resolución de bloqueos por spinner infinito en el selector de iconos mediante cancelación reactiva de peticiones con `AbortController` y timeouts de seguridad.
+     * **Ejemplos**: Ajuste de uniformidad tipográfica en el Splash Screen; corrección de límites de la barra de progreso para que no se salga de su bloque; traslado de los botones de dispositivos al borde derecho del status bar; visualización de la versión en el Splash Screen; cambio de texto en botones (e.g., "Siguiente" a "Crear"); adopción del icono oficial HTML5 `icomoon-free:html-five2`; resolución de bloqueos por spinner infinito en el selector de iconos mediante cancelación reactiva de peticiones con `AbortController` y timeouts de seguridad; y persistencia permanente de proyectos recientes en disco (`userData/recent-projects.json`) con fijación de puerto local preferido (`48321`).
 
 4. **Regla de Actualización Obligatoria de Versión en el Skill de Producción (`appToProduccion`)**:
    - Al ejecutar el empaquetado para producción mediante el skill `appToProduccion`, se realiza una evaluación previa obligatoria de los cambios introducidos frente a las directrices SemVer.

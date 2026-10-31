@@ -53,6 +53,7 @@ import {
 import {
   getRecentProjects,
   addRecentProject,
+  syncRecentProjectsFromElectron,
 } from './utils/recentProjects';
 
 const MAX_HISTORY = 100;
@@ -88,6 +89,15 @@ export function App() {
     };
     mediaQuery.addEventListener('change', handler);
     return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
+
+  // Sincronizar proyectos recientes desde Electron en entorno de escritorio al montar
+  useEffect(() => {
+    syncRecentProjectsFromElectron().then((recents) => {
+      if (recents && recents.length > 0) {
+        setRecentProjects(recents);
+      }
+    });
   }, []);
 
   const resolvedTheme: ResolvedTheme =

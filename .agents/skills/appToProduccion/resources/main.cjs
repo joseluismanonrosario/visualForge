@@ -139,7 +139,22 @@ function startLocalServer(callback) {
   server.headersTimeout = 65000;
   server.requestTimeout = 30000;
 
-  server.listen(0, '127.0.0.1', () => {
+  const PREFERRED_PORT = 48321;
+
+  server.once('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.warn('Puerto ' + PREFERRED_PORT + ' ocupado. Asignando puerto dinamico de respaldo...');
+      server.listen(0, '127.0.0.1', () => {
+        const port = server.address().port;
+        localServer = server;
+        callback(port);
+      });
+    } else {
+      console.error('Error en el servidor local:', err);
+    }
+  });
+
+  server.listen(PREFERRED_PORT, '127.0.0.1', () => {
     const port = server.address().port;
     localServer = server;
     callback(port);
@@ -305,6 +320,38 @@ ipcMain.handle('project-open-path', async (_event, filePath) => {
     return { canceled: true, error: err.message };
   }
 });
+
+
+  // Persistencia permanente de proyectos recientes en disco (userData)
+  function getRecentsFilePath() {
+    return path.join(app.getPath('userData'), 'recent-projects.json');
+  }
+
+  ipcMain.handle('project-get-recents', async () => {
+    try {
+      const recentsPath = getRecentsFilePath();
+      if (fs.existsSync(recentsPath)) {
+        const data = await fs.promises.readFile(recentsPath, 'utf8');
+        const items = JSON.parse(data);
+        if (Array.isArray(items)) return items;
+      }
+    } catch (err) {
+      console.warn('Error al leer recent-projects.json:', err);
+    }
+    return [];
+  });
+
+  ipcMain.handle('project-save-recents', async (_event, items) => {
+    try {
+      if (!Array.isArray(items)) return false;
+      const recentsPath = getRecentsFilePath();
+      await fs.promises.writeFile(recentsPath, JSON.stringify(items, null, 2), 'utf8');
+      return true;
+    } catch (err) {
+      console.warn('Error al guardar recent-projects.json:', err);
+      return false;
+    }
+  });
 
 // Bloqueo de instancia única
 const gotTheLock = app.requestSingleInstanceLock();

@@ -17,6 +17,7 @@ import { getLogoForTheme } from './TopBar';
 import {
   getRecentProjects,
   sortRecentProjects,
+  syncRecentProjectsFromElectron,
   RecentSortBy,
   RecentSortOrder,
 } from '../utils/recentProjects';
@@ -249,11 +250,26 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
   recentProjects,
   onOpenRecentProject,
 }) => {
-  // Proyectos recientes obtenidos
-  const effectiveRecents =
-    recentProjects && recentProjects.length > 0
+  // Proyectos recientes con sincronización reactiva desde Electron en escritorio
+  const [internalRecents, setInternalRecents] = useState<RecentProjectItem[]>(() => {
+    return recentProjects && recentProjects.length > 0
       ? recentProjects
       : getRecentProjects();
+  });
+
+  useEffect(() => {
+    if (recentProjects && recentProjects.length > 0) {
+      setInternalRecents(recentProjects);
+    } else {
+      syncRecentProjectsFromElectron().then((items) => {
+        if (items && items.length > 0) {
+          setInternalRecents(items);
+        }
+      });
+    }
+  }, [recentProjects]);
+
+  const effectiveRecents = internalRecents;
 
   // Estado de ordenación de proyectos recientes (por fecha por defecto)
   const [recentSortBy, setRecentSortBy] = useState<RecentSortBy>('date');
