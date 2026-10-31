@@ -55,6 +55,7 @@ export function App() {
   const [isWelcomeOpen, setIsWelcomeOpen] = useState(true);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isUnsavedModalOpen, setIsUnsavedModalOpen] = useState(false);
+  const [currentFilePath, setCurrentFilePath] = useState<string | null>(null);
   const [recentProjects, setRecentProjects] = useState<RecentProjectItem[]>(() =>
     getRecentProjects()
   );
@@ -613,15 +614,18 @@ export function App() {
         zoom,
       });
 
-      const result = await saveProjectFile(projectName, jsonString);
+      // Si ya estaba guardado en una ruta previa, guarda directamente sin pedir nombre.
+      // Si es un proyecto nuevo sin ruta previa, abre la ventana para elegir ubicación.
+      const result = await saveProjectFile(projectName, jsonString, currentFilePath);
       if (result.success) {
-        const targetPath = result.filePath || `${projectName}.vforge`;
+        const targetPath = result.filePath || currentFilePath || `${projectName}.vforge`;
+        setCurrentFilePath(targetPath);
         showToast(
           `Proyecto guardado con éxito: ${targetPath}`,
           'success'
         );
 
-        // Registrar en lista de proyectos recientes organizados alfabéticamente
+        // Registrar en lista de proyectos recientes
         const updatedRecents = addRecentProject({
           name: projectName,
           path: targetPath,
@@ -636,7 +640,7 @@ export function App() {
     } catch (err: any) {
       showToast(`Error de serialización: ${err.message}`, 'error');
     }
-  }, [projectName, projectType, tree, canvasSettings, viewportMode, zoom, showToast]);
+  }, [projectName, projectType, tree, canvasSettings, viewportMode, zoom, currentFilePath, showToast]);
 
   // Proceso de Cargar / Abrir (Deserialización y Restauración)
   const handleOpenProject = useCallback(async () => {
@@ -666,8 +670,11 @@ export function App() {
       setIsWelcomeOpen(false);
       setHasUnsavedChanges(false);
 
-      // Registrar en lista de proyectos recientes organizados alfabéticamente
+      // Establecer la ruta del archivo abierto para futuros guardados directos
       const targetPath = result.fileName || `${restored.projectName}.vforge`;
+      setCurrentFilePath(targetPath);
+
+      // Registrar en lista de proyectos recientes
       const updatedRecents = addRecentProject({
         name: restored.projectName,
         path: targetPath,
@@ -730,10 +737,14 @@ export function App() {
         setIsWelcomeOpen(false);
         setHasUnsavedChanges(false);
 
-        // Actualizar marca y posición en la lista de recientes manteniendo orden alfabético
+        // Asignar ruta activa para guardados directos en el futuro
+        const targetPath = item.path || `${restored.projectName}.vforge`;
+        setCurrentFilePath(targetPath);
+
+        // Actualizar marca y posición en la lista de recientes
         const updatedRecents = addRecentProject({
           name: restored.projectName,
-          path: item.path || `${restored.projectName}.vforge`,
+          path: targetPath,
           fileName: item.fileName || `${restored.projectName}.vforge`,
           content,
         });
@@ -750,14 +761,15 @@ export function App() {
     [handleUpdateCanvasSettings, showToast]
   );
 
-  // Solicitar cierre de proyecto (desde el botón indicador junto al nombre del proyecto)
+  // Solicitar cierre de proyecto (desde el botón equis junto al nombre del proyecto)
   const handleRequestCloseProject = useCallback(() => {
     if (!hasUnsavedChanges) {
-      // Si está grabado (sin cambios pendientes), se va a la pantalla de nuevo proyecto directamente
+      // Si está grabado (sin cambios pendientes), simplemente cierra e ir a nuevo proyecto
+      setCurrentFilePath(null);
       setIsWelcomeOpen(true);
       setIsProjectLoaded(false);
     } else {
-      // Si no está grabado, pregunta si quiere grabar
+      // Si no está grabado, preguntar si desea guardarlo
       setIsUnsavedModalOpen(true);
     }
   }, [hasUnsavedChanges]);
@@ -774,9 +786,10 @@ export function App() {
         zoom,
       });
 
-      const result = await saveProjectFile(projectName, jsonString);
+      // Guarda directamente si ya tenía ruta asignada, o abre el diálogo si es nuevo
+      const result = await saveProjectFile(projectName, jsonString, currentFilePath);
       if (result.success) {
-        const targetPath = result.filePath || `${projectName}.vforge`;
+        const targetPath = result.filePath || currentFilePath || `${projectName}.vforge`;
         showToast(`Proyecto guardado con éxito: ${targetPath}`, 'success');
 
         const updatedRecents = addRecentProject({
@@ -788,6 +801,7 @@ export function App() {
         setRecentProjects(updatedRecents);
         setHasUnsavedChanges(false);
         setIsUnsavedModalOpen(false);
+        setCurrentFilePath(null);
 
         // Se va a la pantalla de nuevo proyecto y cierra el proyecto
         setIsWelcomeOpen(true);
@@ -798,12 +812,13 @@ export function App() {
     } catch (err: any) {
       showToast(`Error de serialización: ${err.message}`, 'error');
     }
-  }, [projectName, projectType, tree, canvasSettings, viewportMode, zoom, showToast]);
+  }, [projectName, projectType, tree, canvasSettings, viewportMode, zoom, currentFilePath, showToast]);
 
   // Al negar la solicitud de guardar: descarta cambios, cierra y se va a la pantalla de nuevo proyecto
   const handleDiscardAndCloseProject = useCallback(() => {
     setIsUnsavedModalOpen(false);
     setHasUnsavedChanges(false);
+    setCurrentFilePath(null);
     // Se va a la pantalla de nuevo proyecto y cierra el proyecto
     setIsWelcomeOpen(true);
     setIsProjectLoaded(false);
@@ -936,6 +951,7 @@ export function App() {
       setHistory([initialTree]);
       setHistoryIdx(0);
       setSelectedId(initialTree[0]?.id || null);
+      setCurrentFilePath(null);
       setHasUnsavedChanges(false);
     },
     []

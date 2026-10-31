@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { AlertTriangle, Save, LogOut, X } from 'lucide-react';
+import { AlertTriangle, X } from 'lucide-react';
 import { ResolvedTheme } from '../types';
 
 interface UnsavedChangesModalProps {
@@ -41,7 +41,7 @@ export const UnsavedChangesModal: React.FC<UnsavedChangesModalProps> = ({
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
       <div
-        className={`w-full max-w-md rounded-2xl border shadow-2xl p-6 transition-all select-none ${
+        className={`w-full max-w-md rounded-2xl border shadow-2xl p-6 transition-all select-none relative ${
           isLight
             ? 'bg-white border-zinc-200 text-zinc-900'
             : isBlue
@@ -49,8 +49,22 @@ export const UnsavedChangesModal: React.FC<UnsavedChangesModalProps> = ({
             : 'bg-[#1e1e22] border-[#383838] text-zinc-100'
         }`}
       >
+        {/* Equis en la esquina para cerrar o cancelar */}
+        <button
+          type="button"
+          onClick={onCancel}
+          className={`absolute top-4 right-4 p-1.5 rounded-lg transition-colors cursor-pointer ${
+            isLight
+              ? 'text-zinc-400 hover:text-zinc-800 hover:bg-zinc-100'
+              : 'text-zinc-400 hover:text-white hover:bg-white/10'
+          }`}
+          title="Cerrar o cancelar"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
         {/* Header Icon + Title */}
-        <div className="flex items-start gap-3.5 mb-4">
+        <div className="flex items-start gap-3.5 mb-4 pr-6">
           <div className="p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex-shrink-0">
             <AlertTriangle className="w-6 h-6 stroke-[1.8]" />
           </div>
@@ -72,12 +86,12 @@ export const UnsavedChangesModal: React.FC<UnsavedChangesModalProps> = ({
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-2 border-t border-white/5">
+        {/* Botones de acción normales sin iconos */}
+        <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-3 border-t border-white/5">
           <button
             type="button"
             onClick={onCancel}
-            className={`px-3.5 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+            className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
               isLight
                 ? 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'
                 : 'text-zinc-400 hover:text-white hover:bg-white/10'
@@ -89,21 +103,23 @@ export const UnsavedChangesModal: React.FC<UnsavedChangesModalProps> = ({
           <button
             type="button"
             onClick={onDiscardAndClose}
-            className="px-3.5 py-2 rounded-lg text-xs font-semibold bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+            className={`px-4 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+              isLight
+                ? 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border border-zinc-300'
+                : 'bg-[#29292d] hover:bg-[#323237] text-zinc-300 hover:text-white border border-[#3e3e44]'
+            }`}
             title="Cerrar el proyecto descartando los cambios no guardados"
           >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>No guardar</span>
+            No guardar
           </button>
 
           <button
             type="button"
             onClick={onSaveAndClose}
-            className="px-4 py-2 rounded-lg text-xs font-semibold bg-[#0d99ff] hover:bg-[#0088ee] text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-[#0d99ff]/20 active:scale-98"
+            className="px-4 py-2 rounded-lg text-xs font-semibold bg-[#0d99ff] hover:bg-[#0088ee] text-white transition-all cursor-pointer shadow-md shadow-[#0d99ff]/20 active:scale-98"
             title="Guardar el proyecto en archivo .vforge y cerrar"
           >
-            <Save className="w-3.5 h-3.5" />
-            <span>Guardar</span>
+            Guardar
           </button>
         </div>
       </div>

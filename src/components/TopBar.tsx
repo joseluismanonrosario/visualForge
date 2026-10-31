@@ -232,37 +232,40 @@ export const TopBar: React.FC<TopBarProps> = ({
 
       {/* Center: Project Title & Environment Badge */}
       <div className="flex items-center gap-2 max-w-[360px] sm:max-w-lg">
-        {/* New Project Button */}
-        <button
-          onClick={onOpenNewProject}
-          className="flex items-center gap-1 px-2 py-1 rounded bg-[#1e1e1e] hover:bg-[#383838] border border-[#383838] text-zinc-200 text-xs font-medium transition-colors cursor-pointer"
-          title="Crear o configurar proyecto"
-        >
-          <Plus className="w-3.5 h-3.5 text-[#0d99ff]" />
-          <span className="hidden sm:inline">Nuevo</span>
-        </button>
-
-        {/* Open Project Button (Solo icono) */}
-        {onOpenProject && (
+        {/* Grupo unificado de botones de proyecto: +, Abrir, Guardar */}
+        <div className="inline-flex items-center rounded-lg bg-[#1e1e1e] border border-[#383838] p-0.5 divide-x divide-[#383838] shadow-xs flex-shrink-0">
+          {/* New Project Button (+) */}
           <button
-            onClick={onOpenProject}
-            className="flex items-center justify-center p-1.5 rounded bg-[#1e1e1e] hover:bg-[#383838] border border-[#383838] text-zinc-200 transition-colors cursor-pointer"
-            title="Abrir Proyecto .vforge (Ctrl+O)"
+            onClick={onOpenNewProject}
+            className="flex items-center gap-1 px-2 py-1 rounded-l-md hover:bg-[#383838] text-zinc-200 text-xs font-medium transition-colors cursor-pointer"
+            title="Crear o configurar proyecto nuevo (+)"
           >
-            <FolderOpen className="w-3.5 h-3.5 text-amber-400" />
+            <Plus className="w-3.5 h-3.5 text-[#0d99ff]" />
+            <span className="hidden sm:inline">Nuevo</span>
           </button>
-        )}
 
-        {/* Save Project Button (Solo icono) */}
-        {onSaveProject && (
-          <button
-            onClick={onSaveProject}
-            className="flex items-center justify-center p-1.5 rounded bg-[#1e1e1e] hover:bg-[#383838] border border-[#383838] text-zinc-200 transition-colors cursor-pointer"
-            title="Guardar Proyecto .vforge (Ctrl+S)"
-          >
-            <Save className="w-3.5 h-3.5 text-emerald-400" />
-          </button>
-        )}
+          {/* Open Project Button (Solo icono) */}
+          {onOpenProject && (
+            <button
+              onClick={onOpenProject}
+              className="flex items-center justify-center p-1.5 hover:bg-[#383838] text-zinc-200 transition-colors cursor-pointer"
+              title="Abrir Proyecto .vforge (Ctrl+O)"
+            >
+              <FolderOpen className="w-3.5 h-3.5 text-amber-400" />
+            </button>
+          )}
+
+          {/* Save Project Button (Solo icono) */}
+          {onSaveProject && (
+            <button
+              onClick={onSaveProject}
+              className="flex items-center justify-center p-1.5 rounded-r-md hover:bg-[#383838] text-zinc-200 transition-colors cursor-pointer"
+              title="Guardar Proyecto .vforge (Ctrl+S)"
+            >
+              <Save className="w-3.5 h-3.5 text-emerald-400" />
+            </button>
+          )}
+        </div>
 
         {/* Project Type Badge */}
         <button

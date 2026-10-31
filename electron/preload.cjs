@@ -8,6 +8,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   isMaximized: () => ipcRenderer.invoke('window-is-maximized'),
   saveProject: (defaultName, content) =>
     ipcRenderer.invoke('project-save', { defaultName, content }),
+  saveProjectDirect: (filePath, content) =>
+    ipcRenderer.invoke('project-save-direct', { filePath, content }),
   openProject: () =>
     ipcRenderer.invoke('project-open'),
   openProjectPath: (filePath) =>

@@ -132,20 +132,61 @@ export function deserializeProject(jsonString: string): RestoredProjectData {
   };
 }
 
+// Referencia en memoria para File System Access API nativa en navegadores compatibles
+let activeWebFileHandle: any = null;
+
+export function setActiveWebFileHandle(handle: any) {
+  activeWebFileHandle = handle;
+}
+
+export function getActiveWebFileHandle(): any {
+  return activeWebFileHandle;
+}
+
 /**
- * Invoca el diálogo nativo de guardado para almacenar el archivo .vforge
- * Soporta Electron API, File System Access API nativa y fallback con Blob.
+ * Invoca el guardado del archivo .vforge.
+ * Si ya cuenta con una ruta o archivo existente (existingPath), guarda directamente sin pedir nombre.
+ * Si es un archivo nuevo sin ruta previa, abre el diálogo nativo de guardado para elegir ubicación.
  */
 export async function saveProjectFile(
   projectName: string,
-  jsonString: string
+  jsonString: string,
+  existingPath?: string | null
 ): Promise<{ success: boolean; filePath?: string; error?: string }> {
+  // A. Si ya estaba guardado en una ruta previamente, guardar directamente
+  if (existingPath && typeof existingPath === 'string' && existingPath.trim().length > 0) {
+    // 1. Entorno Desktop nativo (Electron IPC guardado directo sin diálogo)
+    if (typeof window !== 'undefined' && (window as any).electronAPI?.saveProjectDirect) {
+      try {
+        const res = await (window as any).electronAPI.saveProjectDirect(existingPath, jsonString);
+        if (!res?.canceled && !res?.error) {
+          return { success: true, filePath: res.filePath || existingPath };
+        }
+      } catch (err: any) {
+        console.warn('Fallo en guardado directo nativo, solicitando diálogo:', err);
+      }
+    }
+
+    // 2. Navegador Web con File System Access API previamente autorizada
+    if (activeWebFileHandle) {
+      try {
+        const writable = await activeWebFileHandle.createWritable();
+        await writable.write(jsonString);
+        await writable.close();
+        return { success: true, filePath: activeWebFileHandle.name || existingPath };
+      } catch (err: any) {
+        console.warn('Fallo en guardado directo web, solicitando diálogo:', err);
+      }
+    }
+  }
+
+  // B. Si es la primera vez que se guarda (proyecto nuevo sin ruta), abrir ventana de guardar
   const cleanName = (projectName || 'VisualForge_Project')
     .replace(/[<>:"/\\|?*]+/g, '_')
     .trim();
   const defaultFileName = cleanName.endsWith('.vforge') ? cleanName : `${cleanName}.vforge`;
 
-  // 1. Entorno Desktop nativo (Electron IPC)
+  // 1. Entorno Desktop nativo (Electron IPC showSaveDialog)
   if (typeof window !== 'undefined' && (window as any).electronAPI?.saveProject) {
     try {
       const res = await (window as any).electronAPI.saveProject(defaultFileName, jsonString);
@@ -174,6 +215,7 @@ export async function saveProjectFile(
       const writable = await handle.createWritable();
       await writable.write(jsonString);
       await writable.close();
+      activeWebFileHandle = handle;
       return { success: true, filePath: handle.name };
     } catch (err: any) {
       if (err.name === 'AbortError') return { success: false }; // Cancelado por el usuario
@@ -242,6 +284,7 @@ export async function openProjectFile(): Promise<{
       });
       const file = await handle.getFile();
       const content = await file.text();
+      activeWebFileHandle = handle;
       return { success: true, content, fileName: file.name };
     } catch (err: any) {
       if (err.name === 'AbortError') return { success: false };

@@ -194,6 +194,19 @@ ipcMain.handle('project-save', async (_event, { defaultName, content }) => {
   }
 });
 
+// Guardado directo sin diálogo cuando el proyecto ya tiene ruta asignada
+ipcMain.handle('project-save-direct', async (_event, { filePath, content }) => {
+  try {
+    if (!filePath || typeof filePath !== 'string') {
+      return { canceled: true, error: 'Ruta no válida para guardado directo' };
+    }
+    await fs.promises.writeFile(filePath, content, 'utf8');
+    return { canceled: false, filePath };
+  } catch (err) {
+    return { canceled: true, error: err.message };
+  }
+});
+
 ipcMain.handle('project-open', async () => {
   if (!mainWindow) return { canceled: true };
   try {
