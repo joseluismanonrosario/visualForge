@@ -4,6 +4,7 @@
 param(
     [switch]$PortableOnly = $false,
     [switch]$SkipBuild = $false,
+    [switch]$SkipGitHubRelease = $false,
     [string]$TargetVersion = ""
 )
 
@@ -141,5 +142,79 @@ if (Test-Path $ReleaseDir) {
     foreach ($file in $ExeFiles) {
         $sizeMB = [math]::Round($file.Length / 1MB, 2)
         Write-Host " - $($file.Name) ($sizeMB MB)" -ForegroundColor White
+    }
+}
+
+# 8. Publicar Release en GitHub si hubo cambio de version o el tag no existe
+if (-not $SkipGitHubRelease) {
+    $VersionTag = "v$($PkgContent.version)"
+    Write-Host ""
+    Write-Host "Verificando estado de Release en GitHub para $VersionTag..." -ForegroundColor Cyan
+
+    $ExistingLocalTag = git tag -l $VersionTag
+    $ExistingRemoteTag = git ls-remote --tags origin $VersionTag
+
+    if (-not $ExistingLocalTag -or -not $ExistingRemoteTag) {
+        Write-Host "Detectado cambio de version ($VersionTag). Procediendo a publicar Release en GitHub..." -ForegroundColor Yellow
+
+        # Extraer notas de la version desde CHANGELOG.md si existe
+        $ReleaseNotes = ""
+        $ChangelogPath = "$WorkspaceRoot\CHANGELOG.md"
+        if (Test-Path $ChangelogPath) {
+            $ChangelogContent = Get-Content -Raw -Path $ChangelogPath
+            $Pattern = "(?s)##\s+\[$([regex]::Escape($PkgContent.version))\][^\r\n]*\r?\n(.*?)(?=\r?\n##\s+\[|\Z)"
+            if ($ChangelogContent -match $Pattern) {
+                $ReleaseNotes = $Matches[1].Trim()
+            }
+        }
+
+        $NotesFilePath = "$WorkspaceRoot\release_notes_tmp.md"
+        if ($ReleaseNotes) {
+            Set-Content -Path $NotesFilePath -Value $ReleaseNotes -Encoding UTF8
+        }
+
+        # 1. Crear el tag en git si no existe
+        if (-not $ExistingLocalTag) {
+            git tag -a $VersionTag -m "VisualForge Studio $VersionTag"
+            Write-Host "[OK] Tag local $VersionTag creado." -ForegroundColor Green
+        }
+
+        # 2. Subir el tag al repositorio remoto en GitHub
+        Write-Host "Enviando tag $VersionTag a GitHub origin..." -ForegroundColor Yellow
+        git push origin $VersionTag
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "[OK] Tag $VersionTag enviado exitosamente a GitHub." -ForegroundColor Green
+        }
+
+        # 3. Intentar crear GitHub Release con binarios via GitHub CLI (gh) si esta disponible
+        $GhInstalled = Get-Command gh -ErrorAction SilentlyContinue
+        if ($GhInstalled) {
+            Write-Host "Creando GitHub Release y adjuntando ejecutables .exe con GitHub CLI..." -ForegroundColor Yellow
+            $ExePatternFiles = Get-ChildItem -Path $ReleaseDir -Filter "*$($PkgContent.version)*.exe"
+            
+            $GhArgs = @("release", "create", $VersionTag)
+            foreach ($f in $ExePatternFiles) {
+                $GhArgs += $f.FullName
+            }
+            $GhArgs += @("--title", "VisualForge Studio $VersionTag")
+            if (Test-Path $NotesFilePath) {
+                $GhArgs += @("--notes-file", $NotesFilePath)
+            } else {
+                $GhArgs += @("--notes", "Release $VersionTag de VisualForge Studio.")
+            }
+
+            gh @GhArgs
+            if ($LASTEXITCODE -eq 0) {
+                Write-Host "[OK] Release de GitHub publicado exitosamente con ejecutables adjuntos!" -ForegroundColor Green
+            }
+        } else {
+            Write-Host "[INFO] Tag y Release disponibles en GitHub: https://github.com/joseluismanonrosario/visualForge/releases/tag/$VersionTag" -ForegroundColor Cyan
+        }
+
+        if (Test-Path $NotesFilePath) {
+            Remove-Item -Path $NotesFilePath -Force -ErrorAction SilentlyContinue
+        }
+    } else {
+        Write-Host "[INFO] La version $VersionTag ya cuenta con Release publicado en GitHub. No se requiere nuevo release." -ForegroundColor DarkGray
     }
 }

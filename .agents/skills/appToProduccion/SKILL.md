@@ -2,7 +2,7 @@
 name: appToProduccion
 description: >-
   Convierte la aplicación web VisualForge Studio (React 19 + Vite) en un ejecutable nativo .exe para Windows (instalador y versión portable independiente) usando Electron y Electron Builder.
-  Incluye la regla obligatoria de evaluación y actualización de versión SemVer en la app (package.json, CHANGELOG.md, README.md, especificaciones) antes de empaquetar.
+  Incluye la regla obligatoria de evaluación y actualización de versión SemVer en la app (package.json, CHANGELOG.md, README.md, especificaciones) antes de empaquetar, y la publicación automática de un Release en GitHub siempre y cuando haya un cambio de versión.
   Úsalo ÚNICA Y EXCLUSIVAMENTE cuando el usuario lo invoque o solicite de forma explícita llamando a 'appToProduccion' o pidiendo compilar/empaquetar esta aplicación a .exe para producción.
 ---
 
@@ -34,7 +34,22 @@ Cuando se determine un incremento de versión:
 
 ---
 
-## 2. Arquitectura de Empaquetado
+## 2. Regla Obligatoria de Publicación de Release en GitHub ante Cambio de Versión
+
+> [!IMPORTANT]
+> **PUBLICACIÓN AUTOMÁTICA DE RELEASE EN GITHUB**: Al ejecutar `appToProduccion`, **siempre y cuando haya un cambio de versión** (es decir, la versión generada no cuente todavía con un tag o release registrado en el repositorio remoto de GitHub):
+> 1. **Detección Condicional**: El proceso verifica si el tag `v<versión>` ya existe en local o en GitHub (`git tag -l` y `git ls-remote --tags origin`). Si ya existe y no hubo incremento, **no se crea un nuevo release** para evitar duplicados.
+> 2. **Creación y Envío del Tag a GitHub**:
+>    - Se crea el tag anotado en Git: `git tag -a v<versión> -m "VisualForge Studio v<versión>"`.
+>    - Se envía el tag a GitHub: `git push origin v<versión>`, lo cual genera formalmente el Release en la pestaña de Releases del repositorio.
+> 3. **Publicación con Notas y Binarios Adjuntos**:
+>    - Se extraen de forma automática las notas de versión correspondientes desde `CHANGELOG.md`.
+>    - Si está disponible la herramienta GitHub CLI (`gh`), se publica el Release adjuntando los archivos `.exe` generados (`VisualForge Studio Setup <versión>.exe` y `VisualForge Studio <versión>.exe`).
+>    - Si `gh` no está disponible, el Release queda publicado mediante el Git tag oficial en `https://github.com/joseluismanonrosario/visualForge/releases/tag/v<versión>`.
+
+---
+
+## 3. Arquitectura de Empaquetado
 
 - **Motor de Conversión**: **Electron** + **Electron Builder**.
 - **Compatibilidad con Iconify y Assets**: El proceso principal de Electron (`electron/main.cjs`) incluye un servidor local HTTP ultraligero embebido en loopback (`127.0.0.1:<random-port>`) que sirve la carpeta `dist/` e intercepta las peticiones `/@iconify/` y `/api/iconify/`, garantizando que todo el catálogo de más de 400.000 iconos locales funcione al 100% sin conexión a internet y sin bloqueos de seguridad por protocolo `file://`.
@@ -44,7 +59,7 @@ Cuando se determine un incremento de versión:
 
 ---
 
-## 3. Flujo de Ejecución Paso a Paso
+## 4. Flujo de Ejecución Paso a Paso
 
 Cuando el usuario invoque el skill, sigue estrictamente estos pasos en orden:
 
@@ -66,6 +81,8 @@ O si el usuario solicita únicamente la versión portable:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .agents/skills/appToProduccion/scripts/build-exe.ps1 -PortableOnly
 ```
+
+*Nota: El script gestiona de extremo a extremo la sincronización de archivos, la compilación de Vite, el empaquetado con Electron Builder y la publicación del Release en GitHub si hubo cambio de versión.*
 
 ### Paso 2: Flujo manual equivalente (si se requiere depuración paso a paso)
 Si se requiere ejecutar los pasos de forma individual:
@@ -105,19 +122,27 @@ Si se requiere ejecutar los pasos de forma individual:
    npx electron-builder --win
    ```
 
+8. **Crear y enviar Release a GitHub si ameritó cambio de versión**:
+   ```bash
+   git tag -a v<versión> -m "VisualForge Studio v<versión>"
+   git push origin v<versión>
+   ```
+
 ---
 
-## 4. Verificación y Resultados
+## 5. Verificación y Resultados
 
 Tras finalizar el proceso:
 1. Revisa los archivos generados en la carpeta `release/`:
    - `release/VisualForge Studio Setup <versión>.exe` (Instalador NSIS)
    - `release/VisualForge Studio <versión>.exe` (Portable)
-2. Reporta al usuario la ruta completa de los ejecutables, su versión exacta y su tamaño en MB.
+2. Verifica la publicación del Release en GitHub:
+   - `https://github.com/joseluismanonrosario/visualForge/releases/tag/v<versión>`
+3. Reporta al usuario la ruta completa de los ejecutables, su versión exacta, su tamaño en MB y el enlace al Release de GitHub.
 
 ---
 
-## 5. Recursos del Skill
+## 6. Recursos del Skill
 
 - Script ejecutable: [build-exe.ps1](./scripts/build-exe.ps1)
 - Plantilla Main Process: [main.cjs](./resources/main.cjs)

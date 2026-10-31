@@ -1173,3 +1173,12 @@ VisualForge Studio se gestiona bajo el estándar de **Versionado Semántico 2.0.
      * Se actualizan las referencias de versión en `README.md`.
      * Se sincroniza el documento de especificaciones `especificaciones_del_proyecto.md`.
    - **Bautismo Automático de Binarios**: Electron Builder consume automáticamente la versión actualizada desde `package.json`, asegurando que los ejecutables resultantes (`VisualForge Studio Setup <version>.exe` y `VisualForge Studio <version>.exe`) queden nombrados con la versión exacta y coherente con el repositorio.
+
+5. **Regla de Publicación Obligatoria de Release en GitHub ante Cambio de Versión en `appToProduccion`**:
+   - Cada vez que se invoque el skill `appToProduccion`, se comprueba si la versión a compilar constituye un cambio o incremento respecto a las versiones ya publicadas en GitHub (`git tag -l` y `git ls-remote --tags origin`).
+   - **Condición Estricta**: Si y solo si existe un cambio de versión no registrado previamente:
+     * Se crea automáticamente el tag anotado en Git: `git tag -a v<version> -m "VisualForge Studio v<version>"`.
+     * Se envía el tag a GitHub (`git push origin v<version>`), publicando formalmente el Release en el repositorio.
+     * Se extraen las notas de versión correspondientes directamente desde `CHANGELOG.md` para documentar la entrega.
+     * Si está disponible GitHub CLI (`gh`), se adjuntan los binarios ejecutables `.exe` compilados para descarga directa en la plataforma.
+   - En caso de reejecutar la compilación para una versión ya liberada, la publicación de Release se omite para evitar duplicados o tags redundantes.
