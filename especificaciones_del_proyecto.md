@@ -63,15 +63,17 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
           - En modo oscuro (`dark`), el panel de propiedades del lienzo (`Canvas Settings Inspector`) cuenta con contraste reforzado.
       - **Botón Present / Preview (Play `▶` / Eye)**: Alterna entre modo diseño y modo vista previa interactiva.
       - **Botón Share / Export Code**: Abre el modal de exportación de código fuente.
-    - **Status Bar Inferior Multifunción con Viewports y Zoom**:
+    - **Status Bar Inferior Multifunción con Viewports al Borde Derecho y Zoom**:
       - Barra de estado horizontal ubicada en el borde inferior del entorno de diseño (`h-6 bg-[#18181b] border-t border-[#2e2e32] px-3 flex items-center justify-between text-[11px]`).
       - **Lado Izquierdo**: Indicador de estado "Listo" con viñeta verde y recuento en tiempo real de los componentes en el árbol del lienzo.
-      - **Centro**: Botonera de tipo de pantalla y puntos de interrupción (`Monitor` *Desktop 1440px*, `Tablet` *Tablet 768px*, `Smartphone` *Móvil 375px*) integrada directamente en la barra de estado con fondo sutil y estados activos bien diferenciados.
-      - **Esquina Derecha**: Controles integrados de Zoom con botones para reducir zoom (`ZoomOut`), indicador del porcentaje actual con clic para restablecer rápidamente al 100%, y botón para aumentar zoom (`ZoomIn`).
-    - **Splash Screen Compacto y Tipografía Uniforme**:
+      - **Borde Derecho (Controles Agrupados)**:
+        * **Controles de Zoom**: Botones para reducir zoom (`ZoomOut`), indicador numérico del porcentaje actual con clic para restablecer rápidamente al 100%, y botón para aumentar zoom (`ZoomIn`).
+        * **Divisor Visual y Botones de Tipo de Pantalla al Borde Derecho**: En el extremo derecho absoluto de la barra de estado se ubica la botonera de dispositivos (`Monitor` *Desktop 1440px*, `Tablet` *Tablet 768px*, `Smartphone` *Móvil 375px*) con bordes sutiles, fondo contrastado y estados activos diferenciados, permitiendo alternar el breakpoint de diseño de forma ergonómica sin obstruir el centro del área de trabajo.
+    - **Splash Screen Compacto, Tipografía Uniforme e Indicador de Versión**:
       - Dimensiones optimizadas más compactas (`w-[500px] max-w-[85vw] aspect-[918/614] rounded-[18px] sm:rounded-[20px]`).
       - **Texto de Carga Uniforme**: Tipografía calibrada (`text-[9.5px] sm:text-[10px] text-zinc-400`) para mantener perfecta armonía y proporción con los textos finos de la tarjeta.
       - **Barra de Progreso Delimitada**: Barra de progreso confinada con precisión a su bloque asignado (`width: '28%'`), evitando cualquier desbordamiento fuera de su marco ilustrado.
+      - **Indicador de Versión Actual de la App**: En la esquina inferior derecha de la tarjeta (`right: '4.2%', bottom: '4.8%'`), se despliega una insignia compacta y elegante con la versión activa (`vX.Y.Z`, extraída dinámicamente de `package.json`), estilizada con `font-mono text-[10.5px]`, fondo traslúcido `bg-black/40`, bordes sutiles `border-white/10` y desenfoque de cristal `backdrop-blur-xs`.
      - **Extensión al Borde y Controles de Ventana Exclusivos para Versión Ejecutable (Window Controls)**:
        - La barra superior se extiende de borde a borde (`pl-3 pr-0`), eliminando márgenes derechos para acoplar directamente en la esquina superior derecha los 3 botones estándar de control de ventana de Windows:
          * **Minimizar** (`Minus` / `-`): Minimiza la ventana al hacer clic.
@@ -895,7 +897,8 @@ Al iniciar la aplicación, se despliega una pantalla de bienvenida flotante (Spl
   - Mensajes secuenciales de carga en tiempo real: *"Iniciando aplicación..."*, *"Cargando catálogo de componentes y assets..."*, *"Inicializando motor de renderizado..."*, *"Iniciando VisualForge Studio..."*.
   - Presentación limpia y directa del texto de estado sin puntos flotantes o saltarines distractores en la animación.
   - Barra de progreso brillante con gradiente dinámico (`from-[#0d99ff] via-indigo-500 to-violet-500`) con resplandor neón.
-- **Duración y Transición**:
+- **Duración, Transición e Indicador de Versión**:
+  - **Insignia de Versión Activa**: Exhibición de la versión de la aplicación (ej. `v1.4.2`) en la esquina inferior derecha con estilo sobrio y legible (`text-[10.5px] font-mono`, `bg-black/40`, bordes transparentes).
   - Tiempo de permanencia estimado de 2.6 segundos mientras los assets e índices del sistema se inicializan.
   - Transición suave de desvanecimiento (`fade-out`) al completarse, revelando la pantalla de selección de proyectos sin parpadeos.
   - Soporte de omisión instantánea al hacer clic sobre la pantalla.
@@ -1149,7 +1152,7 @@ VisualForge Studio se gestiona bajo el estándar de **Versionado Semántico 2.0.
 
 2. **Documentación Oficial del Repositorio**:
    - **`README.md`**: Guía exhaustiva con arquitectura del sistema, instalación, scripts de compilación web y empaquetado nativo `.exe`, descripción de persistencia `.vforge`, y política de versionado SemVer.
-   - **`CHANGELOG.md`**: Registro cronológico de cambios bajo la especificación *Keep a Changelog*, documentando cada versión (`v1.0.0` a `v1.4.1`) con secciones *Agregado*, *Cambiado*, *Corregido* y *Eliminado*.
+   - **`CHANGELOG.md`**: Registro cronológico de cambios bajo la especificación *Keep a Changelog*, documentando cada versión (`v1.0.0` a `v1.4.2`) con secciones *Agregado*, *Cambiado*, *Corregido* y *Eliminado*.
 
 3. **Directrices de Versionado Semántico desde la Perspectiva del Desarrollador**:
    - **Versión MAJOR (X.0.0) - Ruptura de Compatibilidad**:
@@ -1160,4 +1163,13 @@ VisualForge Studio se gestiona bajo el estándar de **Versionado Semántico 2.0.
      * **Ejemplos**: Incorporar nuevos tipos de componentes al catálogo (`componentCatalog.ts`); nuevos motores de exportación de código fuente; extensiones no destructivas al modelo con propiedades opcionales (`props` o estilos adicionales); soporte para nuevos breakpoints de pantalla; o nuevos subsistemas como proyectos recientes e historial extendido a 100 pasos.
    - **Versión PATCH (0.0.X) - Correcciones y Ajustes Menores**:
      * **Criterios determinantes**: Correcciones de errores (*bug fixes*), ajustes cosméticos, optimizaciones de rendimiento y refinamientos de interfaz de usuario sin alteración de la API de datos ni de la compatibilidad de archivos.
-     * **Ejemplos**: Ajuste de uniformidad tipográfica en el Splash Screen; corrección de límites de la barra de progreso para que no se salga de su bloque; traslado de los botones de dispositivos al status bar; cambio de texto en botones (e.g., "Siguiente" a "Crear"); centrado del grupo de nombre en la cabecera; y supresión de notificaciones toast innecesarias.
+     * **Ejemplos**: Ajuste de uniformidad tipográfica en el Splash Screen; corrección de límites de la barra de progreso para que no se salga de su bloque; traslado de los botones de dispositivos al borde derecho del status bar; visualización de la versión en el Splash Screen; cambio de texto en botones (e.g., "Siguiente" a "Crear"); centrado del grupo de nombre en la cabecera; y supresión de notificaciones toast innecesarias.
+
+4. **Regla de Actualización Obligatoria de Versión en el Skill de Producción (`appToProduccion`)**:
+   - Al ejecutar el empaquetado para producción mediante el skill `appToProduccion`, se realiza una evaluación previa obligatoria de los cambios introducidos frente a las directrices SemVer.
+   - **Evaluación y Actualización Directa en la App**: Si las modificaciones ameritan un incremento de versión (sea MAJOR, MINOR o PATCH) o si `package.json` está desfasado respecto a las novedades implementadas:
+     * Se actualiza inmediatamente el campo `"version"` en `package.json`.
+     * Se documenta el bloque de versión correspondiente en `CHANGELOG.md`.
+     * Se actualizan las referencias de versión en `README.md`.
+     * Se sincroniza el documento de especificaciones `especificaciones_del_proyecto.md`.
+   - **Bautismo Automático de Binarios**: Electron Builder consume automáticamente la versión actualizada desde `package.json`, asegurando que los ejecutables resultantes (`VisualForge Studio Setup <version>.exe` y `VisualForge Studio <version>.exe`) queden nombrados con la versión exacta y coherente con el repositorio.

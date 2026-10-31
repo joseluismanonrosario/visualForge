@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import packageJson from '../../package.json';
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -77,6 +78,19 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
           alt="VisualForge Studio Splash"
           className="w-full h-full object-cover pointer-events-none select-none"
         />
+
+        {/* Versión actual de la app (esquina inferior derecha) */}
+        <div
+          className="absolute flex items-center justify-end"
+          style={{
+            right: '4.2%',
+            bottom: '4.8%',
+          }}
+        >
+          <span className="text-[10px] sm:text-[10.5px] font-mono font-medium text-zinc-300/90 tracking-wider bg-black/40 px-2 py-0.5 rounded border border-white/10 backdrop-blur-xs select-none shadow-sm">
+            v{packageJson.version}
+          </span>
+        </div>
 
         {/* Live Animated "Iniciando..." Overlay in the bottom-left area */}
         <div

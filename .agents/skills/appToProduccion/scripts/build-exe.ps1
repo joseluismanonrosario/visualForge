@@ -3,7 +3,8 @@
 # ==============================================================================
 param(
     [switch]$PortableOnly = $false,
-    [switch]$SkipBuild = $false
+    [switch]$SkipBuild = $false,
+    [string]$TargetVersion = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -42,11 +43,33 @@ if (-not (Test-Path $BuilderTarget)) {
     Write-Host "[OK] electron-builder.json configurado con exito." -ForegroundColor Green
 }
 
-# 3. Validar / Configurar campo main en package.json
+# 3. Validar / Configurar version y campos de Electron en package.json
 $PkgPath = "$WorkspaceRoot\package.json"
 $PkgContent = Get-Content -Raw -Path $PkgPath | ConvertFrom-Json
 
 $NeedsPkgUpdate = $false
+
+# Sincronización de Versión si se especifica o si CHANGELOG.md tiene versión más reciente
+if ($TargetVersion -and $PkgContent.version -ne $TargetVersion) {
+    Write-Host "[appToProduccion] Actualizando version de $($PkgContent.version) a $TargetVersion segun parametro..." -ForegroundColor Yellow
+    $PkgContent.version = $TargetVersion
+    $NeedsPkgUpdate = $true
+} else {
+    $ChangelogPath = "$WorkspaceRoot\CHANGELOG.md"
+    if (Test-Path $ChangelogPath) {
+        $ChangelogContent = Get-Content -Raw -Path $ChangelogPath
+        if ($ChangelogContent -match '##\s+\[([0-9]+\.[0-9]+\.[0-9]+)\]') {
+            $LatestChangelogVersion = $Matches[1]
+            if ($PkgContent.version -ne $LatestChangelogVersion) {
+                Write-Host "[appToProduccion] Sincronizando version de package.json ($($PkgContent.version) -> $LatestChangelogVersion) detectada en CHANGELOG.md..." -ForegroundColor Yellow
+                $PkgContent.version = $LatestChangelogVersion
+                $NeedsPkgUpdate = $true
+            }
+        }
+    }
+}
+Write-Host "Version activa de la aplicacion: v$($PkgContent.version)" -ForegroundColor Cyan
+
 if ($PkgContent.main -ne "electron/main.cjs") {
     $PkgContent | Add-Member -NotePropertyName "main" -NotePropertyValue "electron/main.cjs" -Force
     $NeedsPkgUpdate = $true
@@ -59,7 +82,7 @@ if (-not $PkgContent.scripts."electron:build") {
 
 if ($NeedsPkgUpdate) {
     $PkgContent | ConvertTo-Json -Depth 10 | Set-Content -Path $PkgPath -Encoding UTF8
-    Write-Host "[OK] package.json actualizado con entrada main y scripts de Electron." -ForegroundColor Green
+    Write-Host "[OK] package.json sincronizado con exito." -ForegroundColor Green
 }
 
 # 4. Verificar dependencias de Electron
