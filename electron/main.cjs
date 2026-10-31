@@ -1,6 +1,14 @@
 const { app, BrowserWindow, Menu, shell, ipcMain, dialog, session } = require('electron');
 const crypto = require('crypto');
 
+// Encabezados HTTP de seguridad estrictos (OWASP / Electron Security Checklist)
+const SECURITY_HEADERS = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'Referrer-Policy': 'no-referrer',
+  'Cross-Origin-Opener-Policy': 'same-origin',
+};
+
 // Token criptografico de sesion secreta para proteger el servidor local contra navegadores externos
 const SESSION_SECRET = crypto.randomBytes(24).toString('hex');
 const path = require('path');
@@ -40,7 +48,17 @@ function startLocalServer(callback) {
     req.on('error', () => {});
     res.on('error', () => {});
 
-    try {
+        try {
+      // Restringir metodos HTTP permitidos en el servidor local (unicamente GET y HEAD)
+      if (req.method !== 'GET' && req.method !== 'HEAD') {
+        res.writeHead(405, {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Allow': 'GET, HEAD',
+          ...SECURITY_HEADERS,
+        });
+        res.end('405 Method Not Allowed');
+        return;
+      }
       const parsedUrl = new URL(req.url, 'http://127.0.0.1');
 
       // Validacion de token de sesion secreta (Header, Query Param o Cookie)
@@ -50,7 +68,7 @@ function startLocalServer(callback) {
       const requestToken = req.headers['x-vf-token'] || parsedUrl.searchParams.get('_vf_token') || cookieToken;
 
       if (!requestToken || requestToken !== SESSION_SECRET) {
-        res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8', ...SECURITY_HEADERS });
         res.end('403 Forbidden: Acceso no autorizado a VisualForge Studio.');
         return;
       }
@@ -160,7 +178,7 @@ function startLocalServer(callback) {
           if (ext === '.html') {
             headers['Set-Cookie'] = `vf_token=${SESSION_SECRET}; Path=/; SameSite=Strict; HttpOnly`;
           }
-          res.writeHead(200, headers);
+          res.writeHead(200, { ...headers, ...SECURITY_HEADERS });
           res.end(data);
         });
         return;
@@ -224,6 +242,18 @@ function createWindow(port) {
       sandbox: true,
       webSecurity: true,
     },
+  });
+
+    // Revocar todos los permisos del sistema (camara, microfono, geolocalizacion, notificaciones, etc.)
+  mainWindow.webContents.session.setPermissionRequestHandler((_webContents, _permission, callback) => {
+    callback(false);
+  });
+  mainWindow.webContents.session.setPermissionCheckHandler(() => false);
+  mainWindow.webContents.session.setDevicePermissionHandler(() => false);
+
+  // Prevenir inyeccion o anclaje de webviews auxiliares no autorizados
+  mainWindow.webContents.on('will-attach-webview', (event) => {
+    event.preventDefault();
   });
 
   Menu.setApplicationMenu(null);

@@ -60,6 +60,25 @@ export function serializeProject(params: {
 }
 
 /**
+ * Sanitiza recursivamente objetos JSON para prevenir ataques de Prototype Pollution.
+ * Elimina cualquier clave peligrosa como __proto__, constructor o prototype.
+ */
+function sanitizeJsonInput(input: any): any {
+  if (!input || typeof input !== 'object') return input;
+  if (Array.isArray(input)) {
+    return input.map(sanitizeJsonInput);
+  }
+  const clean: Record<string, any> = Object.create(null);
+  for (const [key, value] of Object.entries(input)) {
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+      continue;
+    }
+    clean[key] = sanitizeJsonInput(value);
+  }
+  return clean;
+}
+
+/**
  * Parsea y valida el contenido JSON de un archivo .vforge, restaurando todas las propiedades.
  */
 export function deserializeProject(jsonString: string): RestoredProjectData {
@@ -69,7 +88,7 @@ export function deserializeProject(jsonString: string): RestoredProjectData {
 
   let parsed: any;
   try {
-    parsed = JSON.parse(jsonString);
+    parsed = sanitizeJsonInput(JSON.parse(jsonString));
   } catch (err: any) {
     throw new Error(`Error de sintaxis JSON al leer el archivo .vforge: ${err.message}`);
   }

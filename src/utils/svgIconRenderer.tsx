@@ -113,23 +113,28 @@ export function sanitizeSvg(svgContent: string): string {
 
   let sanitized = svgContent;
 
-  // Remove <script>...</script> tags and unclosed <script...
+  // 1. Strip XML declarations, doctypes, entity definitions and CDATA tags
+  sanitized = sanitized.replace(/<\?xml\b[^>]*\?>/gi, '');
+  sanitized = sanitized.replace(/<!DOCTYPE\b[^>]*>/gi, '');
+  sanitized = sanitized.replace(/<!ENTITY\b[^>]*>/gi, '');
+
+  // 2. Strip <script>...</script> tags and unclosed <script...
   sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
   sanitized = sanitized.replace(/<script\b[^>]*>/gi, '');
 
-  // Remove <foreignObject>...</foreignObject> tags and contents
+  // 3. Strip <foreignObject>...</foreignObject> tags and contents
   sanitized = sanitized.replace(/<foreignObject\b[^<]*(?:(?!<\/foreignObject>)<[^<]*)*<\/foreignObject>/gi, '');
   sanitized = sanitized.replace(/<foreignObject\b[^>]*>/gi, '');
 
-  // Remove hazardous tags like iframe, object, embed, applet, form, input, base, meta
-  sanitized = sanitized.replace(/<(iframe|object|embed|applet|form|input|base|meta)\b[^>]*>/gi, '');
-  sanitized = sanitized.replace(/<\/(iframe|object|embed|applet|form|input|base|meta)>/gi, '');
+  // 4. Strip hazardous embedding and executable SVG tags
+  sanitized = sanitized.replace(/<(iframe|object|embed|applet|form|input|base|meta|link|style|animate|set|handler)\b[^>]*>/gi, '');
+  sanitized = sanitized.replace(/<\/(iframe|object|embed|applet|form|input|base|meta|link|style|animate|set|handler)>/gi, '');
 
-  // Remove inline on* event handler attributes (e.g., onload, onerror, onclick, onmouseover)
+  // 5. Strip inline on* event handler attributes
   sanitized = sanitized.replace(/\s+on[a-zA-Z]+\s*=\s*(?:'[^']*'|"[^"]*"|[^\s>]+)/gi, '');
 
-  // Remove href / xlink:href with javascript: or data:text/html
-  sanitized = sanitized.replace(/(href|xlink:href)\s*=\s*['"]\s*(javascript:|data:\s*text\/html)[^'"]*['"]/gi, '$1=""');
+  // 6. Strip dangerous URI schemes in href / xlink:href (including entities like &#x6A; or URL-encoded)
+  sanitized = sanitized.replace(/(href|xlink:href)\s*=\s*['"]\s*(?:javascript:|data:\s*text\/html|data:\s*application\/|\s*&#)[^'"]*['"]/gi, '$1=""');
 
   return sanitized;
 }

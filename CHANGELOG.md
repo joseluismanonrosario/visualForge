@@ -6,6 +6,17 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 ---
 
+## [1.4.7] - 2026-10-31
+
+### Seguridad
+- **Blindaje Estricto de Content Security Policy (CSP)**: Eliminación de la directiva 'unsafe-inline' en script-src dentro de index.html, restringiendo la ejecución de JavaScript exclusivamente al origen local autenticado ('self' y http://127.0.0.1:*) y mitigando de raíz cualquier vector de XSS por inyección inline.
+- **Inmunidad contra Prototype Pollution**: Incorporación de sanitización recursiva de objetos (sanitizeJsonInput) en deserializeProject (projectPersistence.ts), eliminando claves peligrosas (__proto__, constructor, prototype) al importar o restaurar archivos de proyecto .vforge.
+- **Sanitización Profunda de SVG contra XSS y XXE**: Refuerzo de sanitizeSvg() en svgIconRenderer.tsx mediante eliminación de declaraciones XML (<?xml>), doctypes (<!DOCTYPE>), entidades (<!ENTITY>), tags de animación/ejecución (<animate>, <set>, <handler>) y esquemas de URI ofuscados (javascript:, data:text/html).
+- **Encabezados HTTP de Seguridad OWASP en Servidor Embebido**: Adición de X-Content-Type-Options: nosniff, X-Frame-Options: DENY, Referrer-Policy: no-referrer y Cross-Origin-Opener-Policy: same-origin en todas las respuestas del servidor HTTP local de Electron.
+- **Restricción de Métodos HTTP y Revocación Total de Permisos**: Bloqueo de verbos HTTP no autorizados en el servidor local (permitiendo únicamente GET y HEAD con rechazo 405 Method Not Allowed), revocación universal de permisos del sistema (cámara, micrófono, geolocalización, notificaciones) y bloqueo de webviews auxiliares en Electron.
+
+---
+
 ## [1.4.6] - 2026-10-31
 
 ### Corregido
