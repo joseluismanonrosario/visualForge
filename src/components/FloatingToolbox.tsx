@@ -578,7 +578,6 @@ export const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
                     } else {
                       onDeleteNode?.(selectedId);
                     }
-                    showPlacementToast('✓ Todos los elementos del lienzo han sido eliminados');
                   } else {
                     onDeleteNode?.(selectedId);
                   }

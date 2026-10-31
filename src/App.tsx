@@ -267,20 +267,22 @@ export function App() {
 
       const effectiveTargetId = targetId !== undefined ? targetId : selectedId;
 
-      if (!effectiveTargetId) {
-        // Si no hay elemento seleccionado, buscar el contenedor principal activo o añadir a la raíz
-        const mainContainer = tree.find((n) => n.isContainer && n.id !== 'navbar_root');
-        if (mainContainer && position === 'inside') {
-          newTree = insertChildInTree(tree, mainContainer.id, newNode);
-        } else {
-          newTree = [...tree, newNode];
-        }
+      if (!effectiveTargetId || effectiveTargetId === 'canvas') {
+        // Si no hay elemento seleccionado o el lienzo está seleccionado, añadir directamente al lienzo
+        newTree = [...tree, newNode];
       } else {
         const targetNode = findNodeInTree(tree, effectiveTargetId);
         if (targetNode?.isContainer && position === 'inside') {
           newTree = insertChildInTree(tree, effectiveTargetId, newNode);
+        } else if (targetNode) {
+          newTree = insertNodeRelative(
+            tree,
+            effectiveTargetId,
+            newNode,
+            targetNode.isContainer ? position : 'after'
+          );
         } else {
-          newTree = insertNodeRelative(tree, effectiveTargetId, newNode, targetNode?.isContainer ? position : 'after');
+          newTree = [...tree, newNode];
         }
       }
 

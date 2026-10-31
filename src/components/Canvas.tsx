@@ -560,8 +560,8 @@ export const Canvas: React.FC<CanvasProps> = ({
             className={`canvas-artboard w-full rounded-xl shadow-2xl relative transition-all duration-200 ${
               isHandActive ? 'pointer-events-none' : ''
             } ${
-              selectedId === 'canvas'
-                ? 'ring-2 ring-[#0d99ff] ring-offset-2 ring-offset-[#1e1e1e] border border-[#0d99ff]'
+              !isPreviewMode && selectedId === 'canvas'
+                ? 'ring-2 ring-[#0d99ff] border-transparent'
                 : isPreviewMode
                 ? 'border border-[#2e2e32]'
                 : 'border border-[#2e2e32] hover:border-[#3e3e42]'
