@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ProjectType, ResolvedTheme, RecentProjectItem } from '../types';
 import {
   FilePlus2,
@@ -9,10 +9,17 @@ import {
   Code2,
   FileCode2,
   Clock,
+  ArrowUp,
+  ArrowDown,
   X,
 } from 'lucide-react';
 import { getLogoForTheme } from './TopBar';
-import { getRecentProjects } from '../utils/recentProjects';
+import {
+  getRecentProjects,
+  sortRecentProjects,
+  RecentSortBy,
+  RecentSortOrder,
+} from '../utils/recentProjects';
 
 interface TemplateOption {
   id: 'blank' | 'saas' | 'iot';
@@ -177,11 +184,41 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
   recentProjects,
   onOpenRecentProject,
 }) => {
-  // Proyectos recientes organizados alfabéticamente
+  // Proyectos recientes obtenidos
   const effectiveRecents =
     recentProjects && recentProjects.length > 0
       ? recentProjects
       : getRecentProjects();
+
+  // Estado de ordenación de proyectos recientes (por fecha por defecto)
+  const [recentSortBy, setRecentSortBy] = useState<RecentSortBy>('date');
+  const [recentSortOrder, setRecentSortOrder] = useState<RecentSortOrder>('desc');
+
+  // Alternar orden por nombre (al presionar la fila de nombre: alterna ascendente / descendente)
+  const handleToggleSortName = () => {
+    if (recentSortBy === 'name') {
+      setRecentSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setRecentSortBy('name');
+      setRecentSortOrder('asc');
+    }
+  };
+
+  // Alternar orden por fecha (al presionar la fila de fecha: alterna descendente / ascendente)
+  const handleToggleSortDate = () => {
+    if (recentSortBy === 'date') {
+      setRecentSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setRecentSortBy('date');
+      setRecentSortOrder('desc');
+    }
+  };
+
+  // Proyectos ordenados dinámicamente según el criterio y dirección activa
+  const sortedRecents = useMemo(() => {
+    return sortRecentProjects(effectiveRecents, recentSortBy, recentSortOrder);
+  }, [effectiveRecents, recentSortBy, recentSortOrder]);
+
   // Active selected project type (default to HTML/CSS or current)
   const [selectedTypeId, setSelectedTypeId] = useState<ProjectType>(() => {
     if (currentType === 'esp32' || currentType === 'react') return currentType;
@@ -371,7 +408,7 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
             </div>
           </div>
 
-          {/* Recientes List (Organizados por orden alfabético y con apertura directa) */}
+          {/* Recientes List (Organizados por fecha o nombre con ordenación interactiva asc/desc) */}
           <div className="pt-1">
             <div className="flex items-center justify-between mb-1.5 px-1">
               <h4 className={`text-[11px] font-medium ${textMuted}`}>
@@ -385,13 +422,88 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
                     ? 'bg-[#131c31] text-sky-400/80 border-[#1f2c4a]'
                     : 'bg-[#1c1c1f] text-zinc-400 border-white/5'
                 }`}
-                title="Archivos organizados alfabéticamente (A-Z)"
+                title={`Ordenado por ${recentSortBy === 'name' ? 'Nombre' : 'Fecha'} (${recentSortOrder === 'asc' ? 'Ascendente' : 'Descendente'})`}
               >
-                A-Z
+                {recentSortBy === 'name'
+                  ? recentSortOrder === 'asc'
+                    ? 'Nombre A-Z'
+                    : 'Nombre Z-A'
+                  : recentSortOrder === 'desc'
+                  ? 'Fecha (Reciente)'
+                  : 'Fecha (Antiguo)'}
               </span>
             </div>
 
-            {effectiveRecents.length === 0 ? (
+            {/* Fila de encabezados interactivos: Nombre y Fecha con ordenación al hacer clic */}
+            <div
+              className={`flex items-center justify-between px-2 py-1 rounded-md mb-1 text-[10px] font-semibold select-none border ${
+                isLight
+                  ? 'bg-zinc-100/90 border-zinc-200 text-zinc-600'
+                  : isBlue
+                  ? 'bg-[#0f172a] border-[#1e293b] text-zinc-400'
+                  : 'bg-[#18181b] border-[#29292d] text-zinc-400'
+              }`}
+            >
+              {/* Botón Encabezado Nombre: Alterna Ascendente / Descendente */}
+              <button
+                type="button"
+                onClick={handleToggleSortName}
+                className={`flex items-center gap-1 transition-colors cursor-pointer group py-0.5 px-1 rounded ${
+                  recentSortBy === 'name'
+                    ? 'text-[#0d99ff] font-bold'
+                    : isLight
+                    ? 'hover:text-zinc-900'
+                    : 'hover:text-white'
+                }`}
+                title={`Ordenar por nombre (${
+                  recentSortBy === 'name' && recentSortOrder === 'asc'
+                    ? 'Cambiar a orden descendente Z-A'
+                    : 'Cambiar a orden ascendente A-Z'
+                })`}
+              >
+                <span>Nombre</span>
+                {recentSortBy === 'name' ? (
+                  recentSortOrder === 'asc' ? (
+                    <ArrowUp className="w-3 h-3 text-[#0d99ff]" />
+                  ) : (
+                    <ArrowDown className="w-3 h-3 text-[#0d99ff]" />
+                  )
+                ) : (
+                  <ArrowUp className="w-2.5 h-2.5 opacity-0 group-hover:opacity-40 transition-opacity" />
+                )}
+              </button>
+
+              {/* Botón Encabezado Fecha: Alterna Descendente / Ascendente */}
+              <button
+                type="button"
+                onClick={handleToggleSortDate}
+                className={`flex items-center gap-1 transition-colors cursor-pointer group py-0.5 px-1 rounded ${
+                  recentSortBy === 'date'
+                    ? 'text-[#0d99ff] font-bold'
+                    : isLight
+                    ? 'hover:text-zinc-900'
+                    : 'hover:text-white'
+                }`}
+                title={`Ordenar por fecha (${
+                  recentSortBy === 'date' && recentSortOrder === 'desc'
+                    ? 'Cambiar a más antiguos primero'
+                    : 'Cambiar a más recientes primero'
+                })`}
+              >
+                <span>Fecha</span>
+                {recentSortBy === 'date' ? (
+                  recentSortOrder === 'desc' ? (
+                    <ArrowDown className="w-3 h-3 text-[#0d99ff]" />
+                  ) : (
+                    <ArrowUp className="w-3 h-3 text-[#0d99ff]" />
+                  )
+                ) : (
+                  <ArrowDown className="w-2.5 h-2.5 opacity-0 group-hover:opacity-40 transition-opacity" />
+                )}
+              </button>
+            </div>
+
+            {sortedRecents.length === 0 ? (
               <div
                 className={`rounded-xl p-3.5 text-center border transition-all ${
                   isLight
@@ -406,12 +518,12 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
                   Sin proyectos recientes
                 </p>
                 <p className="text-[9px] opacity-70 mt-0.5">
-                  Los archivos que guardes o abras aparecerán aquí organizados de la A a la Z.
+                  Los archivos que guardes o abras aparecerán aquí organizados por fecha.
                 </p>
               </div>
             ) : (
               <div
-                className={`rounded-xl p-1.5 max-h-[175px] overflow-y-auto space-y-1 select-none transition-all ${
+                className={`rounded-xl p-1.5 max-h-[165px] overflow-y-auto space-y-1 select-none transition-all ${
                   isLight
                     ? 'bg-zinc-50 border border-zinc-200'
                     : isBlue
@@ -419,7 +531,7 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
                     : 'bg-[#161618] border border-[#2e2e32]'
                 }`}
               >
-                {effectiveRecents.map((proj) => (
+                {sortedRecents.map((proj) => (
                   <div
                     key={proj.id || proj.name}
                     onClick={() => onOpenRecentProject?.(proj)}

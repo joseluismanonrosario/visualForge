@@ -3,23 +3,51 @@ import { RecentProjectItem } from '../types';
 const STORAGE_KEY = 'vf_recent_projects';
 const MAX_RECENT_PROJECTS = 30;
 
+export type RecentSortBy = 'name' | 'date';
+export type RecentSortOrder = 'asc' | 'desc';
+
+/**
+ * Ordena una lista de proyectos por nombre o por fecha (ascendente o descendente).
+ */
+export function sortRecentProjects(
+  items: RecentProjectItem[],
+  sortBy: RecentSortBy = 'date',
+  sortOrder: RecentSortOrder = 'desc'
+): RecentProjectItem[] {
+  return [...items].sort((a, b) => {
+    if (sortBy === 'name') {
+      const cmp = (a.name || '').localeCompare(b.name || '', undefined, {
+        sensitivity: 'base',
+        numeric: true,
+      });
+      return sortOrder === 'asc' ? cmp : -cmp;
+    } else {
+      // Orden por fecha usando timestamp numérico
+      const timeA = a.timestamp || 0;
+      const timeB = b.timestamp || 0;
+      return sortOrder === 'asc' ? timeA - timeB : timeB - timeA;
+    }
+  });
+}
+
 /**
  * Ordena una lista de proyectos alfabéticamente por su nombre (de la A a la Z, case-insensitive).
  */
-export function sortProjectsAlphabetically(items: RecentProjectItem[]): RecentProjectItem[] {
-  return [...items].sort((a, b) =>
-    (a.name || '').localeCompare(b.name || '', undefined, {
-      sensitivity: 'base',
-      numeric: true,
-    })
-  );
+export function sortProjectsAlphabetically(
+  items: RecentProjectItem[],
+  order: RecentSortOrder = 'asc'
+): RecentProjectItem[] {
+  return sortRecentProjects(items, 'name', order);
 }
 
 /**
  * Obtiene la lista de proyectos recientes almacenados en localStorage,
- * garantizando que siempre se devuelvan ordenados alfabéticamente.
+ * ordenados por defecto por fecha descendente (los más recientes primero).
  */
-export function getRecentProjects(): RecentProjectItem[] {
+export function getRecentProjects(
+  sortBy: RecentSortBy = 'date',
+  sortOrder: RecentSortOrder = 'desc'
+): RecentProjectItem[] {
   if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -27,7 +55,7 @@ export function getRecentProjects(): RecentProjectItem[] {
     const items = JSON.parse(raw);
     if (!Array.isArray(items)) return [];
 
-    return sortProjectsAlphabetically(items);
+    return sortRecentProjects(items, sortBy, sortOrder);
   } catch (err) {
     console.warn('Error al leer proyectos recientes de localStorage:', err);
     return [];
@@ -101,8 +129,8 @@ export function addRecentProject(params: {
     newList = [...existing, updatedItem];
   }
 
-  // Ordenar estrictamente por orden alfabético
-  const sorted = sortProjectsAlphabetically(newList).slice(0, MAX_RECENT_PROJECTS);
+  // Ordenar por fecha de modificación (los más recientes primero)
+  const sorted = sortRecentProjects(newList, 'date', 'desc').slice(0, MAX_RECENT_PROJECTS);
 
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(sorted));
