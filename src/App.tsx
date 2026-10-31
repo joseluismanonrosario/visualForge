@@ -10,6 +10,7 @@ import {
   AppTheme,
   ResolvedTheme,
   CanvasSettings,
+  RecentProjectItem,
 } from './types';
 import { INITIAL_CANVAS_TREE, ESP32_CANVAS_TREE } from './data/initialTemplate';
 import { COMPONENT_CATALOG, getCatalogForProject } from './data/componentCatalog';
@@ -40,6 +41,10 @@ import {
   saveProjectFile,
   openProjectFile,
 } from './utils/projectPersistence';
+import {
+  getRecentProjects,
+  addRecentProject,
+} from './utils/recentProjects';
 
 export function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -47,6 +52,9 @@ export function App() {
   const [projectType, setProjectType] = useState<ProjectType>('html_css');
   const [isProjectLoaded, setIsProjectLoaded] = useState(false);
   const [isWelcomeOpen, setIsWelcomeOpen] = useState(true);
+  const [recentProjects, setRecentProjects] = useState<RecentProjectItem[]>(() =>
+    getRecentProjects()
+  );
   const [appTheme, setAppTheme] = useState<AppTheme>(() => {
     return (localStorage.getItem('vf_app_theme') as AppTheme) || 'system';
   });
@@ -593,10 +601,20 @@ export function App() {
 
       const result = await saveProjectFile(projectName, jsonString);
       if (result.success) {
+        const targetPath = result.filePath || `${projectName}.vforge`;
         showToast(
-          `Proyecto guardado con éxito: ${result.filePath || `${projectName}.vforge`}`,
+          `Proyecto guardado con éxito: ${targetPath}`,
           'success'
         );
+
+        // Registrar en lista de proyectos recientes organizados alfabéticamente
+        const updatedRecents = addRecentProject({
+          name: projectName,
+          path: targetPath,
+          fileName: targetPath.split(/[\\/]/).pop() || `${projectName}.vforge`,
+          content: jsonString,
+        });
+        setRecentProjects(updatedRecents);
       } else if (result.error) {
         showToast(`Error al guardar: ${result.error}`, 'error');
       }
@@ -632,6 +650,16 @@ export function App() {
       setIsProjectLoaded(true);
       setIsWelcomeOpen(false);
 
+      // Registrar en lista de proyectos recientes organizados alfabéticamente
+      const targetPath = result.fileName || `${restored.projectName}.vforge`;
+      const updatedRecents = addRecentProject({
+        name: restored.projectName,
+        path: targetPath,
+        fileName: targetPath.split(/[\\/]/).pop() || `${restored.projectName}.vforge`,
+        content: result.content,
+      });
+      setRecentProjects(updatedRecents);
+
       showToast(
         `Proyecto "${restored.projectName}" cargado exitosamente (${restored.tree.length} componentes)`,
         'success'
@@ -640,6 +668,70 @@ export function App() {
       showToast(`Error al cargar el proyecto .vforge: ${err.message}`, 'error');
     }
   }, [handleUpdateCanvasSettings, showToast]);
+
+  // Proceso de Abrir directamente un proyecto desde la lista de recientes
+  const handleOpenRecentProject = useCallback(
+    async (item: RecentProjectItem) => {
+      try {
+        let content = item.content;
+
+        // Si se ejecuta en entorno Electron nativo y existe ruta en disco,
+        // intentar leer la versión más fresca directamente desde el archivo
+        if (
+          typeof window !== 'undefined' &&
+          (window as any).electronAPI?.openProjectPath &&
+          item.path
+        ) {
+          try {
+            const res = await (window as any).electronAPI.openProjectPath(item.path);
+            if (!res.canceled && res.content) {
+              content = res.content;
+            }
+          } catch (e) {
+            console.warn('Fallback a contenido en caché para archivo reciente:', e);
+          }
+        }
+
+        if (!content) {
+          showToast(`No se encontró el contenido del archivo "${item.name}".`, 'error');
+          return;
+        }
+
+        const restored = deserializeProject(content);
+
+        // Restaurar estado completo en el lienzo
+        setTree(restored.tree);
+        setHistory([restored.tree]);
+        setHistoryIdx(0);
+        setProjectName(restored.projectName);
+        setProjectType(restored.projectType);
+        handleUpdateCanvasSettings(restored.canvasSettings);
+        setViewportMode(restored.viewportMode);
+        setZoom(restored.zoom);
+        setSelectedId(restored.tree[0]?.id || null);
+
+        setIsProjectLoaded(true);
+        setIsWelcomeOpen(false);
+
+        // Actualizar marca y posición en la lista de recientes manteniendo orden alfabético
+        const updatedRecents = addRecentProject({
+          name: restored.projectName,
+          path: item.path || `${restored.projectName}.vforge`,
+          fileName: item.fileName || `${restored.projectName}.vforge`,
+          content,
+        });
+        setRecentProjects(updatedRecents);
+
+        showToast(
+          `Proyecto "${restored.projectName}" abierto exitosamente (${restored.tree.length} componentes)`,
+          'success'
+        );
+      } catch (err: any) {
+        showToast(`Error al abrir el proyecto reciente: ${err.message}`, 'error');
+      }
+    },
+    [handleUpdateCanvasSettings, showToast]
+  );
 
   // Global Keyboard Shortcuts
   useEffect(() => {
@@ -794,6 +886,8 @@ export function App() {
                 setIsWelcomeOpen(false);
               }}
               onOpenProject={handleOpenProject}
+              recentProjects={recentProjects}
+              onOpenRecentProject={handleOpenRecentProject}
               currentType={projectType}
               resolvedTheme={resolvedTheme}
             />

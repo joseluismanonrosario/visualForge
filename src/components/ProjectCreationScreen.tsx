@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ProjectType, ResolvedTheme } from '../types';
+import { ProjectType, ResolvedTheme, RecentProjectItem } from '../types';
 import {
   FilePlus2,
   FolderOpen,
@@ -7,9 +7,12 @@ import {
   PanelsTopLeft,
   Activity,
   Code2,
+  FileCode2,
+  Clock,
   X,
 } from 'lucide-react';
 import { getLogoForTheme } from './TopBar';
+import { getRecentProjects } from '../utils/recentProjects';
 
 interface TemplateOption {
   id: 'blank' | 'saas' | 'iot';
@@ -94,50 +97,6 @@ const PROJECT_TYPE_OPTIONS: ProjectTypeOption[] = [
   },
 ];
 
-// Mock recent projects list (disabled / read-only as requested)
-const RECENT_PROJECTS = [
-  {
-    name: 'LittleAspPetCoreTodo.do',
-    date: '06/04/2026 11:54 p. m.',
-    path: 'CS\\User\\berganinCanackh\\Garnarch\\Amigartarjah',
-  },
-  {
-    name: 'AsphvtCoreTodo.Linit.Testi.copoj',
-    date: '06/04/2026 10:36 p. m.',
-    path: 'CS\\User\\berpadgerGergerVille seprectore-tode:AcpPetCoreTode UniTests',
-  },
-  {
-    name: 'AsphvtCoreTodo.IntegrationTesti.czpmj',
-    date: '03/04/2026 10:31 p. m.',
-    path: 'CS\\User\\berpadgerGergerVille seprectore-tode:AcpPetCoreTodeIntegrationTodo',
-  },
-  {
-    name: 'AsphvtCoreTodo.co.poj',
-    date: '01/04/2026 10:51 p. m.',
-    path: 'CS\\User\\berpadgerGergerVille seprectore-tode:AcpPetCoreTodo',
-  },
-  {
-    name: 'Ulteaspect.core.todo',
-    date: '01/04/2026 10:51 p. m.',
-    path: 'CS\\User\\berganinCanackh\\Garnarch\\Amigartarjah',
-  },
-  {
-    name: 'WebApplication.ain',
-    date: '16/03/2026 04:57 p. m.',
-    path: 'CS\\User\\berganinCanachhadureLegett\\WebApplication1',
-  },
-  {
-    name: 'loasnt.dn',
-    date: '16/03/2026 04:57 p. m.',
-    path: 'CS\\User\\berganinCanachhadure\\vepecicionne',
-  },
-  {
-    name: 'WebApplication.ain',
-    date: '15/03/2026 11:59 p. m.',
-    path: 'CS\\User\\berganinCanachhadureLegett\\WebApplication1',
-  },
-];
-
 /* Custom SVG Icons matching reference screenshot */
 const Esp32ChipIcon: React.FC<{ className?: string }> = ({
   className = 'text-zinc-200',
@@ -203,6 +162,8 @@ interface ProjectCreationScreenProps {
   onOpenProject?: () => void;
   currentType?: ProjectType;
   resolvedTheme?: ResolvedTheme;
+  recentProjects?: RecentProjectItem[];
+  onOpenRecentProject?: (project: RecentProjectItem) => void;
 }
 
 export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
@@ -213,7 +174,14 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
   onOpenProject,
   currentType = 'html_css',
   resolvedTheme = 'dark',
+  recentProjects,
+  onOpenRecentProject,
 }) => {
+  // Proyectos recientes organizados alfabéticamente
+  const effectiveRecents =
+    recentProjects && recentProjects.length > 0
+      ? recentProjects
+      : getRecentProjects();
   // Active selected project type (default to HTML/CSS or current)
   const [selectedTypeId, setSelectedTypeId] = useState<ProjectType>(() => {
     if (currentType === 'esp32' || currentType === 'react') return currentType;
@@ -403,56 +371,101 @@ export const ProjectCreationScreen: React.FC<ProjectCreationScreenProps> = ({
             </div>
           </div>
 
-          {/* Recientes List (Disabled as requested) */}
+          {/* Recientes List (Organizados por orden alfabético y con apertura directa) */}
           <div className="pt-1">
-            <h4 className={`text-[11px] font-medium mb-1.5 px-1 ${textMuted}`}>
-              Recientes
-            </h4>
-            <div
-              className={`rounded-xl p-2 max-h-[160px] overflow-hidden space-y-1 opacity-50 cursor-not-allowed select-none ${
-                isLight
-                  ? 'bg-zinc-50 border border-zinc-200'
-                  : isBlue
-                  ? 'bg-[#0b1120] border border-[#1e293b]'
-                  : 'bg-[#161618] border border-[#2e2e32]'
-              }`}
-            >
-              {RECENT_PROJECTS.slice(0, 4).map((proj, idx) => (
-                <div
-                  key={idx}
-                  className={`px-2 py-1 rounded-md flex flex-col gap-0.5 text-left ${
-                    isLight ? 'hover:bg-zinc-200/50' : 'hover:bg-zinc-800/40'
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-1.5">
-                    <div className="flex items-center gap-1.5 truncate">
-                      <Code2 className="w-3 h-3 text-violet-400 flex-shrink-0" />
+            <div className="flex items-center justify-between mb-1.5 px-1">
+              <h4 className={`text-[11px] font-medium ${textMuted}`}>
+                Recientes
+              </h4>
+              <span
+                className={`text-[9px] font-mono px-1.5 py-0.5 rounded border select-none ${
+                  isLight
+                    ? 'bg-zinc-100 text-zinc-500 border-zinc-200'
+                    : isBlue
+                    ? 'bg-[#131c31] text-sky-400/80 border-[#1f2c4a]'
+                    : 'bg-[#1c1c1f] text-zinc-400 border-white/5'
+                }`}
+                title="Archivos organizados alfabéticamente (A-Z)"
+              >
+                A-Z
+              </span>
+            </div>
+
+            {effectiveRecents.length === 0 ? (
+              <div
+                className={`rounded-xl p-3.5 text-center border transition-all ${
+                  isLight
+                    ? 'bg-zinc-50 border-zinc-200 text-zinc-500'
+                    : isBlue
+                    ? 'bg-[#0b1120] border-[#1e293b] text-zinc-400'
+                    : 'bg-[#161618] border-[#2e2e32] text-zinc-400'
+                }`}
+              >
+                <Clock className="w-4 h-4 mx-auto mb-1 opacity-50 text-violet-400" />
+                <p className="text-[10px] font-medium text-zinc-300">
+                  Sin proyectos recientes
+                </p>
+                <p className="text-[9px] opacity-70 mt-0.5">
+                  Los archivos que guardes o abras aparecerán aquí organizados de la A a la Z.
+                </p>
+              </div>
+            ) : (
+              <div
+                className={`rounded-xl p-1.5 max-h-[175px] overflow-y-auto space-y-1 select-none transition-all ${
+                  isLight
+                    ? 'bg-zinc-50 border border-zinc-200'
+                    : isBlue
+                    ? 'bg-[#0b1120] border border-[#1e293b]'
+                    : 'bg-[#161618] border border-[#2e2e32]'
+                }`}
+              >
+                {effectiveRecents.map((proj) => (
+                  <div
+                    key={proj.id || proj.name}
+                    onClick={() => onOpenRecentProject?.(proj)}
+                    className={`group px-2 py-1.5 rounded-lg flex flex-col gap-0.5 text-left cursor-pointer transition-all border border-transparent ${
+                      isLight
+                        ? 'hover:bg-white hover:border-zinc-300 hover:shadow-xs'
+                        : isBlue
+                        ? 'hover:bg-[#131c31] hover:border-sky-500/40 hover:shadow-xs'
+                        : 'hover:bg-[#202024] hover:border-[#38383c] hover:shadow-xs'
+                    }`}
+                    title={`Abrir directamente: ${proj.name} (${proj.path})`}
+                  >
+                    <div className="flex items-center justify-between gap-1.5">
+                      <div className="flex items-center gap-1.5 truncate">
+                        <FileCode2 className="w-3.5 h-3.5 text-violet-400 flex-shrink-0 group-hover:text-[#0d99ff] transition-colors" />
+                        <span
+                          className={`text-[10px] font-semibold truncate ${
+                            isLight
+                              ? 'text-zinc-800'
+                              : 'text-zinc-200 group-hover:text-white'
+                          }`}
+                        >
+                          {proj.name}
+                        </span>
+                      </div>
                       <span
-                        className={`text-[10px] font-medium truncate ${
-                          isLight ? 'text-zinc-800' : 'text-zinc-300'
+                        className={`text-[8px] flex-shrink-0 font-mono ${
+                          isLight ? 'text-zinc-500' : 'text-zinc-400'
                         }`}
                       >
-                        {proj.name}
+                        {proj.date}
                       </span>
                     </div>
                     <span
-                      className={`text-[8px] flex-shrink-0 font-mono ${
-                        isLight ? 'text-zinc-500' : 'text-zinc-500'
+                      className={`text-[8px] truncate font-mono pl-5 ${
+                        isLight
+                          ? 'text-zinc-400'
+                          : 'text-zinc-500 group-hover:text-zinc-400'
                       }`}
                     >
-                      {proj.date}
+                      {proj.path}
                     </span>
                   </div>
-                  <span
-                    className={`text-[8px] truncate font-mono pl-4.5 ${
-                      isLight ? 'text-zinc-500' : 'text-zinc-600'
-                    }`}
-                  >
-                    {proj.path}
-                  </span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

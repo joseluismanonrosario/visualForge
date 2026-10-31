@@ -10,6 +10,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('project-save', { defaultName, content }),
   openProject: () =>
     ipcRenderer.invoke('project-open'),
+  openProjectPath: (filePath) =>
+    ipcRenderer.invoke('project-open-path', filePath),
   onMaximizedChange: (callback) => {
     const handler = (_event, val) => callback(val);
     ipcRenderer.on('window-maximized-change', handler);

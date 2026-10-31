@@ -66,7 +66,11 @@ La pantalla se distribuye en una interfaz fija estilo herramienta de diseño mod
            - **Modo Azul (`blue`)**: Isotipo blanco plateado (`/logos/logo-white.png`), "VisualForge" en blanco, `<h2>Iniciar</h2>` en celeste cielo `#38bdf8` y divisor `#1e293b`.
          * **Botón Cerrar/Cancelar (`X`)**: Visible en la esquina derecha de la cabecera si hay un proyecto actualmente cargado.
          * **Tres Columnas de Opciones**:
-           1. Acciones (Crear un proyecto destacado, Abrir proyecto .vforge funcional con explorador de archivos nativo) y Proyectos Recientes.
+           1. Acciones (Crear un proyecto destacado, Abrir proyecto .vforge funcional con explorador de archivos nativo) y **Proyectos Recientes Activos**:
+              - Lista interactiva y dinámica de archivos recientes organizada por orden alfabético estricto (de la A a la Z) con distintivo de cabecera `A-Z`.
+              - Registro automatizado: Cada proyecto que se abre o guarda se agrega inmediatamente a la lista con su nombre, ruta y fecha.
+              - Apertura directa con un clic: Al presionar cualquier archivo reciente, se restaura y abre de inmediato en el lienzo de trabajo, cerrando la pantalla de inicio.
+              - Estado vacío amigable en caso de no registrarse proyectos previos.
            2. Tipos de Proyecto en orden jerárquico estricto: **1. HTML / CSS Tradicional**, **2. React Web**, **3. ESP32 / IoT**.
            3. Plantillas dinámicas reactivas al tipo de proyecto seleccionado.
          * **Pie de Navegación**: Botones de Cancelar y Siguiente estilizados con sombras y colores del tema activo.
@@ -1036,6 +1040,20 @@ VisualForge implementa un motor de persistencia completo para guardar y abrir pr
      - `selectedId`: Selecciona automáticamente el nodo principal para permitir edición instantánea.
      - `isWelcomeOpen`: Cierra la pantalla de inicio si estaba activa.
      - Muestra un toast informativo confirmando la carga exitosa y el número de componentes restaurados.
+
+### C. Sistema de Archivos Recientes Organizados Alfabéticamente
+1. **Registro Automático en Guardado y Apertura**:
+   - Cada vez que el usuario guarda un proyecto (`handleSaveProject` / `Ctrl+S`) o abre un archivo (`handleOpenProject` / `Ctrl+O`), el proyecto se registra automáticamente en la lista de recientes mediante `addRecentProject()`.
+   - Se captura su nombre (`name`), ruta de archivo (`path`), nombre de archivo (`fileName`), fecha formateada legible (`date`), marca de tiempo (`timestamp`) y contenido serializado (`content`).
+2. **Ordenación Alfabética Continua (A-Z)**:
+   - La lista de proyectos recientes se ordena estrictamente por orden alfabético (`sortProjectsAlphabetically()`, de la A a la Z, insensible a mayúsculas/minúsculas).
+   - Se mantiene persistida en `localStorage` bajo la clave `vf_recent_projects` para disponibilidad instantánea entre sesiones.
+3. **Apertura Directa con un Clic**:
+   - Al pulsar cualquier elemento en la lista de recientes (`ProjectCreationScreen`), se ejecuta `handleOpenRecentProject()`:
+     - En la versión de escritorio nativa (Electron): Invoca el handler IPC seguro `project-open-path` para leer la versión más actualizada directamente del archivo en el sistema de archivos.
+     - En la versión web (o fallback): Deserializa instantáneamente el contenido respaldado en memoria / almacenamiento local.
+     - Restaura de forma inmediata el árbol jerárquico de componentes, configuración del lienzo, nombres de proyecto y estado del editor, cerrando la pantalla de inicio sin necesidad de volver a abrir el diálogo del explorador de archivos.
+     - Actualiza la marca temporal del proyecto en la lista de recientes preservando el orden alfabético.
 
 ---
 

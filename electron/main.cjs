@@ -219,6 +219,18 @@ ipcMain.handle('project-open', async () => {
   }
 });
 
+ipcMain.handle('project-open-path', async (_event, filePath) => {
+  try {
+    if (!filePath || typeof filePath !== 'string') {
+      return { canceled: true, error: 'Ruta de archivo no especificada' };
+    }
+    const content = await fs.promises.readFile(filePath, 'utf8');
+    return { canceled: false, filePath, content };
+  } catch (err) {
+    return { canceled: true, error: err.message };
+  }
+});
+
 // Bloqueo de instancia única
 const gotTheLock = app.requestSingleInstanceLock();
 

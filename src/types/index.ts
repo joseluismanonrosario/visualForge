@@ -134,3 +134,13 @@ export interface FontAwesomeIconItem {
   styles: ('solid' | 'regular' | 'brands')[];
   tags: string[];
 }
+
+export interface RecentProjectItem {
+  id: string;
+  name: string;
+  fileName: string;
+  path: string;
+  date: string;
+  timestamp: number;
+  content?: string;
+}
