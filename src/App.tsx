@@ -103,6 +103,16 @@ export function App() {
     });
   }, []);
 
+  const rootAppRef = React.useRef<HTMLDivElement>(null);
+
+  // Garantizar que no quede desplazamiento residual al pasar de la pantalla de bienvenida al editor
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    if (document.documentElement) document.documentElement.scrollTop = 0;
+    if (document.body) document.body.scrollTop = 0;
+    if (rootAppRef.current) rootAppRef.current.scrollTop = 0;
+  }, [isWelcomeOpen]);
+
   const resolvedTheme: ResolvedTheme =
     appTheme === 'system' ? (systemIsDark ? 'dark' : 'light') : appTheme;
 
@@ -1146,7 +1156,7 @@ export function App() {
   );
 
   return (
-    <div className="h-screen w-screen overflow-hidden flex flex-col bg-[#1e1e1e] text-zinc-100 font-sans select-none">
+    <div ref={rootAppRef} className="h-screen w-screen overflow-hidden flex flex-col bg-[#1e1e1e] text-zinc-100 font-sans select-none">
       {/* Splash Screen al iniciar la aplicación (dura 2 a 3 segundos con animación de carga) */}
       {showSplash && (
         <SplashScreen onComplete={() => setShowSplash(false)} />
@@ -1162,7 +1172,7 @@ export function App() {
           />
 
           {/* Pantalla de crear proyecto centrada con recuadro sobre el canvas */}
-          <div className="flex-1 relative w-full h-[calc(100vh-44px)] canvas-dots flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+          <div key="project-creation-container" className="flex-1 relative w-full h-[calc(100vh-44px)] canvas-dots flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
             <ProjectCreationScreen
               isOpen={isWelcomeOpen}
               canCancel={isProjectLoaded}
@@ -1213,7 +1223,7 @@ export function App() {
           />
 
           {/* Main Studio Body: Left Sidebar + Canvas + Right Sidebar */}
-          <div className="flex-1 flex overflow-hidden relative">
+          <div key="studio-workspace-container" className="flex-1 flex overflow-hidden relative">
             <LeftSidebar
               tree={tree}
               projectType={projectType}

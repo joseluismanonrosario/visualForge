@@ -1212,3 +1212,48 @@ VisualForge Studio se gestiona bajo el estándar de **Versionado Semántico 2.0.
      * Se extraen las notas de versión correspondientes directamente desde `CHANGELOG.md` para documentar la entrega.
      * Si está disponible GitHub CLI (`gh`), se adjuntan los binarios ejecutables `.exe` compilados para descarga directa en la plataforma.
    - En caso de reejecutar la compilación para una versión ya liberada, la publicación de Release se omite para evitar duplicados o tags redundantes.
+
+---
+
+## 17. ARQUITECTURA DE SEGURIDAD (ENTORNO WEB Y PRODUCCIÓN NATIVA ELECTRON)
+
+Para garantizar la integridad del sistema, prevenir vulnerabilidades de ejecución remota de código (RCE), ataques de Cross-Site Scripting (XSS), escalada de privilegios y accesos no autorizados a archivos del sistema de archivos tanto en la web como en la versión de producción nativa para Windows (Electron):
+
+1. **Defensa contra Salto de Directorio (Path Traversal Prevention) en Servidor Embebido (`electron/main.cjs`)**:
+   - Verificación canónica mediante `path.resolve` para asegurar que toda ruta solicitada por peticiones HTTP resida estrictamente dentro de los directorios autorizados (`distDir` para archivos compilados e `iconifyDir` para colecciones de iconos).
+   - Filtrado preventivo y eliminación de secuencias `../` relativas antes del formateo de ruta.
+   - En caso de intento de acceso fuera de los límites de directorios permitidos, el servidor aborta la petición devolviendo un código `403 Forbidden: Acceso denegado a recurso no autorizado`.
+
+2. **Aislamiento de Procesos y Sandboxing de Chromium (`sandbox: true`)**:
+   - `webPreferences.sandbox: true`: La ventana principal de Electron ejecuta el motor Chromium con el Sandbox de seguridad nativo completamente activado, confinando el contexto del renderizador a un espacio de privilegios restringidos sin acceso a llamadas directas al sistema operativo.
+   - `webPreferences.contextIsolation: true`: Separación estricta entre el contexto JavaScript de los scripts de la página y el script de precarga (`preload.cjs`).
+   - `webPreferences.nodeIntegration: false`: Bloqueo total de módulos nativos de Node.js (`fs`, `child_process`, `os`) en el hilo de renderizado del navegador.
+   - `webPreferences.webSecurity: true`: Mantenimiento obligatorio de la política de mismo origen (SOP) y restricciones de seguridad estándar de Chromium.
+
+3. **Restricción de Navegación y Prevención de Suplantación (`will-navigate` y `setWindowOpenHandler`)**:
+   - Intercepción de eventos de navegación superior mediante `mainWindow.webContents.on('will-navigate')`.
+   - Se bloquea cualquier redirección interna hacia sitios externos o dominios de terceros dentro del marco de la aplicación, admitiendo navegación únicamente hacia el origen local seguro `http://127.0.0.1:${port}`.
+   - Todas las solicitudes de apertura de nuevas ventanas y navegación hacia URLs externas (`http:` y `https:`) se abren de manera aislada en el navegador web predeterminado del sistema del usuario mediante `shell.openExternal`, con rechazo (`{ action: 'deny' }`) de ventanas emergentes internas no controladas.
+
+4. **Validación Estricta de Extensiones y Protección del Sistema de Archivos en IPC (`isPathSafeForProject`)**:
+   - Función de validación centralizada que audita todas las rutas de archivo suministradas a través de canales IPC (`project-save`, `project-save-direct`, `project-open-path`).
+   - Restricción estricta de extensiones: Únicamente se permite la lectura y escritura de archivos de proyecto con extensiones autorizadas (`.vforge` y `.json`).
+   - Bloqueo preventivo de directorios críticos del sistema operativo Windows: Se prohíbe el acceso y guardado en directorios del sistema como `%WINDIR%` (`C:\Windows`) y sus subcarpetas protegidas.
+
+5. **Token Criptográfico de Sesión Secreta para el Servidor Local**:
+   - Generación de token criptográfico aleatorio con alta entropía (`crypto.randomBytes(24).toString('hex')`) al inicializarse la aplicación.
+   - Exigencia y validación del token en cada solicitud procesada por el servidor HTTP interno (vía cabecera `x-vf-token`, parámetro `_vf_token` o cookie `HttpOnly` `vf_token`). Las solicitudes huérfanas o emitidas desde navegadores externos no autorizados son denegadas inmediatamente con `HTTP 403 Forbidden`.
+
+6. **Content Security Policy (CSP) y Carga de Recursos Seguros (`index.html`)**:
+   - Declaración de directiva CSP en la cabecera del documento HTML:
+     ```html
+     <meta http-equiv="Content-Security-Policy" content="default-src 'self' http://127.0.0.1:*; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://maxst.icons8.com https://unicons.iconscout.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://maxst.icons8.com https://unicons.iconscout.com data:; img-src 'self' data: blob: https: http:; connect-src 'self' http://127.0.0.1:* ws://127.0.0.1:* https:; object-src 'none'; base-uri 'self';" />
+     ```
+   - Restricción de ejecución a recursos del mismo origen, bloqueo total de plugins y objetos no seguros (`object-src 'none'`), y delimitación estricta de orígenes autorizados para fuentes tipográficas y hojas de estilo de CDNs oficiales.
+   - Adición del atributo de seguridad `crossorigin="anonymous"` en todas las etiquetas `<link rel="stylesheet">` de CDNs externas.
+
+7. **Sanitización Integral de SVGs contra XSS (`src/utils/svgIconRenderer.tsx`)**:
+   - Implementación de la función `sanitizeSvg(svgContent: string): string` que sanea todo código SVG antes de su inyección en el DOM mediante `dangerouslySetInnerHTML`.
+   - Eliminación regex exhaustiva de etiquetas ejecutables (`<script>...</script>`), contenedores de HTML anidado (`<foreignObject>...</foreignObject>`), y elementos incrustados (`<iframe>`, `<object>`, `<embed>`, `<form>`).
+   - Depuración de todos los manejadores de eventos en línea (atributos `on*` como `onload`, `onerror`, `onclick`, `onmouseover`).
+   - Neutralización de pseudo-protocolos peligrosos (`javascript:`, `data:text/html`) en atributos de hipervínculo (`href`, `xlink:href`).

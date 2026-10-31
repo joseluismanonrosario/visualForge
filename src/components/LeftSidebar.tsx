@@ -324,7 +324,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   }
 
   return (
-    <aside className="w-72 bg-[#252526] border-r border-[#383838] flex flex-col h-[calc(100vh-44px)] select-none z-20 flex-shrink-0 text-xs text-zinc-300">
+    <aside className="w-72 bg-[#252526] border-r border-[#383838] flex flex-col h-full select-none z-20 flex-shrink-0 text-xs text-zinc-300">
       {/* Sidebar Header Tabs */}
       <div className="h-10 border-b border-[#383838] flex items-center justify-between px-2 bg-[#2c2c2c]">
         <div className="flex items-center gap-1">

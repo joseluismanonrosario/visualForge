@@ -372,7 +372,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
     );
 
     return (
-      <aside className="w-80 bg-[#252526] border-l border-[#383838] flex flex-col h-[calc(100vh-44px)] select-none z-20 flex-shrink-0 text-xs text-zinc-300">
+      <aside className="w-80 bg-[#252526] border-l border-[#383838] flex flex-col h-full select-none z-20 flex-shrink-0 text-xs text-zinc-300">
         {/* Cabecera del Inspector de Lienzo */}
         <div className="h-10 border-b border-[#383838] flex items-center justify-between px-3 bg-[#2c2c2c]">
           <div className="flex items-center gap-2">
@@ -1063,7 +1063,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   };
 
   return (
-    <aside className="w-80 bg-[#252526] border-l border-[#383838] flex flex-col h-[calc(100vh-44px)] select-none z-20 flex-shrink-0 text-xs text-zinc-300">
+    <aside className="w-80 bg-[#252526] border-l border-[#383838] flex flex-col h-full select-none z-20 flex-shrink-0 text-xs text-zinc-300">
       {/* Header Tabs */}
       <div className="h-10 border-b border-[#383838] flex items-center justify-between px-3 bg-[#2c2c2c]">
         <div className="flex items-center gap-1">

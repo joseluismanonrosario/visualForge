@@ -104,6 +104,37 @@ export function customizeSvg(
 }
 
 /**
+ * Sanitizes SVG markup to prevent Cross-Site Scripting (XSS) attacks.
+ * Strips script tags, foreignObject, hazardous embedded elements, inline on* event handlers,
+ * and dangerous URI schemes (javascript:, data:text/html).
+ */
+export function sanitizeSvg(svgContent: string): string {
+  if (!svgContent || typeof svgContent !== 'string') return '';
+
+  let sanitized = svgContent;
+
+  // Remove <script>...</script> tags and unclosed <script...
+  sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+  sanitized = sanitized.replace(/<script\b[^>]*>/gi, '');
+
+  // Remove <foreignObject>...</foreignObject> tags and contents
+  sanitized = sanitized.replace(/<foreignObject\b[^<]*(?:(?!<\/foreignObject>)<[^<]*)*<\/foreignObject>/gi, '');
+  sanitized = sanitized.replace(/<foreignObject\b[^>]*>/gi, '');
+
+  // Remove hazardous tags like iframe, object, embed, applet, form, input, base, meta
+  sanitized = sanitized.replace(/<(iframe|object|embed|applet|form|input|base|meta)\b[^>]*>/gi, '');
+  sanitized = sanitized.replace(/<\/(iframe|object|embed|applet|form|input|base|meta)>/gi, '');
+
+  // Remove inline on* event handler attributes (e.g., onload, onerror, onclick, onmouseover)
+  sanitized = sanitized.replace(/\s+on[a-zA-Z]+\s*=\s*(?:'[^']*'|"[^"]*"|[^\s>]+)/gi, '');
+
+  // Remove href / xlink:href with javascript: or data:text/html
+  sanitized = sanitized.replace(/(href|xlink:href)\s*=\s*['"]\s*(javascript:|data:\s*text\/html)[^'"]*['"]/gi, '$1=""');
+
+  return sanitized;
+}
+
+/**
  * Universal Dynamic SVG Icon Component for Canvas and Editor UI
  * Supports 100% of Iconify 250k+ icons locally & offline
  */
@@ -159,7 +190,7 @@ export const SvgIconRenderer: React.FC<SvgIconRendererProps> = ({
           height: typeof effectiveHeight === 'number' ? `${effectiveHeight}px` : effectiveHeight,
           ...style,
         }}
-        dangerouslySetInnerHTML={{ __html: finalSvg }}
+        dangerouslySetInnerHTML={{ __html: sanitizeSvg(finalSvg) }}
       />
     );
   }
@@ -247,7 +278,7 @@ export const SvgIconRenderer: React.FC<SvgIconRendererProps> = ({
         height: typeof effectiveHeight === 'number' ? `${effectiveHeight}px` : effectiveHeight,
         ...style,
       }}
-      dangerouslySetInnerHTML={{ __html: finalMarkup }}
+      dangerouslySetInnerHTML={{ __html: sanitizeSvg(finalMarkup) }}
     />
   );
 };

@@ -6,6 +6,17 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 ---
 
+## [1.4.6] - 2026-10-31
+
+### Corregido
+- **Corrección de Desplazamiento Residual y Solapamiento de Paneles Bajo la Barra Superior**:
+  - **Aislamiento de Nodos DOM con Claves Únicas (`key`)**: Asignación de `key="project-creation-container"` al contenedor de bienvenida y `key="studio-workspace-container"` al espacio de trabajo del estudio en `src/App.tsx`. Esto evita que React reutilice el mismo elemento `div` del DOM y preserve su posición de desplazamiento (`scrollTop`) al pasar de la pantalla de bienvenida al editor.
+  - **Restablecimiento Forzado de Scroll (`useEffect`)**: Implementación de un hook reactivo que resetea a cero `window.scrollTo(0, 0)`, `document.documentElement.scrollTop`, `document.body.scrollTop` y el contenedor raíz `rootAppRef` al conmutar entre pantallas.
+  - **Ajuste de Altura de Paneles Laterales a `h-full`**: Corrección de la altura de `LeftSidebar` y `RightSidebar` (de `h-[calc(100vh-44px)]` a `h-full`), eliminando el desbordamiento de 24px generado por la presencia de la barra de estado inferior (`StatusBar` `h-6`) y asegurando que las cabeceras de *Layers* y *Propiedades* permanezcan fijas y visibles inmediatamente bajo la barra superior.
+  - **Bloqueo de Desbordamiento en `index.html`**: Configuración de `h-full overflow-hidden` en las etiquetas `html`, `body` y `#root` para imposibilitar desplazamientos no deseados a nivel de ventana.
+
+---
+
 ## [1.4.5] - 2026-10-31
 
 ### Seguridad

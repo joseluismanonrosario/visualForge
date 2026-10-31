@@ -32,8 +32,8 @@ const MAX_ICON_CACHE = 40;
 
 // Iniciar servidor local embebido para soporte completo de Iconify y assets
 function startLocalServer(callback) {
-  const distDir = path.join(__dirname, '../dist');
-  const iconifyDir = path.join(__dirname, '../node_modules/@iconify/json');
+  const distDir = path.resolve(__dirname, '../dist');
+  const iconifyDir = path.resolve(__dirname, '../node_modules/@iconify/json');
 
   const server = http.createServer((req, res) => {
     // Evitar que errores no capturados en el socket cierren el servidor
@@ -57,12 +57,24 @@ function startLocalServer(callback) {
 
       let pathname = decodeURIComponent(parsedUrl.pathname);
 
-      // Manejo de iconos locales de Iconify
+      // Manejo de iconos locales de Iconify con prevención estricta de Path Traversal
       if (pathname.startsWith('/@iconify/') || pathname.startsWith('/api/iconify/')) {
         let sub = pathname.replace(/^\/(@iconify|api\/iconify)\/?/, '');
-        let iconPath = path.join(iconifyDir, sub);
+        sub = sub.replace(/^(\.\.[\/\\])+/, '');
+        let iconPath = path.resolve(iconifyDir, sub);
+
+        // Prevenir salto fuera del directorio de colecciones
+        if (!iconPath.startsWith(iconifyDir)) {
+          res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+          res.end('403 Forbidden: Acceso no permitido a colección de iconos.');
+          return;
+        }
+
         if (!fs.existsSync(iconPath) && !sub.startsWith('json/')) {
-          iconPath = path.join(iconifyDir, 'json', sub);
+          const altPath = path.resolve(iconifyDir, 'json', sub);
+          if (altPath.startsWith(iconifyDir) && fs.existsSync(altPath)) {
+            iconPath = altPath;
+          }
         }
 
         if (fs.existsSync(iconPath) && fs.statSync(iconPath).isFile()) {
@@ -112,11 +124,19 @@ function startLocalServer(callback) {
         }
       }
 
-      // Archivos estáticos de dist
-      let filePath = path.join(distDir, pathname === '/' ? 'index.html' : pathname);
+      // Archivos estáticos de dist con prevención estricta de Path Traversal
+      const normalizedPath = pathname === '/' ? '/index.html' : pathname;
+      let filePath = path.resolve(distDir, '.' + normalizedPath);
+
+      // Bloquear cualquier intento de salir del directorio dist
+      if (!filePath.startsWith(distDir)) {
+        res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('403 Forbidden: Acceso denegado a recurso no autorizado.');
+        return;
+      }
 
       if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
-        filePath = path.join(distDir, 'index.html');
+        filePath = path.resolve(distDir, 'index.html');
       }
 
       if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
@@ -201,7 +221,8 @@ function createWindow(port) {
       preload: path.join(__dirname, 'preload.cjs'),
       nodeIntegration: false,
       contextIsolation: true,
-      sandbox: false,
+      sandbox: true,
+      webSecurity: true,
     },
   });
 
@@ -219,6 +240,22 @@ function createWindow(port) {
 
   mainWindow.on('unmaximize', () => {
     mainWindow?.webContents.send('window-maximized-change', false);
+  });
+
+  // Restringir navegación interna: evitar que la app navegue a dominios externos dentro de Electron
+  mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {
+    try {
+      const parsed = new URL(navigationUrl);
+      const allowedOrigin = `http://127.0.0.1:${port}`;
+      if (parsed.origin !== allowedOrigin) {
+        event.preventDefault();
+        if (navigationUrl.startsWith('http:') || navigationUrl.startsWith('https:')) {
+          shell.openExternal(navigationUrl);
+        }
+      }
+    } catch {
+      event.preventDefault();
+    }
   });
 
   // Abrir enlaces externos en el navegador predeterminado del sistema
@@ -258,6 +295,27 @@ ipcMain.handle('window-is-maximized', () => {
   return mainWindow ? mainWindow.isMaximized() : false;
 });
 
+// Validación estricta y control de rutas seguras para proyectos
+function isPathSafeForProject(filePath) {
+  if (!filePath || typeof filePath !== 'string') return false;
+  try {
+    const resolved = path.resolve(filePath);
+    const ext = path.extname(resolved).toLowerCase();
+    // Solo permitir extensiones estrictas de proyecto VisualForge
+    if (ext !== '.vforge' && ext !== '.json') return false;
+
+    // Bloquear directorios críticos del sistema operativo
+    const winDir = (process.env.WINDIR || 'C:\\Windows').toLowerCase();
+    const resolvedLower = resolved.toLowerCase();
+    if (resolvedLower.startsWith(winDir)) return false;
+    if (resolvedLower.includes('\\system32') || resolvedLower.includes('/system32')) return false;
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // Handlers IPC para Guardar y Abrir proyectos .vforge
 ipcMain.handle('project-save', async (_event, { defaultName, content }) => {
   if (!mainWindow) return { canceled: true };
@@ -280,9 +338,13 @@ ipcMain.handle('project-save', async (_event, { defaultName, content }) => {
       return { canceled: true };
     }
 
-    let targetPath = result.filePath;
+    let targetPath = path.resolve(result.filePath);
     if (!targetPath.endsWith('.vforge') && !targetPath.endsWith('.json')) {
       targetPath += '.vforge';
+    }
+
+    if (!isPathSafeForProject(targetPath)) {
+      return { canceled: true, error: 'Ubicación o extensión no permitida para el proyecto.' };
     }
 
     await fs.promises.writeFile(targetPath, content, 'utf8');
@@ -295,11 +357,12 @@ ipcMain.handle('project-save', async (_event, { defaultName, content }) => {
 // Guardado directo sin diálogo cuando el proyecto ya tiene ruta asignada
 ipcMain.handle('project-save-direct', async (_event, { filePath, content }) => {
   try {
-    if (!filePath || typeof filePath !== 'string') {
-      return { canceled: true, error: 'Ruta no válida para guardado directo' };
+    if (!isPathSafeForProject(filePath)) {
+      return { canceled: true, error: 'Ruta no válida o extensión no permitida (.vforge / .json)' };
     }
-    await fs.promises.writeFile(filePath, content, 'utf8');
-    return { canceled: false, filePath };
+    const resolved = path.resolve(filePath);
+    await fs.promises.writeFile(resolved, content, 'utf8');
+    return { canceled: false, filePath: resolved };
   } catch (err) {
     return { canceled: true, error: err.message };
   }
@@ -332,11 +395,15 @@ ipcMain.handle('project-open', async () => {
 
 ipcMain.handle('project-open-path', async (_event, filePath) => {
   try {
-    if (!filePath || typeof filePath !== 'string') {
-      return { canceled: true, error: 'Ruta de archivo no especificada' };
+    if (!isPathSafeForProject(filePath)) {
+      return { canceled: true, error: 'Ruta no válida o extensión no permitida (.vforge / .json)' };
     }
-    const content = await fs.promises.readFile(filePath, 'utf8');
-    return { canceled: false, filePath, content };
+    const resolved = path.resolve(filePath);
+    if (!fs.existsSync(resolved) || !fs.statSync(resolved).isFile()) {
+      return { canceled: true, error: 'El archivo de proyecto no existe o no es válido.' };
+    }
+    const content = await fs.promises.readFile(resolved, 'utf8');
+    return { canceled: false, filePath: resolved, content };
   } catch (err) {
     return { canceled: true, error: err.message };
   }
