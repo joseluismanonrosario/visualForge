@@ -37,19 +37,22 @@ Cuando se determine un incremento de versión:
 
 ---
 
-## 2. Regla Obligatoria de Publicación de Release en GitHub ante Cambio de Versión
+## 2. Regla Obligatoria de Publicación de Release en GitHub con Binarios Ejecutables (.EXE)
 
 > [!IMPORTANT]
-> **PUBLICACIÓN AUTOMÁTICA DE RELEASE EN GITHUB**: Al ejecutar `appToProduccion`, **siempre y cuando haya un cambio de versión** (es decir, la versión generada no cuente todavía con un tag o release registrado en el repositorio remoto de GitHub):
+> **PUBLICACIÓN AUTOMÁTICA DE RELEASE EN GITHUB CON BINARIOS (.EXE)**: Al ejecutar `appToProduccion`, **siempre y cuando haya un cambio de versión** (es decir, la versión generada no cuente todavía con un tag o release registrado en el repositorio remoto de GitHub):
 >
 > 1. **Detección Condicional**: El proceso verifica si el tag `v<version>` ya existe en local o en GitHub (`git tag -l` y `git ls-remote --tags origin`). Si ya existe y no hubo incremento, **no se crea un nuevo release** para evitar duplicados.
 > 2. **Creación y Envío del Tag a GitHub**:
 >    - Se crea el tag anotado en Git: `git tag -a v<version> -m "VisualForge Studio v<version>"`.
->    - Se envía el tag a GitHub: `git push origin v<version>`, lo cual genera formalmente el Release en la pestaña de Releases del repositorio.
-> 3. **Publicación con Notas y Binarios Adjuntos**:
+>    - Se envía el tag a GitHub: `git push origin v<version>`.
+> 3. **Publicación Obligatoria con Binarios Ejecutables (.EXE) Adjuntos**:
 >    - Se extraen de forma automática las notas de versión correspondientes desde `CHANGELOG.md`.
->    - Si está disponible la herramienta GitHub CLI (`gh`), se publica el Release adjuntando los archivos `.exe` generados (`VisualForge Studio Setup <version>.exe` y `VisualForge Studio <version>.exe`).
->    - Si `gh` no está disponible, el Release queda publicado mediante el Git tag oficial en `https://github.com/joseluismanonrosario/visualForge/releases/tag/v<version>`.
+>    - **Regla Mandatoria de Subida de Binarios**: Utilizando GitHub CLI (`gh`), el proceso publica formalmente el Release en GitHub adjuntando obligatoriamente los binarios ejecutables `.exe` compilados:
+>      * `VisualForge Studio Setup <version>.exe` (Instalador estándar NSIS)
+>      * `VisualForge Studio <version>.exe` (Ejecutable portable independiente)
+>    - Si el release ya existía en GitHub, el proceso ejecuta automáticamente `gh release upload v<version> release/*.exe --clobber` para garantizar que los binarios queden vinculados y disponibles para descarga directa y consumo por el sistema de auto-actualización.
+>    - El Release oficial queda publicado con sus ejecutables listos en `https://github.com/joseluismanonrosario/visualForge/releases/tag/v<version>`.
 
 ---
 

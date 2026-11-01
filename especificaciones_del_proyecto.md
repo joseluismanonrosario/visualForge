@@ -1204,13 +1204,16 @@ VisualForge Studio se gestiona bajo el estándar de **Versionado Semántico 2.0.
      * Se sincroniza el documento de especificaciones `especificaciones_del_proyecto.md`.
    - **Bautismo Automático de Binarios**: Electron Builder consume automáticamente la versión actualizada desde `package.json`, asegurando que los ejecutables resultantes (`VisualForge Studio Setup <version>.exe` y `VisualForge Studio <version>.exe`) queden nombrados con la versión exacta y coherente con el repositorio.
 
-5. **Regla de Publicación Obligatoria de Release en GitHub ante Cambio de Versión en `appToProduccion`**:
+5. **Regla de Publicación Obligatoria de Release en GitHub con Binarios Ejecutables (.EXE) en `appToProduccion`**:
    - Cada vez que se invoque el skill `appToProduccion`, se comprueba si la versión a compilar constituye un cambio o incremento respecto a las versiones ya publicadas en GitHub (`git tag -l` y `git ls-remote --tags origin`).
    - **Condición Estricta**: Si y solo si existe un cambio de versión no registrado previamente:
      * Se crea automáticamente el tag anotado en Git: `git tag -a v<version> -m "VisualForge Studio v<version>"`.
-     * Se envía el tag a GitHub (`git push origin v<version>`), publicando formalmente el Release en el repositorio.
+     * Se envía el tag a GitHub (`git push origin v<version>`).
      * Se extraen las notas de versión correspondientes directamente desde `CHANGELOG.md` para documentar la entrega.
-     * Si está disponible GitHub CLI (`gh`), se adjuntan los binarios ejecutables `.exe` compilados para descarga directa en la plataforma.
+     * **Adjunto Mandatorio de Binarios Ejecutables (.EXE)**: Mediante GitHub CLI (`gh`), el proceso publica formalmente el Release adjuntando obligatoriamente los binarios ejecutables `.exe` oficiales:
+       - `VisualForge Studio Setup <version>.exe` (Instalador NSIS)
+       - `VisualForge Studio <version>.exe` (Ejecutable portable independiente)
+     * Si el release ya existía en GitHub, se ejecuta automáticamente `gh release upload v<version> release/*.exe --clobber` para garantizar que los ejecutables queden vinculados y disponibles para descarga directa y consumo del sistema de auto-actualización.
    - En caso de reejecutar la compilación para una versión ya liberada, la publicación de Release se omite para evitar duplicados o tags redundantes.
 
 ---

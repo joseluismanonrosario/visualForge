@@ -186,10 +186,12 @@ if (-not $SkipGitHubRelease) {
             Write-Host "[OK] Tag $VersionTag enviado exitosamente a GitHub." -ForegroundColor Green
         }
 
-        # 3. Intentar crear GitHub Release con binarios via GitHub CLI (gh) si esta disponible
-        $GhInstalled = Get-Command gh -ErrorAction SilentlyContinue
-        if ($GhInstalled) {
-            Write-Host "Creando GitHub Release y adjuntando ejecutables .exe con GitHub CLI..." -ForegroundColor Yellow
+        # 3. Publicar GitHub Release y adjuntar ejecutables .exe obligatoriamente via GitHub CLI (gh)
+        $GhCmd = Get-Command gh -ErrorAction SilentlyContinue
+        $GhExe = if ($GhCmd) { $GhCmd.Source } elseif (Test-Path "C:\Program Files\GitHub CLI\gh.exe") { "C:\Program Files\GitHub CLI\gh.exe" } elseif (Test-Path "$env:LOCALAPPDATA\Programs\GitHub CLI\gh.exe") { "$env:LOCALAPPDATA\Programs\GitHub CLI\gh.exe" } else { $null }
+
+        if ($GhExe) {
+            Write-Host "Creando GitHub Release y adjuntando ejecutables .exe con GitHub CLI ($GhExe)..." -ForegroundColor Yellow
             $ExePatternFiles = Get-ChildItem -Path $ReleaseDir -Filter "*$($PkgContent.version)*.exe"
             
             $GhArgs = @("release", "create", $VersionTag)
@@ -203,9 +205,21 @@ if (-not $SkipGitHubRelease) {
                 $GhArgs += @("--notes", "Release $VersionTag de VisualForge Studio.")
             }
 
-            gh @GhArgs
+            & $GhExe @GhArgs
             if ($LASTEXITCODE -eq 0) {
                 Write-Host "[OK] Release de GitHub publicado exitosamente con ejecutables adjuntos!" -ForegroundColor Green
+            } else {
+                # Fallback: Si el release ya existia, adjuntar directamente con 'release upload'
+                Write-Host "El release ya existe. Adjuntando ejecutables .exe directamente con release upload..." -ForegroundColor Yellow
+                $UploadArgs = @("release", "upload", $VersionTag)
+                foreach ($f in $ExePatternFiles) {
+                    $UploadArgs += $f.FullName
+                }
+                $UploadArgs += "--clobber"
+                & $GhExe @UploadArgs
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Host "[OK] Ejecutables .exe adjuntados exitosamente al Release de GitHub!" -ForegroundColor Green
+                }
             }
         } else {
             Write-Host "[INFO] Tag y Release disponibles en GitHub: https://github.com/joseluismanonrosario/visualForge/releases/tag/$VersionTag" -ForegroundColor Cyan
